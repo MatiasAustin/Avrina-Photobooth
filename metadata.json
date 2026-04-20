@@ -1,0 +1,6 @@
+{
+  "name": "Lux Booth AI",
+  "description": "Professional AI-powered photo booth with real-time templates, QRIS payments, and Google Drive integration.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["photo_capture", "ai_enhancement", "print_management"]
+}

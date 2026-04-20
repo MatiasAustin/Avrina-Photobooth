@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Event": {
+      "title": "Event Configuration",
+      "description": "Settings for a specific photo booth event.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "timer": { "type": "integer", "description": "Countdown in seconds" },
+        "shotCount": { "type": "integer" },
+        "allowRetake": { "type": "boolean" },
+        "pricing": { "type": "number" },
+        "qrisEnabled": { "type": "boolean" },
+        "googleDriveFolderId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "timer", "shotCount"]
+    },
+    "Template": {
+      "title": "Photo Template",
+      "description": "Visual frame/overlay for photos.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "eventId": { "type": "string" }
+      },
+      "required": ["name", "imageUrl", "eventId"]
+    },
+    "Session": {
+      "title": "Photo Session",
+      "description": "A single session of photo capture.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "enhancedPhotos": { "type": "array", "items": { "type": "string" } },
+        "templateId": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "free"] },
+        "paymentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "paymentStatus"]
+    },
+    "PrintJob": {
+      "title": "Print Job",
+      "description": "A job in the print queue.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "status": { "type": "string", "enum": ["queued", "printing", "completed", "failed"] },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "status", "imageUrl"]
+    }
+  },
+  "firestore": {
+    "events": {
+      "schema": "Event",
+      "description": "Collection of event configurations."
+    },
+    "events/{eventId}/templates": {
+      "schema": "Template",
+      "description": "Templates specific to an event."
+    },
+    "sessions": {
+      "schema": "Session",
+      "description": "Captured photo sessions."
+    },
+    "printQueue": {
+      "schema": "PrintJob",
+      "description": "Queue for printing photos."
+    }
+  }
+}
