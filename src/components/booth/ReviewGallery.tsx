@@ -94,7 +94,7 @@ export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: R
             {[0, 1].map((stripIdx) => (
               <div key={stripIdx} className="flex-1 flex flex-col gap-2">
                 {[...photos, ...Array(Math.max(0, 6 - photos.length)).fill(null)].slice(stripIdx * 3, (stripIdx + 1) * 3).map((p, i) => (
-                  <div key={i} className="flex-1 bg-neutral-200 rounded-sm overflow-hidden relative border border-black/5">
+                  <div key={i} className="w-full aspect-square bg-neutral-200 rounded-sm overflow-hidden relative border border-black/5">
                     {p ? <img src={p} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-black/10 font-black text-2xl italic">{(stripIdx * 3) + i + 1}</div>}
                   </div>
                 ))}

@@ -285,7 +285,7 @@ export function Booth() {
 
       const drawSingleStrip = (offsetX: number, photoOffset: number) => {
         const photoWidth = stripWidth - (margin * 2);
-        const photoHeight = (stripHeight - (margin * (slots + 2))) / (slots + 0.8);
+        const photoHeight = photoWidth; // Force 1:1 Square
 
         for (let i = 0; i < slots; i++) {
           const img = loadedImages[i + photoOffset] || loadedImages[i] || loadedImages[0];
@@ -296,7 +296,25 @@ export function Booth() {
           }
 
           const y = margin + i * (photoHeight + margin);
-          ctx.drawImage(img, offsetX + margin, y, photoWidth, photoHeight);
+
+          // Center-Crop "Object-Cover" Logic
+          const imgAspect = img.naturalWidth / img.naturalHeight;
+          const targetAspect = photoWidth / photoHeight;
+          let sx, sy, sw, sh;
+
+          if (imgAspect > targetAspect) {
+            sh = img.naturalHeight;
+            sw = sh * targetAspect;
+            sx = (img.naturalWidth - sw) / 2;
+            sy = 0;
+          } else {
+            sw = img.naturalWidth;
+            sh = sw / targetAspect;
+            sx = 0;
+            sy = (img.naturalHeight - sh) / 2;
+          }
+          
+          ctx.drawImage(img, sx, sy, sw, sh, offsetX + margin, y, photoWidth, photoHeight);
         }
 
         // Branding

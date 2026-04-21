@@ -87,14 +87,33 @@ export function CaptureStage({
               key={countdown}
               initial={{ scale: 2, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="text-[12rem] font-bold text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)]"
+              className="text-[12rem] font-bold text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)] z-30"
             >
               {countdown}
             </motion.span>
           )}
         </div>
+
+        {/* 1:1 Safe Area Mask (Indicates the actual square crop) */}
+        {state !== 'review_shot' && (
+          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+            {/* Darkened Sides */}
+            <div className="absolute inset-y-0 left-0 w-[calc(50%-25%)] bg-black/60 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-[calc(50%-25%)] bg-black/60 pointer-events-none" />
+            
+            {/* Center Area Border/Indicator */}
+            <div className="h-full aspect-square border-2 border-white/20 relative flex flex-col items-center justify-start p-6">
+               <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/40" />
+               <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/40" />
+               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/40" />
+               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/40" />
+               
+               <p className="text-[10px] font-mono text-white/40 tracking-[0.3em] uppercase bg-black/20 px-3 py-1 rounded-full backdrop-blur">Square Safe Area</p>
+            </div>
+          </div>
+        )}
         
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-6 py-2 rounded-full border border-white/10 flex items-center gap-4 text-xs font-mono uppercase tracking-widest">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-6 py-2 rounded-full border border-white/10 flex items-center gap-4 text-xs font-mono uppercase tracking-widest z-30">
            <span className="text-white/40">Capturing Photo</span>
            <span className="text-white">{currentShot + 1} / {totalShots}</span>
         </div>
