@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Shield, Crown, Search, ArrowLeft, MoreHorizontal, UserCheck, UserMinus, Activity, DollarSign } from 'lucide-react';
+import { Users, Shield, Crown, Search, ArrowLeft, MoreHorizontal, UserCheck, UserMinus, Activity, DollarSign, Copy, QrCode, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
@@ -160,7 +160,6 @@ export function DevDashboard({ session }: { session: any }) {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard!");
   };
- Jonah
 
   const filteredProfiles = profiles.filter(p => 
     p.full_name?.toLowerCase().includes(search.toLowerCase()) || 
