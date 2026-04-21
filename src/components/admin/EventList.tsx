@@ -42,6 +42,25 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
     }
   };
 
+  const handleQrisDelete = async () => {
+    if (!editingEvent?.qris_image_url) return;
+    try {
+      // Extract filename from the public URL
+      const url = editingEvent.qris_image_url as string;
+      const fileName = url.split('/qris/').pop();
+      if (fileName) {
+        const { error } = await supabase.storage.from('qris').remove([fileName]);
+        if (error) console.warn('Storage delete warning:', error.message);
+      }
+    } catch (err) {
+      console.warn('Could not delete from storage:', err);
+    } finally {
+      // Always clear state regardless of storage error
+      setQrisPreview(null);
+      setEditingEvent({ ...editingEvent, qris_image_url: '' });
+    }
+  };
+
   const copyLink = (slug: string, id: string) => {
     const url = `${window.location.origin}/booth/${slug}`;
     navigator.clipboard.writeText(url);
@@ -243,24 +262,40 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                   <div className="space-y-3">
                       <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">QRIS Image</label>
                       
-                      {/* Preview */}
+                      {/* Preview with action buttons */}
                       {(qrisPreview || editingEvent.qris_image_url) && (
-                        <div className="relative bg-white rounded-2xl p-3 aspect-square max-h-[200px] flex items-center justify-center overflow-hidden group">
-                          <img 
-                            src={qrisPreview || editingEvent.qris_image_url} 
-                            alt="QRIS Preview" 
-                            className="max-h-full max-w-full object-contain"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
-                            <label className="cursor-pointer text-white text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                              <Upload className="w-4 h-4" /> Change
+                        <div className="space-y-3">
+                          <div className="bg-white rounded-2xl p-3 aspect-square max-h-[200px] flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={qrisPreview || editingEvent.qris_image_url} 
+                              alt="QRIS Preview" 
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          </div>
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            <label className={`flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-white hover:text-black transition-all ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
+                              {isUploadingQris ? (
+                                <div className="w-4 h-4 border-2 border-current/20 border-t-current rounded-full animate-spin" />
+                              ) : (
+                                <Upload className="w-4 h-4" />
+                              )}
+                              {isUploadingQris ? 'Uploading...' : 'Replace'}
                               <input type="file" className="hidden" accept="image/*" onChange={handleQrisUpload} />
                             </label>
+                            <button
+                              type="button"
+                              onClick={handleQrisDelete}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Hapus
+                            </button>
                           </div>
                         </div>
                       )}
 
-                      {/* Upload Button */}
+                      {/* Upload Button — only when no image */}
                       {!qrisPreview && !editingEvent.qris_image_url && (
                         <label className={`flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-white/30 hover:bg-white/5 transition-all ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
                           {isUploadingQris ? (
