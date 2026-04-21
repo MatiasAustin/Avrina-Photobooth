@@ -1,4 +1,4 @@
-import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe, Copy, Check } from 'lucide-react';
+import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe, Copy, Check, Upload, ImageIcon } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
@@ -13,6 +13,34 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isUploadingQris, setIsUploadingQris] = useState(false);
+  const [qrisPreview, setQrisPreview] = useState<string | null>(null);
+
+  const handleQrisUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingEvent) return;
+    setIsUploadingQris(true);
+    try {
+      // Local preview
+      const reader = new FileReader();
+      reader.onload = (ev) => setQrisPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+
+      // Upload to Supabase Storage
+      const fileName = `qris_${editingEvent.id || Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
+      const { error: uploadError } = await supabase.storage
+        .from('qris')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('qris').getPublicUrl(fileName);
+      setEditingEvent({ ...editingEvent, qris_image_url: publicUrl });
+    } catch (err: any) {
+      alert(`Failed to upload QRIS: ${err.message}`);
+    } finally {
+      setIsUploadingQris(false);
+    }
+  };
 
   const copyLink = (slug: string, id: string) => {
     const url = `${window.location.origin}/booth/${slug}`;
@@ -212,14 +240,47 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                      />
                   </div>
 
-                  <div className="space-y-2">
-                      <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">QRIS Image URL (Optional)</label>
-                      <input 
-                        value={editingEvent.qris_image_url || ''}
-                        onChange={e => setEditingEvent({...editingEvent, qris_image_url: e.target.value})}
-                        placeholder="https://...link-ke-gambar-qris.jpg"
-                        className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono"
-                      />
+                  <div className="space-y-3">
+                      <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">QRIS Image</label>
+                      
+                      {/* Preview */}
+                      {(qrisPreview || editingEvent.qris_image_url) && (
+                        <div className="relative bg-white rounded-2xl p-3 aspect-square max-h-[200px] flex items-center justify-center overflow-hidden group">
+                          <img 
+                            src={qrisPreview || editingEvent.qris_image_url} 
+                            alt="QRIS Preview" 
+                            className="max-h-full max-w-full object-contain"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                            <label className="cursor-pointer text-white text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                              <Upload className="w-4 h-4" /> Change
+                              <input type="file" className="hidden" accept="image/*" onChange={handleQrisUpload} />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Upload Button */}
+                      {!qrisPreview && !editingEvent.qris_image_url && (
+                        <label className={`flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-white/30 hover:bg-white/5 transition-all ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {isUploadingQris ? (
+                            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <ImageIcon className="w-8 h-8 text-neutral-600" />
+                              <div className="text-center">
+                                <p className="text-xs font-black uppercase text-neutral-400 tracking-widest">Upload QRIS</p>
+                                <p className="text-[9px] font-mono text-neutral-600 mt-1">PNG, JPG up to 5MB</p>
+                              </div>
+                            </>
+                          )}
+                          <input type="file" className="hidden" accept="image/*" onChange={handleQrisUpload} />
+                        </label>
+                      )}
+
+                      {isUploadingQris && (
+                        <p className="text-[9px] font-mono text-neutral-500 text-center animate-pulse">Uploading...</p>
+                      )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
