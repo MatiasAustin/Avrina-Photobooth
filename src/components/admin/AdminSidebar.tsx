@@ -1,21 +1,24 @@
-import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard } from 'lucide-react';
+import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: any) => void;
+  isDemo?: boolean;
+  isPremium?: boolean;
 }
 
-export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, isDemo, isPremium = true }: AdminSidebarProps) {
   const navigate = useNavigate();
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-    { id: 'events', label: 'Events Registry', icon: Calendar },
-    { id: 'templates', label: 'Templates', icon: ImageIcon },
-    { id: 'payments', label: 'Payments', icon: CreditCard },
-    { id: 'prints', label: 'Print Queue', icon: Printer },
-    { id: 'print_node', label: 'Remote Print Node', icon: Zap },
+    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, premium: false },
+    { id: 'subscription', label: 'Subscription', icon: Shield, premium: false },
+    { id: 'events', label: 'Events Registry', icon: Calendar, premium: !isPremium },
+    { id: 'templates', label: 'Templates', icon: ImageIcon, premium: !isPremium },
+    { id: 'payments', label: 'Payments', icon: CreditCard, premium: !isPremium },
+    { id: 'prints', label: 'Print Queue', icon: Printer, premium: !isPremium },
+    { id: 'print_node', label: 'Remote Print Node', icon: Zap, premium: !isPremium },
   ];
 
   return (
@@ -31,14 +34,27 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => {
+              if ((isDemo || !isPremium) && item.premium) {
+                onTabChange('premium_locked');
+              } else {
+                onTabChange(item.id);
+              }
+            }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+              "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group",
               activeTab === item.id ? "bg-white text-black" : "text-neutral-400 hover:bg-white/5 hover:text-white"
             )}
           >
-            <item.icon className="w-4 h-4" />
-            {item.label}
+            <div className="flex items-center gap-3">
+              <item.icon className="w-4 h-4" />
+              {item.label}
+            </div>
+            {isDemo && item.premium && (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-600/10 text-blue-500 text-[8px] font-black uppercase tracking-tighter border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <Crown className="w-2 h-2 fill-current" /> PRO
+              </div>
+            )}
           </button>
         ))}
       </nav>

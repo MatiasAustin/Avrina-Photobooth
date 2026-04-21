@@ -8,6 +8,8 @@ import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
 import { PublicGallery } from './components/gallery/PublicGallery';
 import { Launchpad } from './components/Launchpad';
+import { DemoBooth } from './components/DemoBooth';
+import { DevDashboard } from './components/dev/DevDashboard';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -50,10 +52,16 @@ export default function App() {
         />
         
         <Route path="/booth/:slug" element={<Booth />} />
+        <Route path="/demo" element={<DemoBooth />} />
+        <Route path="/demo-dashboard" element={<Admin session={null} isDemo={true} />} />
         <Route path="/gallery/:sessionId" element={<PublicGallery />} />
         <Route 
           path="/launchpad" 
           element={session ? <Launchpad session={session} /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/superuser" 
+          element={session ? <DevDashboard session={session} /> : <Navigate to="/login" />} 
         />
         
         {/* Legacy support for #admin hash */}
