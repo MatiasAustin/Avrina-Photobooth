@@ -91,7 +91,7 @@ export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: R
         <h3 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 text-center">Live Strip Preview</h3>
         <div className="bg-neutral-900/50 p-4 rounded-[40px] border border-white/5 shadow-2xl">
           <div className="aspect-[1/2] bg-white rounded-2xl overflow-hidden p-3 flex flex-col gap-2">
-            {[...photos, ...Array(3 - photos.length).fill(null)].slice(0, 3).map((p, i) => (
+            {[...photos, ...Array(Math.max(0, 3 - photos.length)).fill(null)].slice(0, 3).map((p, i) => (
               <div key={i} className="flex-1 bg-neutral-200 rounded-sm overflow-hidden relative border border-black/5">
                 {p ? <img src={p} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-black/10 font-black text-4xl italic">{i+1}</div>}
               </div>

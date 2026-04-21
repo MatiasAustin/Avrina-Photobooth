@@ -328,16 +328,18 @@ export function Booth() {
   const handleFinalize = async (arrangedPhotos: string[]) => {
     try {
       const finalStripBase64 = await generatePhotoStrip(arrangedPhotos);
+      if (!finalStripBase64) throw new Error("Generated strip is empty");
       
-      // 1. Upload the final strip to Storage (Avoids Huge DB payloads)
-      // Convert base64 to Blob
-      const base64Data = finalStripBase64.split(',')[1];
+      // 1. Upload the final strip to Storage
+      const base64Parts = finalStripBase64.split(',');
+      if (base64Parts.length < 2) throw new Error("Invalid base64 data");
+      
+      const base64Data = base64Parts[1];
       const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
+      const byteArray = new Uint8Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        byteArray[i] = byteCharacters.charCodeAt(i);
       }
-      const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'image/jpeg' });
       
       const fileName = `session-${Date.now()}.jpg`;
