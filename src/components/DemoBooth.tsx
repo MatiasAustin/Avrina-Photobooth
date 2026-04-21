@@ -33,7 +33,7 @@ export function DemoBooth() {
   const navigate = useNavigate();
   
   const [state, setState] = useState<BoothState>('idle');
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(MOCK_TEMPLATES[0]);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   const [countdown, setCountdown] = useState(0);
   const [currentShot, setCurrentShot] = useState(0);
@@ -43,8 +43,7 @@ export function DemoBooth() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleStart = () => {
-    // Skip template selection as requested
-    setSelectedTemplate(MOCK_TEMPLATES[0]);
+    // Skip template selection as requested and no overlay
     proceedToCapture();
   };
 
@@ -135,19 +134,19 @@ export function DemoBooth() {
     }
   };
 
-  // High quality strip generation for 6 frames
+  // High quality "2-Strip" layout (2 columns of 3 photos)
   const generatePhotoStrip = async (photos: string[]) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return photos[0];
 
-    const stripWidth = 600;
     const margin = 30;
-    const photoWidth = stripWidth - (margin * 2);
-    const photoHeight = photoWidth; // Square frames for classic strip look
+    const stripWidth = 1000;
+    const photoWidth = (stripWidth - (margin * 3)) / 2;
+    const photoHeight = photoWidth; // Maintain square look
     
-    // Total height: 6 photos + gaps + branding
-    const stripHeight = (margin * 7) + (photoHeight * 6) + 150; 
+    // Total height: 3 rows of photos + gaps + branding
+    const stripHeight = (margin * 4) + (photoHeight * 3) + 160; 
 
     canvas.width = stripWidth;
     canvas.height = stripHeight;
@@ -165,45 +164,47 @@ export function DemoBooth() {
     );
 
     loadedImages.slice(0, 6).forEach((img, i) => {
-        const y = margin + i * (photoHeight + margin);
+        const col = i < 3 ? 0 : 1;
+        const row = i % 3;
         
-        // NO STRETCH LOGIC: Center Crop (Object-fit: cover)
+        const x = margin + col * (photoWidth + margin);
+        const y = margin + row * (photoHeight + margin);
+        
+        // NO STRETCH LOGIC: Center Crop
         const imgAspect = img.width / img.height;
         const targetAspect = photoWidth / photoHeight;
         
         let sx, sy, sw, sh;
         if (imgAspect > targetAspect) {
-          // Image is wider than target
           sh = img.height;
           sw = img.height * targetAspect;
           sx = (img.width - sw) / 2;
           sy = 0;
         } else {
-          // Image is taller than target
           sw = img.width;
           sh = img.width / targetAspect;
           sx = 0;
           sy = (img.height - sh) / 2;
         }
 
-        ctx.drawImage(img, sx, sy, sw, sh, margin, y, photoWidth, photoHeight);
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, photoWidth, photoHeight);
         
-        // Subtle frame around photo
-        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        // Frames
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(margin, y, photoWidth, photoHeight);
+        ctx.strokeRect(x, y, photoWidth, photoHeight);
     });
 
-    // High fidelity Branding
+    // Central Branding
     ctx.fillStyle = '#000000';
-    ctx.font = 'black 32px sans-serif'; // Note: 'black' might need '900'
+    ctx.font = 'black 36px sans-serif';
     ctx.textAlign = 'center';
-    ctx.letterSpacing = '4px';
-    ctx.fillText('AVRINA TRIAL', stripWidth/2, stripHeight - 80);
+    ctx.letterSpacing = '6px';
+    ctx.fillText('AVRINA TRIAL', stripWidth/2, stripHeight - 90);
     
     ctx.font = '14px monospace';
     ctx.fillStyle = '#999999';
-    ctx.fillText(new Date().toLocaleDateString().toUpperCase(), stripWidth/2, stripHeight - 45);
+    ctx.fillText('DEMO SESSION • ' + new Date().toLocaleDateString().toUpperCase(), stripWidth/2, stripHeight - 55);
 
     return canvas.toDataURL('image/jpeg', 0.95);
   };

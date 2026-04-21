@@ -1,124 +1,189 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Check, Zap, Crown, Shield, CreditCard, ArrowRight } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { motion, AnimatePresence } from 'motion/react';
+import { Crown, Check, Zap, ArrowRight, ShieldCheck, QrCode, MessageSquare, ArrowLeft, Copy, CreditCard, Shield } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface SubscriptionManagerProps {
-  currentTier: 'free' | 'pro' | string;
+  currentTier: string;
   userId: string;
   onUpdate: () => void;
 }
 
 export function SubscriptionManager({ currentTier, userId, onUpdate }: SubscriptionManagerProps) {
-  const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
 
-  const handleUpgrade = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_tier: 'pro' })
-        .eq('id', userId);
-
-      if (error) throw error;
-      onUpdate();
-      alert("Successfully upgraded to Professional Access! Enjoy your unlimited features.");
-    } catch (e) {
-      console.error("Upgrade error", e);
-      alert("Upgrade failed. Please check your connection.");
-    } finally {
-      setLoading(false);
-    }
+  const handleCopyAmount = () => {
+    navigator.clipboard.writeText("150000");
+    alert("Jumlah disalin!");
   };
 
-  return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Plan Management</h3>
-        <div className={currentTier === 'pro' ? 'text-blue-500' : 'text-neutral-500'}>
-           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5 text-[10px] font-black uppercase tracking-widest">
-              {currentTier === 'pro' ? <Crown className="w-3 h-3 fill-current" /> : <Shield className="w-3 h-3" />}
-              {currentTier === 'pro' ? 'Professional Active' : 'Free Tier'}
+  const waMessage = encodeURIComponent(`Halo Admin Avrina, saya ingin konfirmasi pembayaran untuk paket Pro.\n\nUser ID: ${userId}\nJumlah: Rp 150.000`);
+  const waLink = `https://wa.me/6281234567890?text=${waMessage}`;
+
+  if (showPayment) {
+    return (
+      <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <button 
+          onClick={() => setShowPayment(false)}
+          className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors group text-xs font-black uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Kembali ke Pilihan Paket
+        </button>
+
+        <div className="bg-neutral-900 border border-white/5 rounded-[40px] p-10 space-y-10 relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 blur-[100px] pointer-events-none" />
+           
+           <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-tight text-white">Detail Pembayaran</h2>
+              <p className="text-sm text-neutral-500 italic">Silakan selesaikan pembayaran untuk aktivasi Pro</p>
            </div>
+
+           <div className="flex flex-col items-center gap-6">
+              <div className="bg-white p-6 rounded-[32px] shadow-2xl relative group">
+                 <div className="w-48 h-48 bg-neutral-100 rounded-xl flex items-center justify-center border-4 border-white overflow-hidden">
+                    <QrCode className="w-32 h-32 text-black opacity-20" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <span className="font-black text-black text-2xl rotate-45 opacity-5">QRIS AVRINA</span>
+                    </div>
+                 </div>
+                 <div className="absolute -top-3 -right-3 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest shadow-xl">
+                    OFFICIAL QRIS
+                 </div>
+              </div>
+              <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Pindai kode QR untuk membayar</p>
+           </div>
+
+           <div className="bg-black/50 rounded-3xl p-8 space-y-6 border border-white/5">
+              <div className="flex items-center justify-between">
+                 <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest text-white">Total Pembayaran</span>
+                 <div className="flex items-center gap-3">
+                    <span className="text-xl font-black text-blue-500">Rp 150.000</span>
+                    <button onClick={handleCopyAmount} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-neutral-500">
+                       <Copy className="w-4 h-4" />
+                    </button>
+                 </div>
+              </div>
+              
+              <div className="h-[1px] bg-white/5" />
+
+              <div className="space-y-4">
+                 <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</div>
+                    <p className="text-xs text-neutral-400 leading-relaxed font-medium">Scan QRIS menggunakan aplikasi Dana/OVO/M-Banking/Gopay Anda.</p>
+                 </div>
+                 <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</div>
+                    <p className="text-xs text-neutral-400 leading-relaxed font-medium">Klik konfirmasi WhatsApp untuk mengirim bukti transfer ke Admin.</p>
+                 </div>
+              </div>
+           </div>
+
+           <a 
+             href={waLink}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="w-full py-6 bg-green-500 text-black rounded-[24px] font-black uppercase text-sm tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(34,197,94,0.2)]"
+           >
+             <MessageSquare className="w-5 h-5" /> Konfirmasi di WhatsApp
+           </a>
+
+           <p className="text-center text-[10px] text-neutral-600 italic font-medium">
+              Aktivasi manual dilakukan oleh tim kami dalam 5-15 menit.
+           </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div className="text-center space-y-4">
+        <h2 className="text-4xl font-black uppercase tracking-tight text-white">Layanan Photobooth <span className="text-blue-500 italic">SaaS</span></h2>
+        <p className="text-neutral-500 text-lg max-w-2xl mx-auto italic font-medium">Tingkatkan kreativitas dan otomasi bisnis Anda dengan paket Professional.</p>
+      </div>
+
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        {/* Starter Plan */}
+        <div className="bg-neutral-900 border border-white/5 rounded-[48px] p-10 flex flex-col justify-between transition-all hover:bg-neutral-900/60 text-white">
+           <div className="space-y-8">
+              <div className="space-y-2">
+                 <h3 className="text-lg font-mono uppercase tracking-[0.3em] text-neutral-500">Starter</h3>
+                 <div className="flex items-baseline gap-1">
+                    <span className="text-5xl font-black italic tracking-tighter">Free</span>
+                 </div>
+              </div>
+              <p className="text-neutral-400 text-sm leading-relaxed font-medium">Cocok untuk mencoba fitur dasar photobooth secara lokal.</p>
+              <div className="space-y-4">
+                 {['Unlimited Local Session', 'Digital Gallery Export', 'Basic Photo Editor'].map(f => (
+                   <div key={f} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-neutral-500" />
+                      </div>
+                      <span className="text-xs font-bold text-neutral-200">{f}</span>
+                   </div>
+                 ))}
+              </div>
+           </div>
+           <button disabled className="mt-12 w-full py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] bg-white/5 text-neutral-500 cursor-default">
+              {currentTier !== 'pro' ? 'Current Plan' : 'Standard Access'}
+           </button>
+        </div>
+
+        {/* Pro Plan */}
+        <div className="relative bg-neutral-900 border-2 border-blue-600/50 rounded-[48px] p-10 flex flex-col justify-between transition-all shadow-[0_0_100px_rgba(37,99,235,0.1)] scale-105 z-10 text-white">
+           <div className="absolute top-8 right-8 px-4 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Best Value</div>
+           <div className="space-y-8">
+              <div className="space-y-2">
+                 <h3 className="text-lg font-mono uppercase tracking-[0.3em] text-neutral-500">Professional</h3>
+                 <div className="flex items-baseline gap-1">
+                    <span className="text-5xl font-black italic tracking-tighter text-white">150k</span>
+                    <span className="text-neutral-500 font-bold">/bln</span>
+                 </div>
+              </div>
+              <p className="text-neutral-400 text-sm leading-relaxed font-medium">Layanan penuh untuk bisnis photobooth profesional dan modern.</p>
+              <div className="space-y-4">
+                 {[
+                   'Custom Overlays & Templates',
+                   'Cloud QR Code System',
+                   'Public Mini-Gallery Hosting',
+                   'Print Management Node',
+                   'Full Analytics Dashboard'
+                 ].map(f => (
+                   <div key={f} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-bold text-neutral-200">{f}</span>
+                   </div>
+                 ))}
+              </div>
+           </div>
+           <button 
+             onClick={() => setShowPayment(true)}
+             disabled={currentTier === 'pro'}
+             className={cn(
+               "mt-12 w-full py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-3",
+               currentTier === 'pro' 
+                 ? "bg-white/5 text-neutral-500 cursor-default"
+                 : "bg-blue-600 text-white hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(37,99,235,0.2)]"
+             )}
+           >
+              {currentTier === 'pro' ? 'Professional Active' : 'Upgrade to Pro'} <ArrowRight className="w-4 h-4" />
+           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-         {/* Plan Comparison Card */}
-         <div className="bg-neutral-900/50 border border-white/10 rounded-[40px] p-10 space-y-8 flex flex-col">
-            <div className="space-y-2">
-               <h4 className="text-2xl font-black uppercase tracking-tight">Your Current <span className="text-white/30">Privileges</span></h4>
-               <p className="text-neutral-500 text-sm">Review what's available under your current agreement.</p>
+      {/* Trust Badge */}
+      <div className="max-w-2xl mx-auto bg-neutral-900 border border-white/5 rounded-[40px] p-8 flex flex-col md:flex-row items-center gap-8 justify-between shadow-xl">
+         <div className="flex gap-6 items-center">
+            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center">
+               <ShieldCheck className="w-7 h-7 text-neutral-500" />
             </div>
-            
-            <div className="space-y-4 flex-1">
-               {[
-                 { label: "Admin Dashboard Access", included: true },
-                 { label: "Live Booth Demo", included: true },
-                 { label: "Event Registrations", included: currentTier === 'pro' },
-                 { label: "Custom Templates", included: currentTier === 'pro' },
-                 { label: "Remote Print Node", included: currentTier === 'pro' },
-                 { label: "Cloud Gallery Export", included: currentTier === 'pro' },
-                 { label: "Priority API Support", included: currentTier === 'pro' }
-               ].map((feat, i) => (
-                 <div key={i} className={`flex items-center gap-3 text-xs font-bold uppercase tracking-tight ${feat.included ? 'text-white' : 'text-neutral-600'}`}>
-                    <Check className={`w-4 h-4 ${feat.included ? 'text-blue-500' : 'text-neutral-800'}`} />
-                    {feat.label}
-                 </div>
-               ))}
+            <div className="space-y-0.5">
+               <h4 className="font-black text-sm uppercase tracking-tight text-white">Pembayaran Manual Aman</h4>
+               <p className="text-xs text-neutral-500 leading-relaxed font-medium">Pembayaran diverifikasi secara manual oleh developer.</p>
             </div>
          </div>
-
-         {/* Action Card */}
-         {currentTier !== 'pro' ? (
-           <div className="bg-white text-black rounded-[40px] p-10 space-y-8 flex flex-col shadow-2xl">
-              <div className="space-y-4">
-                 <div className="inline-flex px-3 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full">Limited Time Offer</div>
-                 <h4 className="text-4xl font-black uppercase tracking-tighter leading-none">Switch to <br/><span className="italic text-blue-600">Professional</span></h4>
-                 <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-black">150k</span>
-                    <span className="text-lg font-bold opacity-30">/bln</span>
-                 </div>
-              </div>
-
-              <div className="space-y-6 flex-1">
-                 <p className="text-sm font-medium leading-relaxed opacity-70">
-                    Buka akses penuh ke ekosistem Avrina. Kelola event tanpa batas, kustomisasi template sesuka hati, dan monitor pendapatan real-time.
-                 </p>
-                 <div className="p-6 bg-black/[0.03] border border-black/5 rounded-3xl space-y-4">
-                    <div className="flex items-center gap-3">
-                       <CreditCard className="w-5 h-5 text-blue-600" />
-                       <span className="text-[10px] font-black uppercase tracking-widest">Instant Activation</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                       <Zap className="w-5 h-5 text-blue-600 fill-current" />
-                       <span className="text-[10px] font-black uppercase tracking-widest">Cancel Anytime</span>
-                    </div>
-                 </div>
-              </div>
-
-              <button 
-                onClick={handleUpgrade}
-                disabled={loading}
-                className="w-full py-5 bg-black text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl"
-              >
-                 {loading ? 'Processing...' : 'Upgrade Now'} <ArrowRight className="w-4 h-4" />
-              </button>
-           </div>
-         ) : (
-           <div className="bg-neutral-800/20 border border-white/5 rounded-[40px] p-10 flex flex-col items-center justify-center text-center space-y-6">
-              <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-500">
-                 <Crown className="w-10 h-10" />
-              </div>
-              <div className="space-y-2">
-                 <h4 className="text-2xl font-black uppercase tracking-tight">You are <span className="text-blue-500 italic">Unlimited</span></h4>
-                 <p className="text-neutral-500 text-sm max-w-[240px] mx-auto">Selamat! Akun Anda aktif dengan fitur Professional Access.</p>
-              </div>
-              <button disabled className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                 Manage Billing (Coming Soon)
-              </button>
-           </div>
-         )}
       </div>
     </div>
   );
