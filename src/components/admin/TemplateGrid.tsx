@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Image as ImageIcon, X, Save } from 'lucide-react';
+import { Trash2, Plus, Image as ImageIcon, X, Save, Palette } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { TemplateEditor } from './TemplateEditor';
 
 export function TemplateGrid() {
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDesignStudio, setShowDesignStudio] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [newTemplate, setNewTemplate] = useState({ name: '', image_url: '', event_id: '' });
 
@@ -63,13 +65,32 @@ export function TemplateGrid() {
     <div className="space-y-8 animate-in fade-in duration-500">
        <div className="flex items-center justify-between">
           <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Global Template Library</h3>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="bg-white text-black px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add Template
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowDesignStudio(true)}
+              className="bg-white/5 border border-white/10 text-white px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-white hover:text-black transition-all"
+            >
+              <Palette className="w-4 h-4" /> Design Studio
+            </button>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-white text-black px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add Template
+            </button>
+          </div>
        </div>
+
+       {showDesignStudio && (
+         <TemplateEditor 
+           events={events}
+           onClose={() => setShowDesignStudio(false)}
+           onSave={() => {
+              setShowDesignStudio(false);
+              fetchData();
+           }}
+         />
+       )}
 
        {loading ? (
          <div className="py-20 text-center"><div className="animate-spin w-8 h-8 border-2 border-white/10 border-t-white rounded-full mx-auto" /></div>
