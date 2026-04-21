@@ -8,6 +8,7 @@ export interface EventConfig {
   price: number;
   qris_enabled: boolean;
   is_active: boolean;
+  session_timeout: number; // in minutes
   created_at: string;
 }
 

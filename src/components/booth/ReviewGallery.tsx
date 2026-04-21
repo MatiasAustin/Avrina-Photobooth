@@ -7,9 +7,15 @@ interface ReviewGalleryProps {
   photos: string[];
   onRetake: () => void;
   onFinalize: (arrangedPhotos: string[]) => void;
+  isTimeout?: boolean;
 }
 
-export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: ReviewGalleryProps) {
+export function ReviewGallery({ 
+  photos: initialPhotos, 
+  onRetake, 
+  onFinalize,
+  isTimeout = false 
+}: ReviewGalleryProps) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
@@ -37,11 +43,20 @@ export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: R
       className="z-10 w-full max-w-7xl px-8 flex flex-col lg:flex-row gap-12 items-start"
     >
       <div className="flex-1 space-y-12">
-        <div className="space-y-2">
-          <h2 className="text-5xl font-black uppercase tracking-tight italic">Review <span className="text-white/20">Gallery</span></h2>
-          <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest flex items-center gap-2">
-            <MousePointer2 className="w-3 h-3" /> Tap two photos to swap their order
-          </p>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-5xl font-black uppercase tracking-tight italic">Review <span className="text-white/20">Gallery</span></h2>
+            <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <MousePointer2 className="w-3 h-3" /> Tap two photos to swap their order
+            </p>
+          </div>
+          
+          {isTimeout && (
+            <div className="bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl flex items-center gap-3">
+               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+               <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest">Session Timeout: Start over disabled</p>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
@@ -73,7 +88,13 @@ export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: R
         <div className="flex items-center gap-6 pt-8">
           <button 
             onClick={onRetake}
-            className="flex items-center gap-3 border border-white/20 px-10 py-5 rounded-full text-white/40 hover:text-white hover:bg-white/5 transition-all uppercase text-xs font-black tracking-[0.2em]"
+            disabled={isTimeout}
+            className={cn(
+              "flex items-center gap-3 border px-10 py-5 rounded-full transition-all uppercase text-xs font-black tracking-[0.2em]",
+              isTimeout 
+                ? "border-white/5 text-white/10 cursor-not-allowed opacity-50" 
+                : "border-white/20 text-white/40 hover:text-white hover:bg-white/5"
+            )}
           >
             <RefreshCcw className="w-4 h-4" /> Start Over
           </button>

@@ -27,6 +27,7 @@ export function Booth() {
   const [currentShot, setCurrentShot] = useState(0);
   const [qrisData, setQrisData] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [globalTimeLeft, setGlobalTimeLeft] = useState<number | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -88,11 +89,13 @@ export function Booth() {
       setTimeout(handlePaymentSuccess, 5000);
     } else {
       setState('template_selection');
+      if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
     }
   };
 
   const handlePaymentSuccess = () => {
     setState('template_selection');
+    if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
   };
 
   const activeStream = useRef<MediaStream | null>(null);
@@ -133,6 +136,21 @@ export function Booth() {
       activeStream.current = null;
     }
   };
+
+  // Global Session Timer
+  useEffect(() => {
+    if (globalTimeLeft === null || globalTimeLeft <= 0 || ['idle', 'summary'].includes(state)) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setGlobalTimeLeft(prev => (prev !== null && prev > 0) ? prev - 1 : 0);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [globalTimeLeft, state]);
+
+  const isTimeout = globalTimeLeft !== null && globalTimeLeft <= 0;
 
   const proceedToCapture = () => {
     setState('countdown');
@@ -453,6 +471,8 @@ export function Booth() {
             state={state}
             onRetake={handleShotRetake}
             onNext={handleShotNext}
+            isTimeout={isTimeout}
+            globalTimeLeft={globalTimeLeft}
           />
         )}
 
@@ -461,6 +481,7 @@ export function Booth() {
             photos={capturedPhotos}
             onRetake={handleRetake}
             onFinalize={handleFinalize}
+            isTimeout={isTimeout}
           />
         )}
 
@@ -475,6 +496,7 @@ export function Booth() {
               setCapturedPhotos([]);
               setCurrentShot(0);
               setSession(null);
+              setGlobalTimeLeft(null);
             }}
           />
         )}

@@ -12,6 +12,8 @@ interface CaptureStageProps {
   state: BoothState;
   onRetake: () => void;
   onNext: () => void;
+  isTimeout?: boolean;
+  globalTimeLeft?: number | null;
 }
 
 export function CaptureStage({ 
@@ -23,8 +25,16 @@ export function CaptureStage({
   lastCapturedPhoto,
   state,
   onRetake,
-  onNext
+  onNext,
+  isTimeout = false,
+  globalTimeLeft = null
 }: CaptureStageProps) {
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return '--:--';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
   return (
     <motion.div 
       key="camera"
@@ -53,12 +63,19 @@ export function CaptureStage({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-8 gap-6 rounded-2xl">
                    <div className="space-y-1">
                       <h3 className="text-4xl font-black uppercase italic tracking-tighter text-white">Shot #{currentShot + 1} Captured!</h3>
-                      <p className="text-white/60 font-mono text-sm uppercase tracking-widest leading-none">Review your pose or retake it</p>
+                      {isTimeout ? (
+                        <p className="text-red-500 font-mono text-[10px] uppercase tracking-widest leading-none">Time's Up: Retake disabled</p>
+                      ) : (
+                        <p className="text-white/60 font-mono text-sm uppercase tracking-widest leading-none">Review your pose or retake it</p>
+                      )}
                    </div>
-                   <div className="flex gap-4">
+                   <div className="flex gap-4 text-glow">
                       <button 
                         onClick={onRetake}
-                        className="flex-1 py-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-white/20 transition-all"
+                        disabled={isTimeout}
+                        className={`flex-1 py-5 backdrop-blur-xl border border-white/20 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs transition-all ${
+                          isTimeout ? 'opacity-20 cursor-not-allowed bg-transparent' : 'bg-white/10 hover:bg-white/20'
+                        }`}
                       >
                         Retake Shot
                       </button>
@@ -113,9 +130,18 @@ export function CaptureStage({
           </div>
         )}
         
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-6 py-2 rounded-full border border-white/10 flex items-center gap-4 text-xs font-mono uppercase tracking-widest z-30">
-           <span className="text-white/40">Capturing Photo</span>
-           <span className="text-white">{currentShot + 1} / {totalShots}</span>
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-6 py-2 rounded-full border border-white/10 flex items-center gap-6 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl">
+           <div className="flex items-center gap-2">
+             <span className="text-white/40">Status</span>
+             <span className="text-white">{currentShot + 1} / {totalShots}</span>
+           </div>
+           
+           <div className="w-[1px] h-4 bg-white/10" />
+           
+           <div className={`flex items-center gap-2 ${isTimeout ? 'text-red-500' : 'text-white'}`}>
+             <span className="text-white/40 italic">Time Left</span>
+             <span className={`font-bold ${isTimeout ? 'animate-pulse' : ''}`}>{formatTime(globalTimeLeft)}</span>
+           </div>
         </div>
       </div>
     </motion.div>

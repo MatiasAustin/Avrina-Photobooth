@@ -61,7 +61,8 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
       shot_count: 3,
       price: 0,
       qris_enabled: false,
-      is_active: true
+      is_active: true,
+      session_timeout: 10
     });
   };
 
@@ -210,15 +211,29 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                      />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                     <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Active Status</span>
-                     <button 
-                       type="button"
-                       onClick={() => setEditingEvent({...editingEvent, is_active: !editingEvent.is_active})}
-                       className={`w-12 h-6 rounded-full relative transition-colors ${editingEvent.is_active ? 'bg-green-500' : 'bg-neutral-700'}`}
-                     >
-                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_active ? 'left-7' : 'left-1'}`} />
-                     </button>
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Session Timeout (min)</label>
+                        <input 
+                          type="number"
+                          value={editingEvent.session_timeout}
+                          onChange={e => setEditingEvent({...editingEvent, session_timeout: parseInt(e.target.value)})}
+                          className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono text-glow"
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Active Status</label>
+                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 h-[58px]">
+                          <span className="text-[8px] font-mono text-neutral-400 uppercase tracking-widest">Live</span>
+                          <button 
+                            type="button"
+                            onClick={() => setEditingEvent({...editingEvent, is_active: !editingEvent.is_active})}
+                            className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_active ? 'bg-green-500' : 'bg-neutral-700'}`}
+                          >
+                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_active ? 'left-5.5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                     </div>
                   </div>
 
                   <button 
