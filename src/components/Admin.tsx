@@ -7,13 +7,14 @@ import { SessionGrid } from './admin/SessionGrid';
 import { EventList } from './admin/EventList';
 import { PrintQueue } from './admin/PrintQueue';
 import { TemplateGrid } from './admin/TemplateGrid';
+import { PrintNode } from './admin/PrintNode';
 
 interface AdminProps {
   session: any;
 }
 
 export function Admin({ session }: AdminProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);
@@ -96,7 +97,7 @@ export function Admin({ session }: AdminProps) {
           <div>
              <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-1">Managed Services / {activeTab}</h2>
              <p className="text-xl font-black uppercase tracking-tight italic">
-               {session.user.user_metadata.full_name || 'Admin'} Console
+               {session.user.user_metadata.full_name || 'Admin'} • Avrina v1.0
              </p>
           </div>
           <div className="flex items-center gap-4">
@@ -143,6 +144,8 @@ export function Admin({ session }: AdminProps) {
               {activeTab === 'prints' && <PrintQueue jobs={printJobs} onUpdate={fetchData} />}
 
               {activeTab === 'templates' && <TemplateGrid />}
+
+              {activeTab === 'print_node' && <PrintNode />}
             </>
           )}
         </div>

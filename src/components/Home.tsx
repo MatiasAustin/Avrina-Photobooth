@@ -12,7 +12,7 @@ export function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 p-8 flex items-center justify-between backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-2">
            <Camera className="w-6 h-6" />
-           <span className="font-black uppercase tracking-tighter text-xl">Lux Booth</span>
+           <span className="font-black uppercase tracking-tighter text-xl">Avrina <span className="text-white/30">v1.0</span></span>
         </div>
         <div className="flex items-center gap-8 text-xs font-mono uppercase tracking-widest text-neutral-400">
           <Link to="/login" className="hover:text-white transition-colors">Login</Link>
@@ -37,7 +37,7 @@ export function Home() {
              transition={{ delay: 0.1 }}
              className="text-7xl md:text-9xl font-black tracking-tighter leading-[0.85] uppercase"
            >
-             Scale Your <br/><span className="text-white/20">Booth Empire</span>
+             Freeze Your <br/><span className="text-white/20">Moment</span>
            </motion.h1>
            
            <motion.p 
@@ -46,7 +46,7 @@ export function Home() {
              transition={{ delay: 0.2 }}
              className="max-w-2xl mx-auto text-neutral-400 text-lg md:text-xl font-medium tracking-tight"
            >
-             The complete SaaS platform for professional photobooth operators. Centralized monitoring, real-time stats, and premium photography flow.
+             The complete SaaS platform for professional photobooth operators. Avrina Photobooth provides centralized monitoring, real-time stats, and premium photography flow.
            </motion.p>
 
            <motion.div 
@@ -97,7 +97,7 @@ export function Home() {
       {/* Footer */}
       <footer className="py-20 px-6 text-center border-t border-white/5">
          <p className="text-neutral-600 font-mono text-[10px] uppercase tracking-[0.3em]">
-           &copy; 2024 Lux Booth Technologies • Built for Scale
+           &copy; 2024 Avrina Photobooth • Frozen in time
          </p>
       </footer>
     </div>

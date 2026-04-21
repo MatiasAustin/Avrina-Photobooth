@@ -36,9 +36,9 @@ export function Login() {
            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
               <Camera className="w-8 h-8 text-white" />
            </div>
-           <h1 className="text-4xl font-bold tracking-tight uppercase">Welcome Back</h1>
-           <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest leading-relaxed">
-             Access your photobooth network <br/> & central monitoring
+           <h1 className="text-4xl font-bold tracking-tight uppercase leading-none">Avrina <span className="text-white/30">Console</span></h1>
+           <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em] leading-relaxed">
+             Freeze your moment • central network
            </p>
         </div>
 

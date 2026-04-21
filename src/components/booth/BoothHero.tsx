@@ -15,10 +15,10 @@ export function BoothHero({ onStart }: BoothHeroProps) {
     >
       <div className="space-y-4">
         <h1 className="text-7xl md:text-8xl font-sans font-bold tracking-tighter text-white">
-          LUX BOOTH
+          AVRINA <span className="text-white/20 italic">v1.0</span>
         </h1>
         <p className="text-lg text-neutral-400 font-mono tracking-widest uppercase italic">
-          Modern Memories • Captured
+          Freeze your moment
         </p>
       </div>
       

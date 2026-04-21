@@ -35,11 +35,11 @@ export function SessionSummary({ eventName, photoUrl, onPrint, onReset }: Sessio
 
           <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
             <div className="bg-white p-2 rounded-lg shrink-0">
-              <QRCodeSVG value={`https://drive.google.com/drive/folders/mock`} size={64} />
+              <QRCodeSVG value={`${window.location.origin}/gallery/${sessionId}`} size={64} />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-widest">Share on Social</p>
-              <p className="text-[10px] text-neutral-500 font-mono">Scan to access the event folder on Google Drive</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-glow">Instant Access</p>
+              <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-tighter">Scan to download your photos from the Avrina Cloud</p>
             </div>
           </div>
         </div>

@@ -43,12 +43,12 @@ export function Register() {
         className="w-full max-w-md space-y-12 relative z-10"
       >
         <div className="text-center space-y-4">
-           <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
-              <Camera className="w-8 h-8" />
+           <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+              <Camera className="w-8 h-8 text-white" />
            </div>
-           <h1 className="text-4xl font-bold tracking-tight uppercase">Get Started</h1>
-           <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest">
-             Level up your event business
+           <h1 className="text-4xl font-bold tracking-tight uppercase leading-none">Join <span className="text-white/30">Avrina</span></h1>
+           <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em] leading-relaxed">
+             Freeze your moment • Start your SaaS journey
            </p>
         </div>
 

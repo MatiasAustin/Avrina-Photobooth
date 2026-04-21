@@ -258,7 +258,7 @@ export function Booth() {
        <div className="max-w-md w-full bg-neutral-900 border border-white/10 p-12 rounded-[40px] text-center space-y-6">
           <h2 className="text-2xl font-bold uppercase tracking-tight">Access Denied</h2>
           <p className="text-neutral-500 mb-8">{error}</p>
-          <button onClick={() => navigate('/')} className="w-full py-4 bg-white text-black font-bold rounded-2xl uppercase text-xs tracking-widest">Back to Lux Booth</button>
+          <button onClick={() => navigate('/')} className="w-full py-4 bg-white text-black font-bold rounded-2xl uppercase text-xs tracking-widest">Back to Home</button>
        </div>
     </div>
   );
@@ -284,7 +284,7 @@ export function Booth() {
         {['countdown', 'capture', 'review_shot'].includes(state) && (
           <CaptureStage 
             videoRef={videoRef}
-            selectedTemplate={selectedTemplate ? { ...selectedTemplate, imageUrl: selectedTemplate.image_url } : null}
+            selectedTemplate={selectedTemplate}
             countdown={countdown}
             currentShot={currentShot}
             totalShots={event?.shot_count || 3}
@@ -305,6 +305,7 @@ export function Booth() {
 
         {state === 'summary' && (
           <SessionSummary 
+            sessionId={session?.id}
             eventName={event?.name}
             photoUrl={capturedPhotos[0]}
             onPrint={handlePrint}
