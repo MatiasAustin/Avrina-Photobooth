@@ -283,12 +283,12 @@ export function Booth() {
         }))
       );
 
-      const drawSingleStrip = (offsetX: number) => {
+      const drawSingleStrip = (offsetX: number, photoOffset: number) => {
         const photoWidth = stripWidth - (margin * 2);
         const photoHeight = (stripHeight - (margin * (slots + 2))) / (slots + 0.8);
 
         for (let i = 0; i < slots; i++) {
-          const img = loadedImages[i] || loadedImages[0];
+          const img = loadedImages[i + photoOffset] || loadedImages[i] || loadedImages[0];
           if (!img || !img.complete || img.naturalWidth === 0) {
             ctx.fillStyle = '#eeeeee';
             ctx.fillRect(offsetX + margin, margin + i * (photoHeight + margin), photoWidth, photoHeight);
@@ -310,8 +310,8 @@ export function Booth() {
         ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
       };
 
-      drawSingleStrip(0);
-      drawSingleStrip(stripWidth);
+      drawSingleStrip(0, 0); // Strip kiri: Foto 1, 2, 3
+      drawSingleStrip(stripWidth, 3); // Strip kanan: Foto 4, 5, 6
 
       const result = canvas.toDataURL('image/jpeg', 0.8);
       // Fail-safe: if string is too short, the canvas export failed
