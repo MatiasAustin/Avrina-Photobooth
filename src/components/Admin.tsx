@@ -13,6 +13,10 @@ import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
 import { UserProfile } from './admin/UserProfile';
 
+interface AdminProps {
+  session: any;
+}
+
 export function Admin({ session }: AdminProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
