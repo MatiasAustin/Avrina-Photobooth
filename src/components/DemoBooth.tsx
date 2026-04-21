@@ -14,7 +14,7 @@ const MOCK_EVENT = {
   id: 'demo-event',
   name: 'AVRINA TRIAL BOOTH',
   timer: 3,
-  shot_count: 3,
+  shot_count: 6,
   price: 0,
   slug: 'demo'
 };
@@ -25,13 +25,6 @@ const MOCK_TEMPLATES = [
     event_id: 'demo-event',
     name: 'Clean White', 
     image_url: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80',
-    created_at: new Date().toISOString()
-  },
-  { 
-    id: 't2', 
-    event_id: 'demo-event',
-    name: 'Dark Studio', 
-    image_url: 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80',
     created_at: new Date().toISOString()
   }
 ];
@@ -49,7 +42,11 @@ export function DemoBooth() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleStart = () => setState('template_selection');
+  const handleStart = () => {
+    // Skip template selection as requested
+    setSelectedTemplate(MOCK_TEMPLATES[0]);
+    proceedToCapture();
+  };
 
   const activeStream = useRef<MediaStream | null>(null);
 
@@ -138,19 +135,24 @@ export function DemoBooth() {
     }
   };
 
-  // Simplified strip generation for Demo (same logic as Booth but local)
+  // High quality strip generation for 6 frames
   const generatePhotoStrip = async (photos: string[]) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return photos[0];
 
     const stripWidth = 600;
-    const stripHeight = 1800;
-    const margin = 40;
-    const photoSize = stripWidth - (margin * 2);
+    const margin = 30;
+    const photoWidth = stripWidth - (margin * 2);
+    const photoHeight = photoWidth; // Square frames for classic strip look
+    
+    // Total height: 6 photos + gaps + branding
+    const stripHeight = (margin * 7) + (photoHeight * 6) + 150; 
 
     canvas.width = stripWidth;
     canvas.height = stripHeight;
+    
+    // Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, stripWidth, stripHeight);
 
@@ -162,21 +164,48 @@ export function DemoBooth() {
       }))
     );
 
-    loadedImages.slice(0, 3).forEach((img, i) => {
-        const y = margin + i * (photoSize + margin);
-        ctx.drawImage(img, margin, y, photoSize, photoSize);
+    loadedImages.slice(0, 6).forEach((img, i) => {
+        const y = margin + i * (photoHeight + margin);
+        
+        // NO STRETCH LOGIC: Center Crop (Object-fit: cover)
+        const imgAspect = img.width / img.height;
+        const targetAspect = photoWidth / photoHeight;
+        
+        let sx, sy, sw, sh;
+        if (imgAspect > targetAspect) {
+          // Image is wider than target
+          sh = img.height;
+          sw = img.height * targetAspect;
+          sx = (img.width - sw) / 2;
+          sy = 0;
+        } else {
+          // Image is taller than target
+          sw = img.width;
+          sh = img.width / targetAspect;
+          sx = 0;
+          sy = (img.height - sh) / 2;
+        }
+
+        ctx.drawImage(img, sx, sy, sw, sh, margin, y, photoWidth, photoHeight);
+        
+        // Subtle frame around photo
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(margin, y, photoWidth, photoHeight);
     });
 
-    // Branding for Demo
+    // High fidelity Branding
     ctx.fillStyle = '#000000';
-    ctx.font = 'bold 30px sans-serif';
+    ctx.font = 'black 32px sans-serif'; // Note: 'black' might need '900'
     ctx.textAlign = 'center';
-    ctx.fillText('AVRINA TRIAL', stripWidth/2, stripHeight - 120);
-    ctx.font = '20px serif';
+    ctx.letterSpacing = '4px';
+    ctx.fillText('AVRINA TRIAL', stripWidth/2, stripHeight - 80);
+    
+    ctx.font = '14px monospace';
     ctx.fillStyle = '#999999';
-    ctx.fillText('Trial Mode • Saved to Device', stripWidth/2, stripHeight - 80);
+    ctx.fillText(new Date().toLocaleDateString().toUpperCase(), stripWidth/2, stripHeight - 45);
 
-    return canvas.toDataURL('image/jpeg', 0.9);
+    return canvas.toDataURL('image/jpeg', 0.95);
   };
 
   const handleFinalize = async (arrangedPhotos: string[]) => {
