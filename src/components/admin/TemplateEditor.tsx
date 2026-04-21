@@ -20,6 +20,9 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [fontFamily, setFontFamily] = useState('sans-serif');
+  const [stickers, setStickers] = useState<any[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragTarget, setDragTarget] = useState<number | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -52,28 +55,40 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         });
       }
 
-      // 2. Draw Sample Photo Slots (for preview only)
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      // 2. Draw Sample Photo Slots (Realistic Preview)
       const margin = 40;
       const photoH = (h - (margin * 5)) / 4.5;
       const photoW = w - (margin * 2);
 
       for (let i = 0; i < 4; i++) {
         const y = margin + i * (photoH + margin);
+        
+        // Shadow for photos
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 4;
+        
+        ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(margin, y, photoW, photoH);
         
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Photo Border
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 1;
         ctx.strokeRect(margin, y, photoW, photoH);
-        
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.font = 'italic 20px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Photo ${i+1} Area`, w/2, y + photoH/2);
-        ctx.fillStyle = 'rgba(0,0,0,0.05)';
       }
 
-      // 3. Footer Area
+      // 3. Draw Stickers
+      for (const sticker of stickers) {
+        ctx.font = `${sticker.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sticker.content, sticker.x, sticker.y);
+      }
+
+      // 4. Footer Area
       const footerY = h - photoH - margin;
       
       // Logo
@@ -104,7 +119,58 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     };
 
     drawPreview();
-  }, [bgColor, textColor, heading, subheading, logo, bgImage, fontFamily]);
+  }, [bgColor, textColor, heading, subheading, logo, bgImage, fontFamily, stickers]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const scale = 600 / rect.width;
+    const x = (e.clientX - rect.left) * scale;
+    const y = (e.clientY - rect.top) * scale;
+
+    // Find if we clicked on a sticker
+    const hitIdx = stickers.findIndex(s => {
+      const dist = Math.sqrt((s.x - x)**2 + (s.y - y)**2);
+      return dist < s.size;
+    });
+
+    if (hitIdx !== -1) {
+      setIsDragging(true);
+      setDragTarget(hitIdx);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging || dragTarget === null) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scale = 600 / rect.width;
+    const x = (e.clientX - rect.left) * scale;
+    const y = (e.clientY - rect.top) * scale;
+
+    const newStickers = [...stickers];
+    newStickers[dragTarget] = { ...newStickers[dragTarget], x, y };
+    setStickers(newStickers);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setDragTarget(null);
+  };
+
+  const addSticker = (content: string) => {
+    setStickers([...stickers, { 
+      id: Date.now().toString(), 
+      content, 
+      x: 300, 
+      y: 1500, 
+      size: 80 
+    }]);
+  };
 
   const handleFileUpload = (type: 'logo' | 'bg', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,6 +218,14 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         exCtx.fillRect(margin, y, photoW, photoH);
       }
       exCtx.globalCompositeOperation = 'source-over';
+
+      // Stickers
+      for (const sticker of stickers) {
+        exCtx.font = `${sticker.size}px serif`;
+        exCtx.textAlign = 'center';
+        exCtx.textBaseline = 'middle';
+        exCtx.fillText(sticker.content, sticker.x, sticker.y);
+      }
 
       // Footer Assets
       if (logo) {
@@ -274,6 +348,22 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
             </div>
 
             <div className="space-y-4">
+               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><Palette className="w-3 h-3"/> Stickers & Props</label>
+               <div className="grid grid-cols-4 gap-2">
+                  {['❤️', '✨', '🌸', '🥳', '🎁', '⭐', '💍', '🥂'].map(s => (
+                    <button 
+                      key={s} 
+                      onClick={() => addSticker(s)}
+                      className="aspect-square bg-black/40 border border-white/5 rounded-xl flex items-center justify-center text-xl hover:bg-white hover:text-black transition-all"
+                    >
+                      {s}
+                    </button>
+                  ))}
+               </div>
+               <p className="text-[8px] text-neutral-600 uppercase tracking-widest text-center mt-2">Tap to add, drag on canvas to position</p>
+            </div>
+
+            <div className="space-y-4">
                <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><ImageIcon className="w-3 h-3"/> Branding</label>
                <div className="flex gap-2">
                  <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white hover:text-black transition-all">
@@ -307,7 +397,11 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
          <div className="relative shadow-[0_0_100px_rgba(255,255,255,0.05)] rounded-2xl overflow-hidden animate-in zoom-in duration-700">
             <canvas 
               ref={canvasRef} 
-              className="max-h-[85vh] w-auto bg-white rounded-sm shadow-2xl"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              className="max-h-[85vh] w-auto bg-white rounded-sm shadow-2xl cursor-crosshair"
             />
          </div>
 
