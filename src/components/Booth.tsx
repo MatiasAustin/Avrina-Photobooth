@@ -79,10 +79,11 @@ export function Booth() {
   const handleStart = async () => {
     if (!event) return;
     
-    if (event.qris_enabled && event.price > 0) {
+    if (event.price > 0) {
+      // Always require payment confirmation if price is set
       setState('payment');
       
-      // 1. Create a pending session record for the admin to confirm
+      // Create a pending session record for the admin to confirm
       const { data, error } = await supabase
         .from('sessions')
         .insert({
@@ -97,8 +98,12 @@ export function Booth() {
         setCurrentSessionId(data.id);
       } else {
         console.error("Failed to create pending session", error);
+        // Fallback: proceed without tracking if DB fails
+        setState('template_selection');
+        if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
       }
     } else {
+      // Free booth - start immediately
       setState('template_selection');
       if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
     }
