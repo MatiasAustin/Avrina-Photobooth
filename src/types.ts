@@ -22,7 +22,6 @@ export interface Session {
   id: string;
   eventId: string;
   photos: string[];
-  enhancedPhotos?: string[];
   templateId?: string;
   paymentStatus: 'pending' | 'paid' | 'free';
   paymentId?: string;
@@ -45,5 +44,4 @@ export type BoothState =
   | 'capture' 
   | 'review_shot'
   | 'review' 
-  | 'enhancing' 
   | 'summary';

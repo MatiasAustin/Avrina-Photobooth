@@ -239,8 +239,6 @@ export function Booth() {
   };
 
   const handleFinalize = async () => {
-    setState('enhancing');
-    
     // Create session via API
     try {
       const res = await fetch("/api/sessions", {
@@ -256,14 +254,11 @@ export function Booth() {
       });
       const sessionData = await res.json();
       setSession(sessionData);
+      setState('summary');
     } catch (e) {
       console.error("Session creation error", e);
+      setState('summary'); // Proceed even on error for now
     }
-
-    // Mock AI Enhancement with Gemini (simulated)
-    setTimeout(() => {
-      setState('summary');
-    }, 3000);
   };
 
   const handlePrint = async () => {
@@ -352,23 +347,7 @@ export function Booth() {
           />
         )}
 
-        {state === 'enhancing' && (
-          <motion.div 
-            key="enhancing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="z-10 text-center space-y-8"
-          >
-            <div className="relative w-24 h-24 mx-auto">
-              <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-              <div className="absolute inset-0 border-4 border-t-white rounded-full animate-spin" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold uppercase tracking-widest">Applying AI Magic</h2>
-              <p className="text-neutral-500 font-mono text-xs uppercase tracking-tighter">Auto-balancing colors • Framing • Enhancing Details</p>
-            </div>
-          </motion.div>
-        )}
+
 
         {state === 'summary' && (
           <SessionSummary 
