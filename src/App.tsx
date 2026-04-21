@@ -7,6 +7,7 @@ import { Home } from './components/Home';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
 import { PublicGallery } from './components/gallery/PublicGallery';
+import { Launchpad } from './components/Launchpad';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -50,6 +51,10 @@ export default function App() {
         
         <Route path="/booth/:slug" element={<Booth />} />
         <Route path="/gallery/:sessionId" element={<PublicGallery />} />
+        <Route 
+          path="/launchpad" 
+          element={session ? <Launchpad session={session} /> : <Navigate to="/login" />} 
+        />
         
         {/* Legacy support for #admin hash */}
         <Route path="*" element={<Navigate to="/" />} />

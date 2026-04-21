@@ -1,6 +1,7 @@
-import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe } from 'lucide-react';
+import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe, Copy, Check } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { cn } from '../../lib/utils';
 
 interface EventListProps {
   userId: string;
@@ -11,6 +12,14 @@ interface EventListProps {
 export function EventList({ userId, events, onUpdate }: EventListProps) {
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyLink = (slug: string, id: string) => {
+    const url = `${window.location.origin}/booth/${slug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,8 +109,31 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                </div>
                <div className="flex items-center gap-2 shrink-0">
                   <button 
+                    onClick={() => copyLink(event.slug, event.id)}
+                    className={cn(
+                      "p-3 rounded-xl border transition-all flex items-center gap-2",
+                      copiedId === event.id 
+                        ? "bg-green-500 border-green-500 text-white" 
+                        : "bg-white/5 border-white/10 text-neutral-400 hover:bg-white hover:text-black"
+                    )}
+                    title="Copy Booth Link"
+                  >
+                    {copiedId === event.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest hidden lg:block">
+                      {copiedId === event.id ? 'Copied' : 'Copy Link'}
+                    </span>
+                  </button>
+                  <button 
+                    onClick={() => window.open(`/booth/${event.slug}`, '_blank')}
+                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all text-neutral-400"
+                    title="Launch Booth"
+                  >
+                    <Globe className="w-5 h-5" />
+                  </button>
+                  <button 
                     onClick={() => setEditingEvent(event)}
-                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all"
+                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all text-neutral-400"
+                    title="Settings"
                   >
                     <Settings className="w-5 h-5" />
                   </button>

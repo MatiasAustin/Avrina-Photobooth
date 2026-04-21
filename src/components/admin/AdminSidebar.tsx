@@ -42,7 +42,14 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 space-y-2 border-t border-white/5">
+        <button 
+          onClick={() => navigate('/launchpad')}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-white/5 text-white hover:bg-white hover:text-black transition-all border border-white/10"
+        >
+          <Zap className="w-4 h-4 text-glow" />
+          Station Launchpad
+        </button>
         <button 
           onClick={() => navigate('/')}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-neutral-500 hover:text-white hover:bg-white/5 transition-all"
