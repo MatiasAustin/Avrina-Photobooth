@@ -29,9 +29,9 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
       if (error) throw error;
       setEditingEvent(null);
       onUpdate();
-    } catch (e) {
-      console.error("Save event error", e);
-      alert("Error saving event. Check for unique slug.");
+    } catch (err: any) {
+      console.error("Save event error", err);
+      alert(`Error saving event: ${err.message || 'Check for unique slug.'}`);
     } finally {
       setIsSaving(false);
     }
