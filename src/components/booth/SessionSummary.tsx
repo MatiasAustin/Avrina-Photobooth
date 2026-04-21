@@ -45,14 +45,9 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
           </div>
         </div>
 
-        <div className="w-full md:w-1/2 aspect-square rounded-[32px] overflow-hidden group shadow-2xl relative">
-           <img src={photoUrl} alt="Session result" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-8">
-              <div className="space-y-1">
-                 <p className="text-xs font-bold uppercase tracking-widest text-white/60">{eventName}</p>
-                 <p className="text-lg font-bold">{new Date().toLocaleDateString()}</p>
-              </div>
-           </div>
+        <div className="w-full md:w-1/2 aspect-[2/3] bg-white rounded-[32px] overflow-hidden group shadow-2xl relative">
+           <img src={photoUrl} alt="Session result" className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </div>
       </div>
 

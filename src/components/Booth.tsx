@@ -211,21 +211,88 @@ export function Booth() {
     setState('template_selection');
   };
 
-  const handleFinalize = async () => {
+  const generatePhotoStrip = async (photos: string[]): Promise<string> => {
+    if (!canvasRef.current) return photos[0];
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return photos[0];
+
+    // Strip dimensions (Targeting 4x6 inch paper at 300DPI approx)
+    // One strip is 600x1800. Double strip is 1200x1800.
+    const stripWidth = 600;
+    const stripHeight = 1800;
+    const margin = 40;
+    const photoWidth = stripWidth - (margin * 2);
+    const photoHeight = (stripHeight - (margin * 5)) / 4.5; // Space for photos + footer
+
+    canvas.width = stripWidth * 2;
+    canvas.height = stripHeight;
+
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const drawSingleStrip = async (offsetX: number) => {
+      // Background for strip
+      ctx.fillStyle = '#ffffff'; // Classic white border
+      ctx.fillRect(offsetX, 0, stripWidth, stripHeight);
+
+      // Draw 4 photos
+      for (let i = 0; i < 4; i++) {
+        const photoSrc = photos[i] || photos[0]; // fallback
+        const img = new Image();
+        img.src = photoSrc;
+        await new Promise((resolve) => {
+          img.onload = () => {
+            const y = margin + i * (photoHeight + margin);
+            ctx.drawImage(img, offsetX + margin, y, photoWidth, photoHeight);
+            resolve(null);
+          };
+          img.onerror = resolve;
+        });
+      }
+
+      // Draw Footer (Branding)
+      ctx.fillStyle = '#f3f3f3';
+      ctx.fillRect(offsetX + margin, stripHeight - photoHeight - margin, photoWidth, photoHeight);
+      
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 40px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(event?.name?.toUpperCase() || 'AVRINA PHOTOBOOTH', offsetX + stripWidth / 2, stripHeight - 120);
+      
+      ctx.font = '24px monospace';
+      ctx.fillStyle = '#888888';
+      ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
+    };
+
+    await drawSingleStrip(0);
+    await drawSingleStrip(stripWidth);
+
+    return canvas.toDataURL('image/jpeg', 0.9);
+  };
+
+  const handleFinalize = async (arrangedPhotos: string[]) => {
     try {
+      const finalStrip = await generatePhotoStrip(arrangedPhotos);
+      
       const { data, error } = await supabase
         .from('sessions')
         .insert({
           event_id: event?.id,
-          photos: capturedPhotos,
+          photos: arrangedPhotos,
           template_id: selectedTemplate?.id,
           payment_status: event?.price > 0 ? 'paid' : 'free',
           payment_id: paymentId || '',
+          final_photo_url: finalStrip // We'll add this column or use existing logic
         })
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Update local setCapturedPhotos to the final strip for summary display
+      setCapturedPhotos([finalStrip]);
       setSession(data);
       setState('summary');
     } catch (e) {
