@@ -212,70 +212,83 @@ export function Booth() {
   };
 
   const generatePhotoStrip = async (photos: string[]): Promise<string> => {
-    if (!photos || photos.length === 0) return '';
-    
-    // Create a temporary canvas to avoid conflicts with global refs
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return photos[0];
-
-    const stripWidth = 600;
-    const stripHeight = 1800;
-    const margin = 40;
-    const photoWidth = stripWidth - (margin * 2);
-    const photoHeight = (stripHeight - (margin * 5)) / 4.5;
-
-    canvas.width = stripWidth * 2;
-    canvas.height = stripHeight;
-
-    // Background (Safety White)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const drawSingleStrip = async (offsetX: number) => {
-      // White strip background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(offsetX, 0, stripWidth, stripHeight);
-
-      // Draw 3 photos (User requested 3 ke bawah)
-      const slots = 3;
-      const photoHeight = (stripHeight - (margin * (slots + 2))) / (slots + 0.8); // Adjusted for taller slots
-
-      for (let i = 0; i < slots; i++) {
-        const photoSrc = photos[i] || photos[i % photos.length]; 
-        const img = new Image();
-        img.src = photoSrc;
-        
-        await new Promise((resolve) => {
-          img.onload = () => {
-            const y = margin + i * (photoHeight + margin);
-            // Draw gray placeholder first
-            ctx.fillStyle = '#f5f5f5';
-            ctx.fillRect(offsetX + margin, y, photoWidth, photoHeight);
-            ctx.drawImage(img, offsetX + margin, y, photoWidth, photoHeight);
-            resolve(null);
-          };
-          img.onerror = resolve;
-          // Security timeout
-          setTimeout(resolve, 2000);
-        });
-      }
-
-      // Draw Footer
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 36px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(event?.name?.toUpperCase() || 'AVRINA PHOTOBOOTH', offsetX + stripWidth / 2, stripHeight - 140);
+    try {
+      if (!photos || photos.length === 0) return '';
       
-      ctx.font = '20px monospace';
-      ctx.fillStyle = '#999999';
-      ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
-    };
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return photos[0];
 
-    await drawSingleStrip(0);
-    await drawSingleStrip(stripWidth);
+      const stripWidth = 600;
+      const stripHeight = 1800;
+      const margin = 40;
+      const slots = 3;
 
-    return canvas.toDataURL('image/jpeg', 0.9);
+      canvas.width = stripWidth * 2;
+      canvas.height = stripHeight;
+
+      // Solid color background first
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Load images with type-specific handling
+      const loadedImages: HTMLImageElement[] = await Promise.all(
+        photos.map(src => new Promise<HTMLImageElement>((resolve) => {
+          const img = new Image();
+          // ONLY use anonymous for external URLs to avoid tainting. Data URLs don't need it.
+          if (src.startsWith('http')) {
+            img.crossOrigin = "anonymous";
+          }
+          img.src = src;
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+            console.warn("Failed to load a photo for strip, using empty placeholder");
+            resolve(img); // Resolve anyway to keep order
+          };
+          setTimeout(() => resolve(img), 2500);
+        }))
+      );
+
+      const drawSingleStrip = (offsetX: number) => {
+        const photoWidth = stripWidth - (margin * 2);
+        const photoHeight = (stripHeight - (margin * (slots + 2))) / (slots + 0.8);
+
+        for (let i = 0; i < slots; i++) {
+          const img = loadedImages[i] || loadedImages[0];
+          if (!img || !img.complete || img.naturalWidth === 0) {
+            ctx.fillStyle = '#eeeeee';
+            ctx.fillRect(offsetX + margin, margin + i * (photoHeight + margin), photoWidth, photoHeight);
+            continue;
+          }
+
+          const y = margin + i * (photoHeight + margin);
+          ctx.drawImage(img, offsetX + margin, y, photoWidth, photoHeight);
+        }
+
+        // Branding
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(event?.name?.toUpperCase() || 'AVRINA NETWORK', offsetX + stripWidth / 2, stripHeight - 140);
+        
+        ctx.font = '20px monospace';
+        ctx.fillStyle = '#999999';
+        ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
+      };
+
+      drawSingleStrip(0);
+      drawSingleStrip(stripWidth);
+
+      const result = canvas.toDataURL('image/jpeg', 0.8);
+      // Fail-safe: if string is too short, the canvas export failed
+      if (result.length < 1000) {
+        throw new Error("Canvas export produced invalid data");
+      }
+      return result;
+    } catch (err) {
+      console.error("Critical: Strip generation failed", err);
+      return photos[0] || '';
+    }
   };
 
   const handleFinalize = async (arrangedPhotos: string[]) => {
