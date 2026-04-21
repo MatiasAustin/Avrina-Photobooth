@@ -37,10 +37,26 @@ export function DevDashboard({ session }: { session: any }) {
   };
 
   const saveSetting = async (key: string, value: any) => {
-    setSavingSettings(true);
-    await supabase.from('system_settings').upsert({ key, value, updated_at: new Date().toISOString() });
-    setSavingSettings(false);
-    fetchSettings();
+    try {
+      setSavingSettings(true);
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ 
+          key, 
+          value, 
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'key' });
+      
+      if (error) throw error;
+      
+      console.log(`Setting ${key} saved successfully`);
+    } catch (err) {
+      console.error('Error saving setting:', err);
+      alert('Gagal menyimpan ke database. Pastikan tabel system_settings sudah dibuat.');
+    } finally {
+      setSavingSettings(false);
+      fetchSettings();
+    }
   };
 
   const handleRoleToggle = async (userId: string, currentRole: string) => {
@@ -204,336 +220,363 @@ export function DevDashboard({ session }: { session: any }) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
-      {/* Sidebar / Navigation */}
-      <div className="max-w-7xl mx-auto p-8 space-y-12">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30">
+      {/* Background Decor */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/5 blur-[120px] rounded-full" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto p-8 space-y-12">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 pt-4">
           <div className="flex items-center gap-6">
-             <button onClick={() => navigate('/')} className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-neutral-400">
-               <ArrowLeft className="w-5 h-5" />
+             <button 
+               onClick={() => navigate('/')} 
+               className="p-4 bg-white/5 border border-white/10 rounded-[24px] hover:bg-white/10 transition-all text-neutral-400 group"
+             >
+               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
              </button>
-             <div>
-                <h1 className="text-3xl font-black uppercase tracking-tighter">Dev <span className="text-blue-600">Console</span></h1>
-                <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mt-1">Platform Admin Management</p>
+             <div className="space-y-1">
+                <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">
+                  Dev <span className="text-blue-600 italic">Console</span>
+                </h1>
+                <div className="flex items-center gap-2 text-neutral-500">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">Platform Management Active</p>
+                </div>
              </div>
           </div>
           
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+          <div className="flex bg-neutral-900/50 p-1.5 rounded-[24px] border border-white/5 backdrop-blur-xl">
              <button 
                onClick={() => setActiveTab('operators')}
                className={cn(
-                 "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                 activeTab === 'operators' ? "bg-white text-black shadow-xl" : "text-neutral-500 hover:text-white"
+                 "px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                 activeTab === 'operators' 
+                  ? "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
+                  : "text-neutral-500 hover:text-white"
                )}
              >
-               Operators
+               <div className="flex items-center gap-2">
+                 <Users className="w-3.5 h-3.5" /> Operators
+               </div>
              </button>
              <button 
                onClick={() => setActiveTab('settings')}
                className={cn(
-                 "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                 activeTab === 'settings' ? "bg-white text-black shadow-xl" : "text-neutral-500 hover:text-white"
+                 "px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                 activeTab === 'settings' 
+                  ? "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
+                  : "text-neutral-500 hover:text-white"
                )}
              >
-               Settings
+               <div className="flex items-center gap-2">
+                 <Shield className="w-3.5 h-3.5" /> Platform Settings
+               </div>
              </button>
           </div>
         </header>
 
-        {/* Quick Stats */}
+        {/* Global Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-              <div className="flex items-center justify-between">
-                 <Users className="w-5 h-5 text-neutral-500" />
-                 <span className="text-[10px] font-mono text-neutral-500">TOTAL OPERATORS</span>
-              </div>
-              <p className="text-4xl font-black">{stats.total}</p>
-           </div>
-           <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-              <div className="flex items-center justify-between">
-                 <Crown className="w-5 h-5 text-blue-500" />
-                 <span className="text-[10px] font-mono text-neutral-500">PREMIUM SUBS</span>
-              </div>
-              <p className="text-4xl font-black">{stats.premium}</p>
-           </div>
-           <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-              <div className="flex items-center justify-between">
-                 <DollarSign className="w-5 h-5 text-green-500" />
-                 <span className="text-[10px] font-mono text-neutral-500">MRR (ESTIMATED)</span>
-              </div>
-              <p className="text-4xl font-black">Rp {(stats.revenue / 1000).toLocaleString()}k</p>
-           </div>
+           {[
+             { label: 'Total Operators', value: stats.total, icon: Users, color: 'text-neutral-400' },
+             { label: 'Premium Accounts', value: stats.premium, icon: Crown, color: 'text-blue-500' },
+             { label: 'Estimated MRR', value: `Rp ${(stats.revenue / 1000).toLocaleString()}k`, icon: DollarSign, color: 'text-green-500' }
+           ].map((stat, i) => (
+             <div key={i} className="p-8 rounded-[40px] bg-neutral-900/40 border border-white/5 backdrop-blur-md space-y-4 group hover:border-white/10 transition-colors">
+                <div className="flex items-center justify-between">
+                   <div className={cn("p-3 rounded-2xl bg-white/5", stat.color)}>
+                     <stat.icon className="w-5 h-5" />
+                   </div>
+                   <span className="text-[10px] font-black font-mono text-neutral-500 uppercase tracking-widest">{stat.label}</span>
+                </div>
+                <p className="text-4xl font-black tracking-tighter">{stat.value}</p>
+             </div>
+           ))}
         </div>
 
-        {/* User Table Card */}
-        <div className="bg-neutral-900 rounded-[40px] border border-white/5 overflow-hidden">
-          <div className="p-8 border-b border-white/5 flex items-center justify-between">
-             <h3 className="text-lg font-black uppercase tracking-tight">Active Users</h3>
-             <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-                <input 
-                  type="text" 
-                  placeholder="Search by name or ID..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="bg-black/50 border border-white/10 rounded-2xl pl-12 pr-6 py-3 text-sm focus:border-blue-600 outline-none transition-all w-64"
-                />
-             </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-white/5">
-                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-neutral-500">Operator Details</th>
-                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-neutral-500">Status</th>
-                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-neutral-500">Joined Date</th>
-                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-neutral-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
-                <AnimatePresence mode="wait">
-          {activeTab === 'operators' ? (
-            <motion.div 
-              key="operators"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              className="space-y-12"
-            >
-              {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-                    <div className="flex items-center justify-between">
-                       <Users className="w-5 h-5 text-neutral-500" />
-                       <span className="text-[10px] font-mono text-neutral-500 uppercase">Total Operators</span>
-                    </div>
-                    <p className="text-4xl font-black">{stats.total}</p>
-                 </div>
-                 <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-                    <div className="flex items-center justify-between">
-                       <Crown className="w-5 h-5 text-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)]" />
-                       <span className="text-[10px] font-mono text-neutral-500 uppercase">Premium Subs</span>
-                    </div>
-                    <p className="text-4xl font-black">{stats.premium}</p>
-                 </div>
-                 <div className="p-8 rounded-[32px] bg-neutral-900 border border-white/5 space-y-4">
-                    <div className="flex items-center justify-between">
-                       <DollarSign className="w-5 h-5 text-green-500" />
-                       <span className="text-[10px] font-mono text-neutral-500 uppercase">Estimated MRR</span>
-                    </div>
-                    <p className="text-4xl font-black">Rp {(stats.revenue / 1000).toLocaleString()}k</p>
-                 </div>
-              </div>
-
-              {/* User Table Card */}
-              <div className="bg-neutral-900 rounded-[40px] border border-white/5 overflow-hidden shadow-2xl">
-                <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                   <h3 className="text-lg font-black uppercase tracking-tight">Active Users</h3>
-                   <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-                      <input 
-                        type="text" 
-                        placeholder="Search by name or ID..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-black/50 border border-white/10 rounded-2xl pl-12 pr-6 py-3 text-sm focus:border-blue-600 outline-none transition-all w-full md:w-64"
-                      />
-                   </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                        <th className="px-8 py-6">Operator Details</th>
-                        <th className="px-8 py-6">Usage Stats</th>
-                        <th className="px-8 py-6">Status</th>
-                        <th className="px-8 py-6">Joined Date</th>
-                        <th className="px-8 py-6">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-sm font-medium">
-                      {filteredProfiles.map((p) => (
-                        <tr key={p.id} className="group hover:bg-white/5 transition-colors">
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                               <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black text-xs text-neutral-400">
-                                 {p.full_name?.[0] || '?'}
-                               </div>
-                               <div>
-                                  <p className="font-black text-white">{p.full_name || 'Unnamed Operator'}</p>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); copyToClipboard(p.id); }}
-                                    className="text-[10px] text-neutral-500 font-mono hover:text-blue-500 transition-colors flex items-center gap-1.5 group"
-                                  >
-                                    {p.id.slice(0, 8)}... <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100" />
-                                  </button>
-                               </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6">
-                             <div className="flex items-center gap-4">
-                                <div className="text-center px-4 border-r border-white/5">
-                                   <p className="text-white font-black">{p.eventCount}</p>
-                                   <p className="text-[8px] text-neutral-500 uppercase tracking-tighter">Events</p>
-                                </div>
-                                <div className="text-center">
-                                   <p className="text-white font-black">{p.sessionCount}</p>
-                                   <p className="text-[8px] text-neutral-500 uppercase tracking-tighter">Photos</p>
-                                </div>
-                             </div>
-                          </td>
-                          <td className="px-8 py-6">
-                             <div className={cn(
-                               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                               p.subscription_tier === 'pro' 
-                                ? "bg-blue-600/10 text-blue-500 border border-blue-600/20" 
-                                : "bg-white/5 text-neutral-500 border border-white/10"
-                             )}>
-                               {p.subscription_tier === 'pro' ? <Crown className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
-                               {p.subscription_tier === 'pro' ? 'Professional' : 'Free Tier'}
-                             </div>
-                             {p.role === 'admin' && (
-                               <div className="mt-1">
-                                 <span className="text-[8px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-blue-600/20">System Admin</span>
-                               </div>
-                             )}
-                          </td>
-                          <td className="px-8 py-6 text-neutral-500 font-mono text-xs uppercase">
-                            {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </td>
-                          <td className="px-8 py-6">
-                             <div className="flex items-center gap-2 relative">
-                                {p.subscription_tier === 'free' ? (
-                                  <button onClick={(e) => { e.stopPropagation(); updateUserTier(p.id, 'pro'); }} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">
-                                    Set Pro
-                                  </button>
-                                ) : (
-                                  <button onClick={(e) => { e.stopPropagation(); updateUserTier(p.id, 'free'); }} className="px-4 py-2 bg-neutral-800 text-neutral-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-600 transition-all">
-                                    Reset Free
-                                  </button>
-                                )}
-                                <div className="relative">
-                                   <button 
-                                     onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === p.id ? null : p.id); }}
-                                     className={cn(
-                                       "p-2 rounded-xl transition-all",
-                                       activeMenu === p.id ? "bg-white text-black shadow-lg" : "text-neutral-600 hover:text-white bg-white/5"
-                                     )}
-                                   >
-                                      <MoreHorizontal className="w-5 h-5" />
-                                   </button>
-                                   {activeMenu === p.id && (
-                                     <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-800 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                                        <button onClick={(e) => { e.stopPropagation(); handleRoleToggle(p.id, p.role); }} className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 flex items-center gap-3 border-b border-white/5">
-                                           <Shield className="w-3 h-3 text-blue-500" /> {p.role === 'admin' ? 'Set as User' : 'Set as Admin'}
-                                        </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(p.id); }} className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 text-red-500 flex items-center gap-3">
-                                           <UserMinus className="w-3 h-3" /> Delete Data
-                                        </button>
-                                     </div>
-                                   )}
-                                </div>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="settings"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-3xl space-y-12 pb-20"
-            >
-               <div className="space-y-2">
-                  <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Platform <span className="text-neutral-500">Settings</span></h2>
-                  <p className="text-neutral-500 font-medium italic">Konfigurasi operasional dan sistem pembayaran SaaS.</p>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-8">
-                     <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Support WhatsApp Number</label>
+        {/* Main Content Area */}
+        <div className="relative min-h-[500px]">
+          <AnimatePresence mode="wait">
+            {activeTab === 'operators' ? (
+              <motion.div 
+                key="operators"
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 1.02, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-6"
+              >
+                <div className="bg-neutral-900/40 border border-white/5 rounded-[48px] overflow-hidden backdrop-blur-sm shadow-2xl">
+                  <div className="p-10 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                     <div className="space-y-1">
+                        <h3 className="text-xl font-black uppercase tracking-tight">Active Operator Database</h3>
+                        <p className="text-xs text-neutral-500 font-medium italic">Manage and monitor all platform participants.</p>
+                     </div>
+                     <div className="relative">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                         <input 
                           type="text" 
-                          value={settings.support_whatsapp}
-                          onChange={(e) => setSettings({ ...settings, support_whatsapp: e.target.value })}
-                          onBlur={(e) => saveSetting('support_whatsapp', e.target.value)}
-                          className="w-full bg-neutral-900 border border-white/10 rounded-2xl px-6 py-4 font-mono text-sm focus:border-blue-600 outline-none transition-all text-white"
-                          placeholder="e.g. 62812345678"
+                          placeholder="Search name, email, or ID..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          className="bg-black/50 border border-white/5 rounded-[20px] pl-14 pr-8 py-4 text-sm focus:border-blue-600 focus:bg-black/80 outline-none transition-all w-full md:w-80 font-medium"
                         />
-                        <p className="text-[10px] text-neutral-600 italic">Format 62. Digunakan untuk instruksi pembayaran pelanggan.</p>
-                     </div>
-
-                     <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Subscription Price (IDR)</label>
-                        <div className="relative">
-                           <span className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-600 font-black">Rp</span>
-                           <input 
-                             type="number" 
-                             value={settings.subscription_price}
-                             onChange={(e) => setSettings({ ...settings, subscription_price: e.target.value })}
-                             onBlur={(e) => saveSetting('subscription_price', e.target.value)}
-                             className="w-full bg-neutral-900 border border-white/10 rounded-2xl pl-14 pr-6 py-4 font-mono text-sm focus:border-blue-600 outline-none transition-all text-white"
-                           />
-                        </div>
                      </div>
                   </div>
 
-                  <div className="space-y-6">
-                     <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">QRIS Payment Code Image</label>
-                     <div className="relative group aspect-square bg-neutral-900 border-2 border-white/10 rounded-[32px] overflow-hidden flex flex-col items-center justify-center p-8 gap-4 border-dashed hover:border-blue-500/50 transition-all">
-                        {settings.qris_image_url ? (
-                          <>
-                            <img src={settings.qris_image_url} alt="QRIS" className="w-full h-full object-contain" />
-                            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 text-center p-4">
-                               <label className="px-6 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl">
-                                  Ganti Gambar QRIS
-                                  <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
-                               </label>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                             <div className="p-6 bg-white/5 rounded-3xl">
-                                <QrCode className="w-8 h-8 text-neutral-500" />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+                          <th className="px-10 py-8">Operator Identity</th>
+                          <th className="px-10 py-8">Activity Metrics</th>
+                          <th className="px-10 py-8">Platform Status</th>
+                          <th className="px-10 py-8">Account Date</th>
+                          <th className="px-10 py-8">Management</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-sm font-medium">
+                        {filteredProfiles.map((p) => (
+                          <tr key={p.id} className="group hover:bg-white/[0.02] transition-colors">
+                            <td className="px-10 py-8">
+                              <div className="flex items-center gap-5">
+                                 <div className="w-12 h-12 bg-white/5 rounded-[18px] border border-white/10 flex items-center justify-center font-black text-sm text-neutral-400 group-hover:bg-blue-600/10 group-hover:border-blue-600/20 group-hover:text-blue-500 transition-all duration-500">
+                                   {p.full_name?.[0] || '?'}
+                                 </div>
+                                 <div className="space-y-0.5">
+                                    <p className="font-black text-white text-base">{p.full_name || 'Unnamed Operator'}</p>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); copyToClipboard(p.id); }}
+                                      className="text-[10px] text-neutral-500 font-mono hover:text-blue-500 transition-colors flex items-center gap-2 group/id"
+                                    >
+                                      {p.id.slice(0, 12)}... <Copy className="w-3 h-3 opacity-0 group-hover/id:opacity-100 transition-all" />
+                                    </button>
+                                 </div>
+                              </div>
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className="flex items-center gap-6">
+                                  <div className="text-center px-6 border-r border-white/5">
+                                     <p className="text-white font-black text-lg">{p.eventCount}</p>
+                                     <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-black">Events</p>
+                                  </div>
+                                  <div className="text-center">
+                                     <p className="text-white font-black text-lg">{p.sessionCount}</p>
+                                     <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-black">Photos</p>
+                                  </div>
+                               </div>
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className="space-y-2">
+                                 <div className={cn(
+                                   "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.1em]",
+                                   p.subscription_tier === 'pro' 
+                                    ? "bg-blue-600/10 text-blue-500 border border-blue-600/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" 
+                                    : "bg-white/5 text-neutral-500 border border-white/10"
+                                 )}>
+                                   {p.subscription_tier === 'pro' ? <Crown className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                                   {p.subscription_tier === 'pro' ? 'Professional' : 'Free Tier'}
+                                 </div>
+                                 {p.role === 'admin' && (
+                                   <div className="flex items-center gap-2 text-blue-400">
+                                      <Shield className="w-3 h-3" />
+                                      <span className="text-[9px] font-black uppercase tracking-[0.2em] italic">System Admin</span>
+                                   </div>
+                                 )}
+                               </div>
+                            </td>
+                            <td className="px-10 py-8 text-neutral-500 font-mono text-xs uppercase">
+                              {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className="flex items-center gap-3">
+                                  {p.subscription_tier === 'free' ? (
+                                    <button 
+                                      onClick={() => updateUserTier(p.id, 'pro')} 
+                                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                      Set Pro
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      onClick={() => updateUserTier(p.id, 'free')} 
+                                      className="px-5 py-2.5 bg-neutral-800 text-neutral-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-700 transition-all"
+                                    >
+                                      Revoke Pro
+                                    </button>
+                                  )}
+                                  <div className="relative">
+                                     <button 
+                                       onClick={() => setActiveMenu(activeMenu === p.id ? null : p.id)}
+                                       className={cn(
+                                         "p-2.5 rounded-xl transition-all border",
+                                         activeMenu === p.id 
+                                          ? "bg-white text-black border-white shadow-xl scale-110" 
+                                          : "text-neutral-500 hover:text-white bg-white/5 border-white/5"
+                                       )}
+                                     >
+                                        <MoreHorizontal className="w-5 h-5" />
+                                     </button>
+
+                                     <AnimatePresence>
+                                       {activeMenu === p.id && (
+                                         <motion.div 
+                                           initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                           animate={{ opacity: 1, y: 0, scale: 1 }}
+                                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                           className="absolute right-0 top-full mt-4 w-52 bg-neutral-900 border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-2xl"
+                                         >
+                                            <button 
+                                              onClick={() => handleRoleToggle(p.id, p.role)} 
+                                              className="w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 flex items-center gap-3 border-b border-white/5 transition-colors"
+                                            >
+                                               <Shield className="w-4 h-4 text-blue-500" /> {p.role === 'admin' ? 'Change to User' : 'Grant Admin'}
+                                            </button>
+                                            <button 
+                                              onClick={() => handleDeleteUser(p.id)} 
+                                              className="w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 text-red-500 flex items-center gap-3 transition-colors"
+                                            >
+                                               <UserMinus className="w-4 h-4" /> Terminate User
+                                            </button>
+                                         </motion.div>
+                                       )}
+                                     </AnimatePresence>
+                                  </div>
+                               </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="settings"
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 1.02 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-4xl mx-auto space-y-12 pb-32"
+              >
+                 <div className="text-center space-y-4">
+                    <h2 className="text-5xl font-black uppercase tracking-tighter text-white">Platform <span className="text-blue-600 italic underline decoration-white/10">Configuration</span></h2>
+                    <p className="text-neutral-500 font-medium italic text-lg max-w-xl mx-auto">Master controls for subscription fees, support channels, and payment assets.</p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-10">
+                       <div className="bg-neutral-900/40 p-8 rounded-[40px] border border-white/5 backdrop-blur-sm space-y-6">
+                          <div className="flex items-center gap-4 text-blue-500">
+                             <div className="w-10 h-10 bg-blue-600/10 rounded-2xl flex items-center justify-center">
+                               <Users className="w-5 h-5" />
                              </div>
-                             <label className="text-[10px] text-blue-500 font-bold uppercase tracking-widest cursor-pointer hover:underline text-center">
-                                Upload file QRIS<br/>(PNG/JPG)
-                                <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
-                             </label>
-                          </>
-                        )}
-                        {savingSettings && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Zap className="w-8 h-8 animate-spin text-blue-500" /></div>}
-                     </div>
-                  </div>
-               </div>
+                             <h4 className="text-sm font-black uppercase tracking-widest">Support Access</h4>
+                          </div>
+                          
+                          <div className="space-y-3">
+                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Support WhatsApp Number</label>
+                             <input 
+                               type="text" 
+                               value={settings.support_whatsapp}
+                               onChange={(e) => setSettings({ ...settings, support_whatsapp: e.target.value })}
+                               onBlur={(e) => saveSetting('support_whatsapp', e.target.value)}
+                               className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-5 font-mono text-sm focus:border-blue-600 outline-none transition-all text-white placeholder:text-neutral-700 shadow-inner"
+                               placeholder="e.g. 62812345678"
+                             />
+                             <p className="text-[9px] text-neutral-600 italic font-medium">Customer redirect for manual payment confirmation.</p>
+                          </div>
+                       </div>
 
-               <div className="p-8 bg-blue-600/5 border border-blue-600/20 rounded-[32px] flex flex-col md:flex-row md:items-center gap-6 justify-between">
-                  <div className="flex items-center gap-6">
-                     <div className="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-500">
-                        <Activity className="w-6 h-6" />
-                     </div>
-                     <div className="space-y-0.5">
-                        <h4 className="text-xs font-black uppercase tracking-tight text-white">Cloud Autosave Active</h4>
-                        <p className="text-[10px] text-neutral-500 font-medium">Perubahan disimpan otomatis ke database saat Anda selesai mengedit (onBlur).</p>
-                     </div>
-                  </div>
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
+                       <div className="bg-neutral-900/40 p-8 rounded-[40px] border border-white/5 backdrop-blur-sm space-y-6">
+                          <div className="flex items-center gap-4 text-green-500">
+                             <div className="w-10 h-10 bg-green-600/10 rounded-2xl flex items-center justify-center">
+                               <DollarSign className="w-5 h-5" />
+                             </div>
+                             <h4 className="text-sm font-black uppercase tracking-widest">Pricing Model</h4>
+                          </div>
+
+                          <div className="space-y-3">
+                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Subscription Price (IDR)</label>
+                             <div className="relative">
+                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-600 font-bold">IDR</span>
+                                <input 
+                                  type="number" 
+                                  value={settings.subscription_price}
+                                  onChange={(e) => setSettings({ ...settings, subscription_price: e.target.value })}
+                                  onBlur={(e) => saveSetting('subscription_price', e.target.value)}
+                                  className="w-full bg-black/50 border border-white/10 rounded-2xl pl-16 pr-6 py-5 font-mono text-sm focus:border-green-600 outline-none transition-all text-white shadow-inner"
+                                />
+                             </div>
+                             <p className="text-[9px] text-neutral-600 italic font-medium">Platform-wide monthly fee for Professional access.</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="bg-neutral-900/40 p-10 rounded-[48px] border border-white/5 backdrop-blur-sm space-y-8 flex flex-col items-center text-center">
+                       <div className="space-y-2">
+                          <h4 className="text-sm font-black uppercase tracking-widest text-white">Payment Gateway Asset</h4>
+                          <p className="text-[10px] text-neutral-500 italic max-w-[200px]">Displayed to customers during the checkout process.</p>
+                       </div>
+
+                       <div className="relative group aspect-square w-full max-w-[280px] bg-black/40 border-2 border-white/10 rounded-[40px] overflow-hidden flex flex-col items-center justify-center p-8 gap-4 border-dashed hover:border-blue-500/50 transition-all shadow-2xl">
+                          {settings.qris_image_url ? (
+                            <>
+                              <img src={settings.qris_image_url} alt="QRIS" className="w-full h-full object-contain" />
+                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 text-center p-8">
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Change QRIS Asset</p>
+                                 <label className="px-8 py-3.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl">
+                                    Upload New File
+                                    <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
+                                 </label>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                               <div className="p-8 bg-white/5 rounded-3xl border border-white/5">
+                                  <QrCode className="w-10 h-10 text-neutral-700" />
+                                </div>
+                               <div className="space-y-4">
+                                  <label className="px-8 py-3.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-lg block">
+                                     Select QRIS Image
+                                     <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
+                                  </label>
+                                  <p className="text-[9px] text-neutral-600 font-medium uppercase tracking-[0.2em]">PNG or JPG • Max 2MB</p>
+                               </div>
+                            </>
+                          )}
+                          {savingSettings && (
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-20">
+                               <Zap className="w-10 h-10 animate-spin text-blue-500" />
+                               <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">Syncing to Cloud...</p>
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Status Footer */}
+                 <div className="p-10 bg-blue-600 border border-white/10 rounded-[48px] flex flex-col md:flex-row md:items-center gap-8 justify-between shadow-[0_20px_50px_rgba(37,99,235,0.2)]">
+                    <div className="flex items-center gap-6">
+                       <div className="w-16 h-16 bg-white/20 rounded-[24px] flex items-center justify-center text-white backdrop-blur-md shadow-inner">
+                          <Activity className="w-8 h-8" />
+                       </div>
+                       <div className="space-y-1">
+                          <h4 className="text-xl font-black uppercase tracking-tight text-white leading-none">Security Active</h4>
+                          <p className="text-xs text-white/70 font-medium opacity-80 uppercase tracking-widest">Real-time database encryption & autosave enabled.</p>
+                       </div>
+                    </div>
+                    <div className="px-8 py-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">System Verified</span>
+                    </div>
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
