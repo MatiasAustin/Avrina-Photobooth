@@ -331,23 +331,18 @@ export function Booth() {
       if (!finalStripBase64) throw new Error("Generated strip is empty");
       
       // 1. Upload the final strip to Storage
-      const base64Parts = finalStripBase64.split(',');
-      if (base64Parts.length < 2) throw new Error("Invalid base64 data");
-      
-      const base64Data = base64Parts[1];
-      const byteCharacters = atob(base64Data);
-      const byteArray = new Uint8Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteArray[i] = byteCharacters.charCodeAt(i);
-      }
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      // Cleaner way to convert base64 to Blob
+      const blob = await fetch(finalStripBase64).then(r => r.blob());
       
       const fileName = `session-${Date.now()}.jpg`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('result') // Updated to the correct bucket for final photos
+        .from('result')
         .upload(fileName, blob);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Storage Upload Error:", uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}. Make sure RLS policy for 'result' bucket allows public uploads.`);
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('result')
@@ -358,24 +353,26 @@ export function Booth() {
         .from('sessions')
         .insert({
           event_id: event?.id,
-          photos: arrangedPhotos, // Still save individual small photos in JSON
+          photos: arrangedPhotos,
           template_id: selectedTemplate?.id,
           payment_status: event?.price > 0 ? 'paid' : 'free',
           payment_id: paymentId || '',
-          final_photo_url: publicUrl // Store the STORAGE URL, not the base64
+          final_photo_url: publicUrl 
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database Insert Error:", error);
+        throw new Error(`Database save failed: ${error.message}`);
+      }
       
-      // Update local setCapturedPhotos to the final strip URL for summary display
       setCapturedPhotos([publicUrl]);
       setSession(data);
       setState('summary');
-    } catch (e) {
+    } catch (e: any) {
       console.error("Session finalize error", e);
-      alert("Something went wrong finalizing your session. We'll show your photos anyway.");
+      alert(`Finalize Error: ${e.message}`);
       setState('summary');
     }
   };

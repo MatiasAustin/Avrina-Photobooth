@@ -86,21 +86,25 @@ export function ReviewGallery({ photos: initialPhotos, onRetake, onFinalize }: R
         </div>
       </div>
 
-      {/* 2x6 Strip Preview */}
-      <div className="w-full lg:w-80 shrink-0 space-y-6">
-        <h3 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 text-center">Live Strip Preview</h3>
-        <div className="bg-neutral-900/50 p-4 rounded-[40px] border border-white/5 shadow-2xl">
-          <div className="aspect-[1/2] bg-white rounded-2xl overflow-hidden p-3 flex flex-col gap-2">
-            {[...photos, ...Array(Math.max(0, 3 - photos.length)).fill(null)].slice(0, 3).map((p, i) => (
-              <div key={i} className="flex-1 bg-neutral-200 rounded-sm overflow-hidden relative border border-black/5">
-                {p ? <img src={p} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-black/10 font-black text-4xl italic">{i+1}</div>}
+      {/* 2x6 Strip Preview (Double) */}
+      <div className="w-full lg:w-[450px] shrink-0 space-y-6">
+        <h3 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 text-center">Live Strip Preview (Print Layout)</h3>
+        <div className="bg-neutral-900/50 p-6 rounded-[40px] border border-white/5 shadow-2xl">
+          <div className="aspect-[4/6] bg-white rounded-2xl overflow-hidden p-4 flex gap-4">
+            {[0, 1].map((stripIdx) => (
+              <div key={stripIdx} className="flex-1 flex flex-col gap-2">
+                {[...photos, ...Array(Math.max(0, 3 - photos.length)).fill(null)].slice(0, 3).map((p, i) => (
+                  <div key={i} className="flex-1 bg-neutral-200 rounded-sm overflow-hidden relative border border-black/5">
+                    {p ? <img src={p} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-black/10 font-black text-2xl italic">{i+1}</div>}
+                  </div>
+                ))}
+                <div className="h-10 flex flex-col items-center justify-center border-t border-black/5 pt-1">
+                   <span className="text-[6px] font-black text-neutral-400 tracking-tighter italic uppercase text-center leading-none">Avrina Photobooth<br/>v1.0 Strip</span>
+                </div>
               </div>
             ))}
-            <div className="h-12 flex items-center justify-center border-t border-black/5 pt-1">
-               <span className="text-[8px] font-black text-neutral-400 tracking-tighter italic uppercase text-center">Avrina Photobooth<br/>v1.0 Strip</span>
-            </div>
           </div>
-          <p className="text-[8px] text-neutral-600 text-center mt-4 font-mono uppercase tracking-widest">3-Shot Strip Format (Active)</p>
+          <p className="text-[8px] text-neutral-600 text-center mt-4 font-mono uppercase tracking-widest italic">Classic 4x6 Double-Strip Format (3 Shots)</p>
         </div>
       </div>
     </motion.div>

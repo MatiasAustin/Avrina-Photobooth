@@ -45,9 +45,9 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
           </div>
         </div>
 
-        <div className="w-full md:w-1/2 aspect-[2/3] bg-white rounded-[32px] overflow-hidden group shadow-2xl relative">
+        <div className="w-full md:w-1/2 aspect-[4/6] bg-white rounded-[32px] overflow-hidden group shadow-2xl relative border-8 border-white">
            <img src={photoUrl} alt="Session result" className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
         </div>
       </div>
 
