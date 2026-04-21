@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { supabase } from '../lib/supabase';
 import { BoothState, EventConfig, PhotoTemplate, Session } from '../types';
 import { BoothHero } from './booth/BoothHero';
 import { PaymentGate } from './booth/PaymentGate';
@@ -10,14 +12,17 @@ import { SessionSummary } from './booth/SessionSummary';
 import { BoothLayout } from './booth/BoothLayout';
 
 export function Booth() {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  
   const [state, setState] = useState<BoothState>('idle');
-  const [event, setEvent] = useState<EventConfig | null>(null);
+  const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [templates, setTemplates] = useState<PhotoTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<PhotoTemplate | null>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [currentShot, setCurrentShot] = useState(0);
   const [qrisData, setQrisData] = useState<string | null>(null);
@@ -26,75 +31,61 @@ export function Booth() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Initialize event
+  // Initialize event from Supabase
   useEffect(() => {
-    const fetchEvent = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/events/default");
-        if (res.ok) {
-          const eventData = await res.json();
-          setEvent(eventData);
-
-          // Fetch templates
-          const tRes = await fetch(`/api/events/${eventData.id}/templates`);
-          const templatesData = await tRes.json();
-          setTemplates(templatesData);
-          if (templatesData.length > 0) setSelectedTemplate(templatesData[0]);
-        } else {
-          setError("Event not found. Please setup in admin.");
-        }
-      } catch (e) {
-        console.error("Fetch event error", e);
-        setError("Database error. Ensure the server is running.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvent();
-  }, []);
-
-  // Payment polling
-  useEffect(() => {
-    if (state === 'payment' && paymentId) {
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/payments/${paymentId}/status`);
-          const data = await res.json();
-          if (data.status === 'paid') {
-            clearInterval(interval);
-            handlePaymentSuccess();
-          }
-        } catch (e) {
-          console.error("Payment status poll error", e);
-        }
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [state, paymentId]);
-
-  const handleStart = async () => {
-    if (!event) {
-      if (error) alert(error);
+    if (!slug) {
+      setError("No booth selected. Please use a valid booth URL.");
+      setLoading(false);
       return;
     }
-    
-    if (event.qrisEnabled && event.pricing > 0) {
-      setState('payment');
-      try {
-        const res = await fetch('/api/payments/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: event.pricing, sessionId: 'temp' })
-        });
-        const data = await res.json();
-        setQrisData(data.qrisData);
-        setPaymentId(data.paymentId);
-      } catch (e) {
-        console.error("Payment creation error", e);
+
+    const fetchEventData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (eventError || !eventData) {
+        setError("Booth not found or inactive.");
+        setLoading(false);
+        return;
       }
+
+      setEvent(eventData);
+
+      // Fetch templates for this event
+      const { data: templatesData, error: templatesError } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('event_id', eventData.id);
+
+      if (!templatesError && templatesData) {
+        setTemplates(templatesData);
+        if (templatesData.length > 0) setSelectedTemplate(templatesData[0]);
+      }
+
+      setLoading(false);
+    };
+
+    fetchEventData();
+  }, [slug]);
+
+  const handleStart = async () => {
+    if (!event) return;
+    
+    if (event.qris_enabled && event.price > 0) {
+      setState('payment');
+      // Simulated QRIS Generation
+      const qrisData = `00020101021126600013ID.CO.QRIS.WWW0215ID10202100000010303UMI51440014ID.CO.QRIS.WWW0215ID10202100000020303UMI5204481453033605802ID5912LUX_BOOTH_${event.slug.toUpperCase()}6007JAKARTA61051234562070703A016304ABCD`;
+      setQrisData(qrisData);
+      setPaymentId(`PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+      
+      // Auto-success after 5 seconds for simulation
+      setTimeout(handlePaymentSuccess, 5000);
     } else {
       setState('template_selection');
     }
@@ -110,11 +101,7 @@ export function Booth() {
     try {
       if (!activeStream.current) {
         activeStream.current = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            width: { ideal: 1920 }, 
-            height: { ideal: 1080 },
-            facingMode: 'user'
-          } 
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' } 
         });
       }
       
@@ -122,24 +109,17 @@ export function Booth() {
         if (videoRef.current.srcObject !== activeStream.current) {
           videoRef.current.srcObject = activeStream.current;
         }
-        // Force play to ensure preview starts
-        try {
-          await videoRef.current.play();
-        } catch (playErr) {
-          console.warn("Auto-play blocked, retrying on interaction", playErr);
-        }
+        await videoRef.current.play().catch(console.warn);
       }
     } catch (e) {
       console.error("Camera error", e);
-      setError("Camera access required. Please allow camera and refresh.");
+      setError("Camera access required.");
     }
   };
 
-  // Ensure camera starts when entering capture-related states
   useEffect(() => {
     const isCaptureState = ['countdown', 'capture', 'review_shot'].includes(state);
     if (isCaptureState) {
-      // Small delay to ensure CaptureStage component has rendered its video element
       const timeout = setTimeout(startCamera, 100);
       return () => clearTimeout(timeout);
     } else {
@@ -151,9 +131,6 @@ export function Booth() {
     if (activeStream.current) {
       activeStream.current.getTracks().forEach(t => t.stop());
       activeStream.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
     }
   };
 
@@ -180,30 +157,26 @@ export function Booth() {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
-        // Match canvas to video resolution
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         
-        // 1. Draw Camera (Mirrored)
         context.save();
         context.translate(canvasRef.current.width, 0);
         context.scale(-1, 1);
         context.drawImage(videoRef.current, 0, 0);
         context.restore();
 
-        // 2. Overlay Template if exists
         if (selectedTemplate) {
           const templateImg = new Image();
           templateImg.crossOrigin = "anonymous";
-          templateImg.src = selectedTemplate.imageUrl;
+          templateImg.src = selectedTemplate.image_url;
           
           await new Promise((resolve) => {
             templateImg.onload = () => {
-              // Draw template to match video aspect
               context.drawImage(templateImg, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
               resolve(null);
             };
-            templateImg.onerror = resolve; // Continue even if template fails
+            templateImg.onerror = resolve;
           });
         }
 
@@ -222,7 +195,7 @@ export function Booth() {
 
   const handleShotNext = () => {
     const nextShot = currentShot + 1;
-    if (nextShot < (event?.shotCount || 6)) {
+    if (nextShot < (event?.shot_count || 3)) {
       setCurrentShot(nextShot);
       setState('countdown');
       startCountdown();
@@ -239,38 +212,34 @@ export function Booth() {
   };
 
   const handleFinalize = async () => {
-    // Create session via API
     try {
-      const res = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventId: event?.id,
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert({
+          event_id: event?.id,
           photos: capturedPhotos,
-          templateId: selectedTemplate?.id,
-          paymentStatus: event?.qrisEnabled ? 'paid' : 'free',
-          paymentId: paymentId || '',
+          template_id: selectedTemplate?.id,
+          payment_status: event?.price > 0 ? 'paid' : 'free',
+          payment_id: paymentId || '',
         })
-      });
-      const sessionData = await res.json();
-      setSession(sessionData);
+        .select()
+        .single();
+
+      if (error) throw error;
+      setSession(data);
       setState('summary');
     } catch (e) {
       console.error("Session creation error", e);
-      setState('summary'); // Proceed even on error for now
+      setState('summary');
     }
   };
 
   const handlePrint = async () => {
     if (!session) return;
     try {
-      await fetch("/api/print-queue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: session.id,
-          imageUrl: capturedPhotos[0], // Simplified
-        })
+      await supabase.from('print_queue').insert({
+        session_id: session.id,
+        image_url: capturedPhotos[0],
       });
       alert("Photo added to print queue!");
     } catch (e) {
@@ -278,42 +247,29 @@ export function Booth() {
     }
   };
 
+  if (loading) return (
+    <div className="h-screen bg-black flex items-center justify-center">
+       <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="h-screen bg-black flex items-center justify-center p-8">
+       <div className="max-w-md w-full bg-neutral-900 border border-white/10 p-12 rounded-[40px] text-center space-y-6">
+          <h2 className="text-2xl font-bold uppercase tracking-tight">Access Denied</h2>
+          <p className="text-neutral-500 mb-8">{error}</p>
+          <button onClick={() => navigate('/')} className="w-full py-4 bg-white text-black font-bold rounded-2xl uppercase text-xs tracking-widest">Back to Lux Booth</button>
+       </div>
+    </div>
+  );
+
   return (
     <BoothLayout>
-      {loading && (
-        <div className="z-50 fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center">
-          <div className="space-y-4 text-center">
-            <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin mx-auto" />
-            <p className="text-white/40 font-mono text-xs uppercase tracking-widest">Loading Event Session...</p>
-          </div>
-        </div>
-      )}
-      
-      {error && !event && (
-        <div className="z-50 fixed inset-0 bg-black/90 flex items-center justify-center px-8">
-           <div className="max-w-md w-full bg-neutral-900 border border-white/10 p-8 rounded-3xl text-center space-y-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
-                 <div className="w-8 h-8 rounded-full border-4 border-red-500" />
-              </div>
-              <div className="space-y-2">
-                 <h3 className="text-xl font-bold uppercase tracking-tight">Setup Required</h3>
-                 <p className="text-neutral-500 text-sm">{error}</p>
-              </div>
-              <button 
-                onClick={() => window.location.hash = '#admin'}
-                className="w-full py-4 bg-white text-black font-bold rounded-2xl uppercase tracking-widest text-xs"
-              >
-                 Go to Admin Dashboard
-              </button>
-           </div>
-        </div>
-      )}
-
       <AnimatePresence mode="wait">
         {state === 'idle' && <BoothHero onStart={handleStart} />}
         
         {state === 'payment' && (
-          <PaymentGate price={event?.pricing || 0} qrisData={qrisData} />
+          <PaymentGate price={event?.price || 0} qrisData={qrisData} />
         )}
 
         {state === 'template_selection' && (
@@ -328,10 +284,10 @@ export function Booth() {
         {['countdown', 'capture', 'review_shot'].includes(state) && (
           <CaptureStage 
             videoRef={videoRef}
-            selectedTemplate={selectedTemplate}
+            selectedTemplate={selectedTemplate ? { ...selectedTemplate, imageUrl: selectedTemplate.image_url } : null}
             countdown={countdown}
             currentShot={currentShot}
-            totalShots={event?.shotCount || 6}
+            totalShots={event?.shot_count || 3}
             lastCapturedPhoto={capturedPhotos[capturedPhotos.length - 1]}
             state={state}
             onRetake={handleShotRetake}
@@ -346,8 +302,6 @@ export function Booth() {
             onFinalize={handleFinalize}
           />
         )}
-
-
 
         {state === 'summary' && (
           <SessionSummary 

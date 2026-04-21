@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
-import { EventConfig, Session, PrintJob } from '../types';
+import { Settings, LogOut, Layout, BarChart, Printer, Calendar } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { AdminSidebar } from './admin/AdminSidebar';
 import { AdminStats } from './admin/AdminStats';
 import { SessionGrid } from './admin/SessionGrid';
@@ -8,80 +8,143 @@ import { EventList } from './admin/EventList';
 import { PrintQueue } from './admin/PrintQueue';
 import { TemplateGrid } from './admin/TemplateGrid';
 
-export function Admin() {
+interface AdminProps {
+  session: any;
+}
+
+export function Admin({ session }: AdminProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints'>('dashboard');
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [events, setEvents] = useState<EventConfig[]>([]);
-  const [printJobs, setPrintJobs] = useState<PrintJob[]>([]);
-  const [isBootstrapping, _setIsBootstrapping] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [printJobs, setPrintJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Data sync via polling (since we are not using Firebase onSnapshot anymore)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [sessRes, eventRes, printRes] = await Promise.all([
-          fetch("/api/sessions"),
-          fetch("/api/events"),
-          fetch("/api/print-queue")
-        ]);
-        
-        if (sessRes.ok) setSessions(await sessRes.json());
-        if (eventRes.ok) setEvents(await eventRes.json());
-        if (printRes.ok) setPrintJobs(await printRes.json());
-      } catch (e) {
-        console.error("Fetch data error", e);
+  const fetchData = async () => {
+    try {
+      // 1. Fetch Events owned by user
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (eventsError) throw eventsError;
+      setEvents(eventsData || []);
+
+      if (eventsData && eventsData.length > 0) {
+        const eventIds = eventsData.map(e => e.id);
+
+        // 2. Fetch Sessions for these events
+        const { data: sessionsData, error: sessionsError } = await supabase
+          .from('sessions')
+          .select('*')
+          .in('event_id', eventIds)
+          .order('created_at', { ascending: false });
+
+        if (sessionsError) throw sessionsError;
+        setSessions(sessionsData || []);
+
+        // 3. Fetch Print Queue for these sessions
+        if (sessionsData && sessionsData.length > 0) {
+             const sessionIds = sessionsData.map(s => s.id);
+             const { data: printData, error: printError } = await supabase
+               .from('print_queue')
+               .select('*')
+               .in('session_id', sessionIds)
+               .order('created_at', { ascending: false });
+             
+             if (printError) throw printError;
+             setPrintJobs(printData || []);
+        }
       }
-    };
+    } catch (e) {
+      console.error("Dashboard fetch error", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Set up real-time subscription for print queue and sessions
+    const sub = supabase.channel('admin-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'print_queue' }, fetchData)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, [session.user.id]);
 
   const totalRevenue = sessions
-    .filter(s => s.paymentStatus === 'paid')
-    .length * (events[0]?.pricing || 0);
+    .filter(s => s.payment_status === 'paid')
+    .reduce((acc, s) => {
+      const event = events.find(e => e.id === s.event_id);
+      return acc + (event?.price || 0);
+    }, 0);
+
+  const handleLogout = () => supabase.auth.signOut();
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden text-white">
+    <div className="flex h-screen bg-black overflow-hidden text-white font-sans">
       <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-neutral-950">
+      <main className="flex-1 overflow-y-auto bg-neutral-950 pb-20">
         <header className="p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-neutral-950/80 backdrop-blur-xl z-20">
           <div>
-             <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Overview / {activeTab}</h2>
-             <p className="text-lg font-bold">Manage your installation</p>
+             <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-1">Managed Services / {activeTab}</h2>
+             <p className="text-xl font-black uppercase tracking-tight italic">
+               {session.user.user_metadata.full_name || 'Admin'} Console
+             </p>
           </div>
           <div className="flex items-center gap-4">
-             <div className="px-4 py-2 bg-neutral-900 border border-white/10 rounded-full flex items-center gap-2 text-xs font-mono">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                SQLite Backend Active
+             <div className="px-4 py-2 bg-neutral-900 border border-white/10 rounded-full flex items-center gap-2 text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                Network Online
              </div>
-             <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-colors">
-                <Settings className="w-5 h-5" />
+             <button 
+               onClick={handleLogout}
+               className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500 hover:text-white transition-all text-neutral-400"
+               title="Sign Out"
+             >
+                <LogOut className="w-5 h-5" />
              </button>
           </div>
         </header>
 
         <div className="p-8 max-w-7xl mx-auto space-y-12">
-          {activeTab === 'dashboard' && (
-            <div className="space-y-12">
-              <AdminStats 
-                sessionCount={sessions.length}
-                revenue={totalRevenue}
-                queueCount={printJobs.filter(j => j.status === 'queued').length}
-                eventCount={events.length}
-              />
-              <SessionGrid sessions={sessions} />
-            </div>
+          {loading ? (
+             <div className="flex items-center justify-center py-20">
+                <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+             </div>
+          ) : (
+            <>
+              {activeTab === 'dashboard' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <AdminStats 
+                    sessionCount={sessions.length}
+                    revenue={totalRevenue}
+                    queueCount={printJobs.filter(j => j.status === 'queued').length}
+                    eventCount={events.length}
+                  />
+                  <div className="space-y-6">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Recent Sessions</h3>
+                     </div>
+                     <SessionGrid sessions={sessions} />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'events' && <EventList userId={session.user.id} events={events} onUpdate={fetchData} />}
+
+              {activeTab === 'prints' && <PrintQueue jobs={printJobs} onUpdate={fetchData} />}
+
+              {activeTab === 'templates' && <TemplateGrid />}
+            </>
           )}
-
-          {activeTab === 'events' && <EventList events={events} />}
-
-          {activeTab === 'prints' && <PrintQueue jobs={printJobs} />}
-
-          {activeTab === 'templates' && <TemplateGrid />}
         </div>
       </main>
     </div>

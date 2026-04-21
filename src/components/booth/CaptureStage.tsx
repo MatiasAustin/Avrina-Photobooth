@@ -77,7 +77,7 @@ export function CaptureStage({
         {/* Template Overlay Preview - Lower opacity during live preview so user can see themselves */}
         {selectedTemplate && (
           <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 ${state === 'review_shot' ? 'opacity-30' : 'opacity-40'}`}>
-            <img src={selectedTemplate.imageUrl} className="w-full h-full object-cover mix-blend-screen" referrerPolicy="no-referrer" />
+            <img src={selectedTemplate.image_url} className="w-full h-full object-cover mix-blend-screen" referrerPolicy="no-referrer" />
           </div>
         )}
 
