@@ -62,7 +62,8 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
       price: 0,
       qris_enabled: false,
       is_active: true,
-      session_timeout: 10
+      session_timeout: 10,
+      qris_image_url: ''
     });
   };
 
@@ -209,6 +210,16 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                        onChange={e => setEditingEvent({...editingEvent, price: parseInt(e.target.value)})}
                        className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono"
                      />
+                  </div>
+
+                  <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">QRIS Image URL (Optional)</label>
+                      <input 
+                        value={editingEvent.qris_image_url || ''}
+                        onChange={e => setEditingEvent({...editingEvent, qris_image_url: e.target.value})}
+                        placeholder="https://...link-ke-gambar-qris.jpg"
+                        className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono"
+                      />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

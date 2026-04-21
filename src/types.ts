@@ -9,6 +9,7 @@ export interface EventConfig {
   qris_enabled: boolean;
   is_active: boolean;
   session_timeout: number; // in minutes
+  qris_image_url?: string;
   created_at: string;
 }
 

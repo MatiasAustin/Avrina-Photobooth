@@ -1,4 +1,4 @@
-import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap } from 'lucide-react';
+import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'events', label: 'Events Registry', icon: Calendar },
     { id: 'templates', label: 'Templates', icon: ImageIcon },
+    { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'prints', label: 'Print Queue', icon: Printer },
     { id: 'print_node', label: 'Remote Print Node', icon: Zap },
   ];

@@ -8,13 +8,14 @@ import { EventList } from './admin/EventList';
 import { PrintQueue } from './admin/PrintQueue';
 import { TemplateGrid } from './admin/TemplateGrid';
 import { PrintNode } from './admin/PrintNode';
+import { PaymentManager } from './admin/PaymentManager';
 
 interface AdminProps {
   session: any;
 }
 
 export function Admin({ session }: AdminProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);
@@ -142,6 +143,8 @@ export function Admin({ session }: AdminProps) {
               {activeTab === 'events' && <EventList userId={session.user.id} events={events} onUpdate={fetchData} />}
 
               {activeTab === 'prints' && <PrintQueue jobs={printJobs} onUpdate={fetchData} />}
+
+              {activeTab === 'payments' && <PaymentManager />}
 
               {activeTab === 'templates' && <TemplateGrid />}
 

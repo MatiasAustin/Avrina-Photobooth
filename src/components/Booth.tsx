@@ -27,6 +27,7 @@ export function Booth() {
   const [currentShot, setCurrentShot] = useState(0);
   const [qrisData, setQrisData] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [globalTimeLeft, setGlobalTimeLeft] = useState<number | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -80,13 +81,23 @@ export function Booth() {
     
     if (event.qris_enabled && event.price > 0) {
       setState('payment');
-      // Simulated QRIS Generation
-      const qrisData = `00020101021126600013ID.CO.QRIS.WWW0215ID10202100000010303UMI51440014ID.CO.QRIS.WWW0215ID10202100000020303UMI5204481453033605802ID5912LUX_BOOTH_${event.slug.toUpperCase()}6007JAKARTA61051234562070703A016304ABCD`;
-      setQrisData(qrisData);
-      setPaymentId(`PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
       
-      // Auto-success after 5 seconds for simulation
-      setTimeout(handlePaymentSuccess, 5000);
+      // 1. Create a pending session record for the admin to confirm
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert({
+          event_id: event.id,
+          payment_status: 'pending',
+          photos: []
+        })
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setCurrentSessionId(data.id);
+      } else {
+        console.error("Failed to create pending session", error);
+      }
     } else {
       setState('template_selection');
       if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
@@ -129,6 +140,33 @@ export function Booth() {
       stopCamera();
     }
   }, [state]);
+
+  // Real-time Payment Confirmation Listener
+  useEffect(() => {
+    if (state !== 'payment' || !currentSessionId) return;
+
+    const channel = supabase
+      .channel(`payment-${currentSessionId}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'sessions', 
+          filter: `id=eq.${currentSessionId}` 
+        },
+        (payload) => {
+          if (payload.new.payment_status === 'paid') {
+            handlePaymentSuccess();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [state, currentSessionId]);
 
   const stopCamera = () => {
     if (activeStream.current) {
@@ -448,7 +486,7 @@ export function Booth() {
         {state === 'idle' && <BoothHero onStart={handleStart} />}
         
         {state === 'payment' && (
-          <PaymentGate price={event?.price || 0} qrisData={qrisData} />
+          <PaymentGate price={event?.price || 0} qrisImageUrl={event?.qris_image_url} />
         )}
 
         {state === 'template_selection' && (
