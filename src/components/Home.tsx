@@ -58,10 +58,10 @@ export function Home() {
              className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8"
            >
              <Link to="/demo" className="w-full sm:w-auto px-12 py-6 bg-blue-600 text-white font-black uppercase tracking-widest rounded-3xl text-sm hover:scale-105 transition-all shadow-[0_20px_50px_rgba(37,99,235,0.3)] flex items-center justify-center gap-3">
-               <Camera className="w-5 h-5" /> Try Live Demo
+               <Camera className="w-5 h-5" /> Launch Live Demo
              </Link>
-             <Link to="/demo-dashboard" className="w-full sm:w-auto px-12 py-6 border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest rounded-3xl text-sm transition-all flex items-center justify-center gap-3">
-               Explore Admin Demo <ArrowRight className="w-4 h-4" />
+             <Link to="/register" className="w-full sm:w-auto px-12 py-6 border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest rounded-3xl text-sm transition-all flex items-center justify-center gap-3">
+               Get Started for Free <ArrowRight className="w-4 h-4" />
              </Link>
            </motion.div>
         </div>

@@ -53,7 +53,6 @@ export default function App() {
         
         <Route path="/booth/:slug" element={<Booth />} />
         <Route path="/demo" element={<DemoBooth />} />
-        <Route path="/demo-dashboard" element={<Admin session={null} isDemo={true} />} />
         <Route path="/gallery/:sessionId" element={<PublicGallery />} />
         <Route 
           path="/launchpad" 

@@ -1,25 +1,24 @@
-import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield, User } from 'lucide-react';
+import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield, User, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: any) => void;
-  isDemo?: boolean;
   isPremium?: boolean;
 }
 
-export function AdminSidebar({ activeTab, onTabChange, isDemo, isPremium = true }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: AdminSidebarProps) {
   const navigate = useNavigate();
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, premium: false },
-    { id: 'subscription', label: 'Subscription', icon: Shield, premium: false },
-    { id: 'profile', label: 'Store Profile', icon: User, premium: false },
-    { id: 'events', label: 'Events Registry', icon: Calendar, premium: !isPremium },
-    { id: 'templates', label: 'Templates', icon: ImageIcon, premium: !isPremium },
-    { id: 'payments', label: 'Payments', icon: CreditCard, premium: !isPremium },
-    { id: 'prints', label: 'Print Queue', icon: Printer, premium: !isPremium },
-    { id: 'print_node', label: 'Remote Print Node', icon: Zap, premium: !isPremium },
+    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, pro: false },
+    { id: 'subscription', label: 'Subscription', icon: Shield, pro: false },
+    { id: 'profile', label: 'Store Profile', icon: User, pro: false },
+    { id: 'events', label: 'Events Registry', icon: Calendar, pro: true },
+    { id: 'templates', label: 'Templates', icon: ImageIcon, pro: true },
+    { id: 'payments', label: 'Payments', icon: CreditCard, pro: true },
+    { id: 'prints', label: 'Print Queue', icon: Printer, pro: true },
+    { id: 'print_node', label: 'Remote Print Node', icon: Zap, pro: true },
   ];
 
   return (
@@ -32,32 +31,42 @@ export function AdminSidebar({ activeTab, onTabChange, isDemo, isPremium = true 
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              if ((isDemo || !isPremium) && item.premium) {
-                onTabChange('premium_locked');
-              } else {
-                onTabChange(item.id);
-              }
-            }}
-            className={cn(
-              "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group",
-              activeTab === item.id ? "bg-white text-black" : "text-neutral-400 hover:bg-white/5 hover:text-white"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </div>
-            {isDemo && item.premium && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-600/10 text-blue-500 text-[8px] font-black uppercase tracking-tighter border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                <Crown className="w-2 h-2 fill-current" /> PRO
+        {menuItems.map((item) => {
+          const isLocked = !isPremium && item.pro;
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                if (isLocked) {
+                  onTabChange('premium_locked');
+                } else {
+                  onTabChange(item.id);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group",
+                activeTab === item.id 
+                  ? "bg-white text-black shadow-lg" 
+                  : isLocked 
+                    ? "text-neutral-600 cursor-not-allowed" 
+                    : "text-neutral-400 hover:bg-white/5 hover:text-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon className={cn("w-4 h-4", isLocked && "opacity-50")} />
+                <span className={isLocked ? "opacity-50" : ""}>{item.label}</span>
               </div>
-            )}
-          </button>
-        ))}
+              {isLocked ? (
+                <Lock className="w-3 h-3 text-neutral-600" />
+              ) : item.pro && (
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-600/10 text-blue-500 text-[8px] font-black uppercase tracking-tighter border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <Crown className="w-2 h-2 fill-current" /> PRO
+                </div>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
       <div className="p-4 space-y-2 border-t border-white/5">

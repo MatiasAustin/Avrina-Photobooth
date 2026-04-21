@@ -13,12 +13,7 @@ import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
 import { UserProfile } from './admin/UserProfile';
 
-interface AdminProps {
-  session: any;
-  isDemo?: boolean;
-}
-
-export function Admin({ session, isDemo = false }: AdminProps) {
+export function Admin({ session }: AdminProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
@@ -28,25 +23,7 @@ export function Admin({ session, isDemo = false }: AdminProps) {
   const [profile, setProfile] = useState<any>(null);
 
   const fetchData = async () => {
-    if (isDemo) {
-      setEvents([
-        { id: '1', name: 'Wedding of John & Jane', slug: 'wedding', price: 50000, is_active: true },
-        { id: '2', name: 'Corporate Gala 2024', slug: 'gala', price: 75000, is_active: true }
-      ]);
-      setSessions([
-        { id: 's1', event_id: '1', photos: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80'], payment_status: 'paid', created_at: new Date().toISOString() },
-        { id: 's2', event_id: '1', photos: ['https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80'], payment_status: 'paid', created_at: new Date().toISOString() },
-        { id: 's3', event_id: '2', photos: ['https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80'], payment_status: 'pending', created_at: new Date().toISOString() }
-      ]);
-      setPrintJobs([
-        { id: 'p1', session_id: 's1', status: 'completed' },
-        { id: 'p2', session_id: 's2', status: 'queued' }
-      ]);
-      setLoading(false);
-      return;
-    }
-
-    if (!isDemo && session?.user) {
+    if (session?.user) {
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
@@ -109,8 +86,6 @@ export function Admin({ session, isDemo = false }: AdminProps) {
   useEffect(() => {
     fetchData();
 
-    if (isDemo) return; // Skip real-time in demo
-
     // Set up real-time subscription for print queue and sessions
     const sub = supabase.channel('admin-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
@@ -120,7 +95,7 @@ export function Admin({ session, isDemo = false }: AdminProps) {
     return () => {
       supabase.removeChannel(sub);
     };
-  }, [session?.user?.id, isDemo]);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (activeTab === 'premium_locked') {
@@ -138,14 +113,13 @@ export function Admin({ session, isDemo = false }: AdminProps) {
 
   const handleLogout = () => supabase.auth.signOut();
 
-  const isPremium = isDemo || profile?.subscription_tier === 'pro';
+  const isPremium = profile?.subscription_tier === 'pro';
 
   return (
     <div className="flex h-screen bg-black overflow-hidden text-white font-sans">
       <AdminSidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
-        isDemo={isDemo} 
         isPremium={isPremium}
       />
 
@@ -153,31 +127,29 @@ export function Admin({ session, isDemo = false }: AdminProps) {
         <header className="p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-neutral-950/80 backdrop-blur-xl z-20">
           <div>
              <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-1">
-               {isDemo ? 'Trial Environment' : 'Managed Services'} / {activeTab}
+               Managed Services / {activeTab}
              </h2>
              <p className="text-xl font-black uppercase tracking-tight italic">
-               {isDemo ? 'Demo Operator' : (profile?.full_name || 'Admin')} • Avrina {isDemo ? 'Trial' : 'v1.0'}
+               {(profile?.full_name || 'Admin')} • Avrina v1.0
              </p>
           </div>
           <div className="flex items-center gap-4">
              {isPremium && (
                <div className="px-4 py-2 bg-blue-600/10 border border-blue-600/30 rounded-full flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                 <Crown className="w-3 h-3 fill-current" /> {isDemo ? 'Premium Demo' : 'Professional'}
+                 <Crown className="w-3 h-3 fill-current" /> Professional
                </div>
              )}
              <div className="px-4 py-2 bg-neutral-900 border border-white/10 rounded-full flex items-center gap-2 text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                 Network Online
              </div>
-             {!isDemo && (
-               <button 
-                 onClick={handleLogout}
-                 className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500 hover:text-white transition-all text-neutral-400"
-                 title="Sign Out"
-               >
-                  <LogOut className="w-5 h-5" />
-               </button>
-             )}
+             <button 
+               onClick={handleLogout}
+               className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500 hover:text-white transition-all text-neutral-400"
+               title="Sign Out"
+             >
+                <LogOut className="w-5 h-5" />
+             </button>
           </div>
         </header>
 
