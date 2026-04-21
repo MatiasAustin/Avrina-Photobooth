@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Shield, Crown, Save, ExternalLink, User, Lock, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
