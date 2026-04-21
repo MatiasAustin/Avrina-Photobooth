@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, LogOut, Layout, BarChart, Printer, Calendar } from 'lucide-react';
+import { Settings, LogOut, Layout, BarChart, Printer, Calendar, Crown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AdminSidebar } from './admin/AdminSidebar';
 import { AdminStats } from './admin/AdminStats';
@@ -10,6 +10,7 @@ import { TemplateGrid } from './admin/TemplateGrid';
 import { PrintNode } from './admin/PrintNode';
 import { PremiumModal } from './admin/PremiumModal';
 import { SubscriptionManager } from './admin/SubscriptionManager';
+import { PaymentManager } from './admin/PaymentManager';
 
 interface AdminProps {
   session: any;

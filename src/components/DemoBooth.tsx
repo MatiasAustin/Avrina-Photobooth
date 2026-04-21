@@ -20,8 +20,20 @@ const MOCK_EVENT = {
 };
 
 const MOCK_TEMPLATES = [
-  { id: 't1', name: 'Clean White', image_url: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80' },
-  { id: 't2', name: 'Dark Studio', image_url: 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80' }
+  { 
+    id: 't1', 
+    event_id: 'demo-event',
+    name: 'Clean White', 
+    image_url: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80',
+    created_at: new Date().toISOString()
+  },
+  { 
+    id: 't2', 
+    event_id: 'demo-event',
+    name: 'Dark Studio', 
+    image_url: 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80',
+    created_at: new Date().toISOString()
+  }
 ];
 
 export function DemoBooth() {
