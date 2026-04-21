@@ -3,13 +3,14 @@ import { Printer, Download, ArrowLeft } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface SessionSummaryProps {
+  sessionId: string;
   eventName?: string;
   photoUrl: string;
   onPrint: () => void;
   onReset: () => void;
 }
 
-export function SessionSummary({ eventName, photoUrl, onPrint, onReset }: SessionSummaryProps) {
+export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onReset }: SessionSummaryProps) {
   return (
     <motion.div 
       key="summary"
@@ -45,7 +46,7 @@ export function SessionSummary({ eventName, photoUrl, onPrint, onReset }: Sessio
         </div>
 
         <div className="w-full md:w-1/2 aspect-square rounded-[32px] overflow-hidden group shadow-2xl relative">
-           <img src={photoUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+           <img src={photoUrl} alt="Session result" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-8">
               <div className="space-y-1">
                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">{eventName}</p>
