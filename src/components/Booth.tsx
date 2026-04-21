@@ -293,29 +293,53 @@ export function Booth() {
 
   const handleFinalize = async (arrangedPhotos: string[]) => {
     try {
-      const finalStrip = await generatePhotoStrip(arrangedPhotos);
+      const finalStripBase64 = await generatePhotoStrip(arrangedPhotos);
       
+      // 1. Upload the final strip to Storage (Avoids Huge DB payloads)
+      // Convert base64 to Blob
+      const base64Data = finalStripBase64.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      
+      const fileName = `session-${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('result') // Updated to the correct bucket for final photos
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('result')
+        .getPublicUrl(fileName);
+
+      // 2. Save Session to Database
       const { data, error } = await supabase
         .from('sessions')
         .insert({
           event_id: event?.id,
-          photos: arrangedPhotos,
+          photos: arrangedPhotos, // Still save individual small photos in JSON
           template_id: selectedTemplate?.id,
           payment_status: event?.price > 0 ? 'paid' : 'free',
           payment_id: paymentId || '',
-          final_photo_url: finalStrip // We'll add this column or use existing logic
+          final_photo_url: publicUrl // Store the STORAGE URL, not the base64
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      // Update local setCapturedPhotos to the final strip for summary display
-      setCapturedPhotos([finalStrip]);
+      // Update local setCapturedPhotos to the final strip URL for summary display
+      setCapturedPhotos([publicUrl]);
       setSession(data);
       setState('summary');
     } catch (e) {
-      console.error("Session creation error", e);
+      console.error("Session finalize error", e);
+      alert("Something went wrong finalizing your session. We'll show your photos anyway.");
       setState('summary');
     }
   };
