@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Check, Clock, Wallet, Search, RefreshCcw } from 'lucide-react';
+import { Check, Clock, Wallet, Search, RefreshCcw, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function PaymentManager() {
@@ -47,12 +47,26 @@ export function PaymentManager() {
         .eq('id', sessionId);
 
       if (error) throw error;
-      // Real-time listener will trigger refresh
     } catch (e) {
       console.error("Confirmation error", e);
       alert("Failed to confirm payment");
     } finally {
       setConfirmingId(null);
+    }
+  };
+
+  const handleDismiss = async (sessionId: string) => {
+    if (!confirm("Batalkan sesi ini? Session akan ditandai sebagai dibatalkan.")) return;
+    try {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ payment_status: 'cancelled' })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+    } catch (e) {
+      console.error("Dismiss error", e);
+      alert("Failed to dismiss session");
     }
   };
 
@@ -106,11 +120,19 @@ export function PaymentManager() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="flex items-center gap-3 w-full md:w-auto">
                  <div className="text-right hidden md:block mr-4">
                     <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Session ID</p>
                     <p className="text-[10px] font-mono text-white/40 uppercase">{session.id.slice(0, 8)}...</p>
                  </div>
+                 <button 
+                   type="button"
+                   onClick={() => handleDismiss(session.id)}
+                   className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-500 text-neutral-500 transition-all"
+                   title="Batalkan session ini"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
                  <button 
                    disabled={confirmingId === session.id}
                    onClick={() => handleConfirm(session.id)}

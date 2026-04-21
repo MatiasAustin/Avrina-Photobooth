@@ -6,9 +6,10 @@ import { cn } from '../../lib/utils';
 interface PaymentGateProps {
   price: number;
   qrisImageUrl?: string;
+  onCancel?: () => void;
 }
 
-export function PaymentGate({ price, qrisImageUrl }: PaymentGateProps) {
+export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps) {
   const [activeTab, setActiveTab] = useState<'qris' | 'cash'>(qrisImageUrl ? 'qris' : 'cash');
 
   const formatted = `Rp ${price.toLocaleString('id-ID')}`;
@@ -158,6 +159,19 @@ export function PaymentGate({ price, qrisImageUrl }: PaymentGateProps) {
           </p>
         </div>
       </motion.div>
+
+      {/* Cancel Button */}
+      {onCancel && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          onClick={onCancel}
+          className="w-full py-4 text-neutral-600 hover:text-neutral-400 font-mono text-[10px] uppercase tracking-widest transition-colors"
+        >
+          ← Batal & Kembali
+        </motion.button>
+      )}
     </motion.div>
   );
 }

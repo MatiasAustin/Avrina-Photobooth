@@ -114,6 +114,21 @@ export function Booth() {
     if (event.session_timeout) setGlobalTimeLeft(event.session_timeout * 60);
   };
 
+  const cancelPendingSession = async () => {
+    if (!currentSessionId) return;
+    try {
+      await supabase
+        .from('sessions')
+        .update({ payment_status: 'cancelled' })
+        .eq('id', currentSessionId)
+        .eq('payment_status', 'pending'); // only cancel if still pending
+    } catch (e) {
+      console.warn('Could not cancel session:', e);
+    } finally {
+      setCurrentSessionId(null);
+    }
+  };
+
   const activeStream = useRef<MediaStream | null>(null);
 
   const startCamera = async () => {
@@ -491,7 +506,14 @@ export function Booth() {
         {state === 'idle' && <BoothHero onStart={handleStart} />}
         
         {state === 'payment' && (
-          <PaymentGate price={event?.price || 0} qrisImageUrl={event?.qris_image_url} />
+          <PaymentGate 
+            price={event?.price || 0} 
+            qrisImageUrl={event?.qris_image_url}
+            onCancel={async () => {
+              await cancelPendingSession();
+              setState('idle');
+            }}
+          />
         )}
 
         {state === 'template_selection' && (
