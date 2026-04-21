@@ -155,34 +155,68 @@ export function Booth() {
 
   const takePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      // Safety: Ensure video is actually playing and has dimensions
+      if (video.readyState < 2 || video.videoWidth === 0) {
+        console.warn("Video not ready for capture");
+        return;
+      }
+
       if (context) {
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
         
+        // 1. Initial Fill (Prevent Transparency/Black)
+        context.fillStyle = '#000000';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Draw Video (Mirrored)
         context.save();
-        context.translate(canvasRef.current.width, 0);
+        context.translate(canvas.width, 0);
         context.scale(-1, 1);
-        context.drawImage(videoRef.current, 0, 0);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         context.restore();
 
+        // 3. Draw Template Overlay
         if (selectedTemplate) {
-          const templateImg = new Image();
-          templateImg.crossOrigin = "anonymous";
-          templateImg.src = selectedTemplate.image_url;
-          
-          await new Promise((resolve) => {
-            templateImg.onload = () => {
-              context.drawImage(templateImg, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-              resolve(null);
-            };
-            templateImg.onerror = resolve;
-          });
+          try {
+            const templateImg = new Image();
+            if (selectedTemplate.image_url.startsWith('http')) {
+              templateImg.crossOrigin = "anonymous";
+            }
+            templateImg.src = selectedTemplate.image_url;
+            
+            await new Promise((resolve) => {
+              const timeout = setTimeout(resolve, 2000); 
+              templateImg.onload = () => {
+                context.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+                clearTimeout(timeout);
+                resolve(null);
+              };
+              templateImg.onerror = () => {
+                console.warn("Template failed to load");
+                clearTimeout(timeout);
+                resolve(null);
+              };
+            });
+          } catch (e) {
+            console.error("Template overlay error", e);
+          }
         }
 
-        const photoData = canvasRef.current.toDataURL('image/jpeg', 0.85);
-        setCapturedPhotos(prev => [...prev, photoData]);
-        setState('review_shot');
+        const photoData = canvas.toDataURL('image/jpeg', 0.82);
+        
+        if (photoData.length > 1000) {
+          setCapturedPhotos(prev => [...prev, photoData]);
+          setState('review_shot');
+        } else {
+          console.error("Capture empty");
+          // Fallback: try to advance anyway or alert
+          setState('review_shot');
+        }
       }
     }
   };
