@@ -1,4 +1,4 @@
-import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield } from 'lucide-react';
+import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ export function AdminSidebar({ activeTab, onTabChange, isDemo, isPremium = true 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, premium: false },
     { id: 'subscription', label: 'Subscription', icon: Shield, premium: false },
+    { id: 'profile', label: 'Store Profile', icon: User, premium: false },
     { id: 'events', label: 'Events Registry', icon: Calendar, premium: !isPremium },
     { id: 'templates', label: 'Templates', icon: ImageIcon, premium: !isPremium },
     { id: 'payments', label: 'Payments', icon: CreditCard, premium: !isPremium },

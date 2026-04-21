@@ -11,6 +11,7 @@ import { PrintNode } from './admin/PrintNode';
 import { PremiumModal } from './admin/PremiumModal';
 import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
+import { UserProfile } from './admin/UserProfile';
 
 interface AdminProps {
   session: any;
@@ -18,7 +19,7 @@ interface AdminProps {
 }
 
 export function Admin({ session, isDemo = false }: AdminProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'premium_locked'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);
@@ -183,7 +184,12 @@ export function Admin({ session, isDemo = false }: AdminProps) {
         <PremiumModal isOpen={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
 
         <div className="p-8 max-w-7xl mx-auto space-y-12">
-          {activeTab === 'subscription' ? (
+          {activeTab === 'profile' ? (
+            <UserProfile 
+              profile={profile}
+              onUpdate={fetchData}
+            />
+          ) : activeTab === 'subscription' ? (
             <SubscriptionManager 
               currentTier={profile?.subscription_tier || 'free'} 
               userId={session?.user?.id}
@@ -212,7 +218,7 @@ export function Admin({ session, isDemo = false }: AdminProps) {
                 </div>
               )}
 
-              {activeTab === 'events' && <EventList userId={session.user.id} events={events} onUpdate={fetchData} />}
+              {activeTab === 'events' && <EventList userId={session?.user?.id || 'demo-user'} events={events} onUpdate={fetchData} />}
 
               {activeTab === 'prints' && <PrintQueue jobs={printJobs} onUpdate={fetchData} />}
 
