@@ -27,7 +27,15 @@ export function SessionGrid({ sessions, onDelete }: SessionGridProps) {
            <div key={session.id} className="p-4 bg-neutral-900/40 border border-white/5 rounded-[32px] space-y-4 group hover:bg-neutral-900/80 transition-all">
               <div className="aspect-[4/5] rounded-[24px] overflow-hidden bg-neutral-800 border border-white/5 relative">
                  <img 
-                   src={Array.isArray(session.photos) ? session.photos[0] : JSON.parse(session.photos)[0]} 
+                   src={(() => {
+                     try {
+                       if (!session.photos) return 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80';
+                       const photos = Array.isArray(session.photos) ? session.photos : JSON.parse(session.photos);
+                       return photos[0] || 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80';
+                     } catch(e) {
+                       return 'https://images.unsplash.com/photo-1516035069341-3491d889c6f2?w=800&q=80';
+                     }
+                   })()} 
                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 hover:scale-110" 
                  />
                  <div className="absolute top-4 left-4">

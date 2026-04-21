@@ -34,9 +34,9 @@ export function Admin({ session, isDemo = false }: AdminProps) {
         { id: '2', name: 'Corporate Gala 2024', slug: 'gala', price: 75000, is_active: true }
       ]);
       setSessions([
-        { id: 's1', event_id: '1', payment_status: 'paid', created_at: new Date().toISOString() },
-        { id: 's2', event_id: '1', payment_status: 'paid', created_at: new Date().toISOString() },
-        { id: 's3', event_id: '2', payment_status: 'pending', created_at: new Date().toISOString() }
+        { id: 's1', event_id: '1', photos: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80'], payment_status: 'paid', created_at: new Date().toISOString() },
+        { id: 's2', event_id: '1', photos: ['https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80'], payment_status: 'paid', created_at: new Date().toISOString() },
+        { id: 's3', event_id: '2', photos: ['https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80'], payment_status: 'pending', created_at: new Date().toISOString() }
       ]);
       setPrintJobs([
         { id: 'p1', session_id: 's1', status: 'completed' },
