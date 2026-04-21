@@ -57,10 +57,11 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
       // 2. Draw Sample Photo Slots (Realistic Preview)
       const margin = 40;
-      const photoH = (h - (margin * 5)) / 4.5;
+      const slots = 3;
+      const photoH = (h - (margin * (slots + 2))) / (slots + 0.8);
       const photoW = w - (margin * 2);
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < slots; i++) {
         const y = margin + i * (photoH + margin);
         
         // Shadow for photos
@@ -210,10 +211,11 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
       // Clear Photo Slots to transparent
       const margin = 40;
-      const photoH = (1800 - (margin * 5)) / 4.5;
+      const slots = 3;
+      const photoH = (1800 - (margin * (slots + 2))) / (slots + 0.8);
       const photoW = 600 - (margin * 2);
       exCtx.globalCompositeOperation = 'destination-out';
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < slots; i++) {
         const y = margin + i * (photoH + margin);
         exCtx.fillRect(margin, y, photoW, photoH);
       }
