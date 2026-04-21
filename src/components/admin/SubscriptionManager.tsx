@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Crown, Check, Zap, ArrowRight, ShieldCheck, QrCode, MessageSquare, ArrowLeft, Copy, CreditCard, Shield } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
+import { SUPPORT_WA_NUMBER, SUBSCRIPTION_PRICE } from '../../lib/constants';
 
 interface SubscriptionManagerProps {
   currentTier: string;
@@ -11,18 +13,40 @@ interface SubscriptionManagerProps {
 
 export function SubscriptionManager({ currentTier, userId, onUpdate }: SubscriptionManagerProps) {
   const [showPayment, setShowPayment] = useState(false);
+  const [settings, setSettings] = useState({
+    support_whatsapp: SUPPORT_WA_NUMBER,
+    subscription_price: SUBSCRIPTION_PRICE.toString(),
+    qris_image_url: ''
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('system_settings').select('*');
+      if (data) {
+        const newSettings = { ...settings };
+        data.forEach(s => {
+          if (s.key === 'support_whatsapp') newSettings.support_whatsapp = s.value;
+          if (s.key === 'subscription_price') newSettings.subscription_price = s.value;
+          if (s.key === 'qris_image_url') newSettings.qris_image_url = s.value;
+        });
+        setSettings(newSettings);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleCopyAmount = () => {
-    navigator.clipboard.writeText("150000");
+    navigator.clipboard.writeText(settings.subscription_price);
     alert("Jumlah disalin!");
   };
 
-  const waMessage = encodeURIComponent(`Halo Admin Avrina, saya ingin konfirmasi pembayaran untuk paket Pro.\n\nUser ID: ${userId}\nJumlah: Rp 150.000`);
-  const waLink = `https://wa.me/6281234567890?text=${waMessage}`;
+  const displayPrice = parseInt(settings.subscription_price).toLocaleString('id-ID');
+  const waMessage = encodeURIComponent(`Halo Admin Avrina, saya ingin konfirmasi pembayaran untuk paket Pro.\n\nUser ID: ${userId}\nJumlah: Rp ${displayPrice}`);
+  const waLink = `https://wa.me/${settings.support_whatsapp}?text=${waMessage}`;
 
   if (showPayment) {
     return (
-      <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20">
         <button 
           onClick={() => setShowPayment(false)}
           className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors group text-xs font-black uppercase tracking-widest"
@@ -40,13 +64,17 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
 
            <div className="flex flex-col items-center gap-6">
               <div className="bg-white p-6 rounded-[32px] shadow-2xl relative group">
-                 <div className="w-48 h-48 bg-neutral-100 rounded-xl flex items-center justify-center border-4 border-white overflow-hidden">
-                    <QrCode className="w-32 h-32 text-black opacity-20" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       <span className="font-black text-black text-2xl rotate-45 opacity-5">QRIS AVRINA</span>
-                    </div>
+                 <div className="w-48 h-48 bg-white rounded-xl flex items-center justify-center overflow-hidden">
+                    {settings.qris_image_url ? (
+                      <img src={settings.qris_image_url} alt="QRIS Official" className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-neutral-300">
+                        <QrCode className="w-16 h-16 opacity-20" />
+                        <span className="text-[8px] font-black uppercase tracking-tighter">QRIS Not Set</span>
+                      </div>
+                    )}
                  </div>
-                 <div className="absolute -top-3 -right-3 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest shadow-xl">
+                 <div className="absolute -top-3 -right-3 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest shadow-xl border-2 border-white/10">
                     OFFICIAL QRIS
                  </div>
               </div>
@@ -55,10 +83,10 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
 
            <div className="bg-black/50 rounded-3xl p-8 space-y-6 border border-white/5">
               <div className="flex items-center justify-between">
-                 <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest text-white">Total Pembayaran</span>
+                 <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Total Pembayaran</span>
                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-black text-blue-500">Rp 150.000</span>
-                    <button onClick={handleCopyAmount} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-neutral-500">
+                    <span className="text-xl font-black text-blue-500 font-mono">Rp {displayPrice}</span>
+                    <button onClick={handleCopyAmount} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-neutral-500">
                        <Copy className="w-4 h-4" />
                     </button>
                  </div>
@@ -68,11 +96,11 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
 
               <div className="space-y-4">
                  <div className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</div>
+                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-black">1</div>
                     <p className="text-xs text-neutral-400 leading-relaxed font-medium">Scan QRIS menggunakan aplikasi Dana/OVO/M-Banking/Gopay Anda.</p>
                  </div>
                  <div className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</div>
+                    <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-[10px] font-black">2</div>
                     <p className="text-xs text-neutral-400 leading-relaxed font-medium">Klik konfirmasi WhatsApp untuk mengirim bukti transfer ke Admin.</p>
                  </div>
               </div>
@@ -87,8 +115,8 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
              <MessageSquare className="w-5 h-5" /> Konfirmasi di WhatsApp
            </a>
 
-           <p className="text-center text-[10px] text-neutral-600 italic font-medium">
-              Aktivasi manual dilakukan oleh tim kami dalam 5-15 menit.
+           <p className="text-center text-[10px] text-neutral-600 italic font-medium leading-relaxed">
+              Aktivasi manual dilakukan oleh tim dev dalam 5-15 menit <br/> setelah bukti transfer divalidasi.
            </p>
         </div>
       </div>
@@ -98,18 +126,18 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-black uppercase tracking-tight text-white">Layanan Photobooth <span className="text-blue-500 italic">SaaS</span></h2>
-        <p className="text-neutral-500 text-lg max-w-2xl mx-auto italic font-medium">Tingkatkan kreativitas dan otomasi bisnis Anda dengan paket Professional.</p>
+        <h2 className="text-4xl font-black uppercase tracking-tight text-white italic">Upgrade <span className="text-blue-500 underline decoration-white/10">Professional</span></h2>
+        <p className="text-neutral-500 text-lg max-w-2xl mx-auto italic font-medium leading-relaxed">Tingkatkan kreativitas dan otomasi bisnis photobooth Anda ke level berikutnya.</p>
       </div>
 
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
         {/* Starter Plan */}
-        <div className="bg-neutral-900 border border-white/5 rounded-[48px] p-10 flex flex-col justify-between transition-all hover:bg-neutral-900/60 text-white">
+        <div className="bg-neutral-900 border border-white/5 rounded-[48px] p-10 flex flex-col justify-between transition-all hover:bg-neutral-900/60 group">
            <div className="space-y-8">
               <div className="space-y-2">
                  <h3 className="text-lg font-mono uppercase tracking-[0.3em] text-neutral-500">Starter</h3>
                  <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-black italic tracking-tighter">Free</span>
+                    <span className="text-5xl font-black italic tracking-tighter text-white">Free</span>
                  </div>
               </div>
               <p className="text-neutral-400 text-sm leading-relaxed font-medium">Cocok untuk mencoba fitur dasar photobooth secara lokal.</p>
@@ -130,13 +158,13 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
         </div>
 
         {/* Pro Plan */}
-        <div className="relative bg-neutral-900 border-2 border-blue-600/50 rounded-[48px] p-10 flex flex-col justify-between transition-all shadow-[0_0_100px_rgba(37,99,235,0.1)] scale-105 z-10 text-white">
-           <div className="absolute top-8 right-8 px-4 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Best Value</div>
+        <div className="relative bg-neutral-900 border-2 border-blue-600/50 rounded-[48px] p-10 flex flex-col justify-between transition-all shadow-[0_0_100px_rgba(37,99,235,0.1)] scale-105 z-10">
+           <div className="absolute top-8 right-8 px-4 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse shadow-lg">Best Value</div>
            <div className="space-y-8">
               <div className="space-y-2">
                  <h3 className="text-lg font-mono uppercase tracking-[0.3em] text-neutral-500">Professional</h3>
                  <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-black italic tracking-tighter text-white">150k</span>
+                    <span className="text-5xl font-black italic tracking-tighter text-white">{(parseInt(settings.subscription_price)/1000).toLocaleString('id-ID')}k</span>
                     <span className="text-neutral-500 font-bold">/bln</span>
                  </div>
               </div>
@@ -150,7 +178,7 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
                    'Full Analytics Dashboard'
                  ].map(f => (
                    <div key={f} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
                         <Check className="w-3 h-3 text-white" />
                       </div>
                       <span className="text-xs font-bold text-neutral-200">{f}</span>
@@ -180,9 +208,12 @@ export function SubscriptionManager({ currentTier, userId, onUpdate }: Subscript
                <ShieldCheck className="w-7 h-7 text-neutral-500" />
             </div>
             <div className="space-y-0.5">
-               <h4 className="font-black text-sm uppercase tracking-tight text-white">Pembayaran Manual Aman</h4>
-               <p className="text-xs text-neutral-500 leading-relaxed font-medium">Pembayaran diverifikasi secara manual oleh developer.</p>
+               <h4 className="font-black text-sm uppercase tracking-tight text-white">Verifikasi Developer Terpercaya</h4>
+               <p className="text-xs text-neutral-500 leading-relaxed font-medium">Pembayaran Anda akan divalidasi langsung oleh tim dev kami via WhatsApp.</p>
             </div>
+         </div>
+         <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+            Secure Transaction
          </div>
       </div>
     </div>
