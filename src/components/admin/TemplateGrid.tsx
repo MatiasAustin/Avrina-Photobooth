@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Image as ImageIcon, X, Save, Palette } from 'lucide-react';
+import { Trash2, Plus, Image as ImageIcon, X, Save, Palette, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { TemplateEditor } from './TemplateEditor';
 import { cn } from '../../lib/utils';
@@ -10,8 +10,9 @@ export function TemplateGrid() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDesignStudio, setShowDesignStudio] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
-  const [newTemplate, setNewTemplate] = useState({ name: '', image_url: '', event_id: '', category: 'General' });
+  const [newTemplate, setNewTemplate] = useState({ name: '', image_url: '', event_id: '', category: 'General', slot_count: 3 });
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,8 +40,38 @@ export function TemplateGrid() {
     fetchData();
   }, []);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}-${file.name.replace(/ /g, '_')}`;
+      const { data, error } = await supabase.storage
+        .from('templates')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('templates')
+        .getPublicUrl(fileName);
+
+      setNewTemplate(prev => ({ ...prev, image_url: publicUrl }));
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newTemplate.image_url) {
+      alert("Please upload a template overlay.");
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -54,7 +85,7 @@ export function TemplateGrid() {
     if (error) alert(error.message);
     else {
       setShowAddModal(false);
-      setNewTemplate({ name: '', image_url: '', event_id: '', category: 'General' });
+      setNewTemplate({ name: '', image_url: '', event_id: '', category: 'General', slot_count: 3 });
       fetchData();
     }
   };
@@ -206,17 +237,45 @@ export function TemplateGrid() {
                      />
                   </div>
 
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">PNG Overlay URL</label>
-                     <input 
-                       value={newTemplate.image_url}
-                       onChange={e => setNewTemplate({...newTemplate, image_url: e.target.value})}
-                       className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none font-mono text-xs text-[var(--color-pawtobooth-dark)]"
-                       placeholder="https://..."
-                       required
-                     />
-                     <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-tighter pl-2">Use a transparent PNG for the photobooth frame.</p>
-                  </div>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Photo Slots</label>
+                         <select 
+                           value={newTemplate.slot_count}
+                           onChange={e => setNewTemplate({...newTemplate, slot_count: parseInt(e.target.value)})}
+                           className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none text-sm text-[var(--color-pawtobooth-dark)] font-bold"
+                         >
+                            <option value={3}>3 Slots</option>
+                            <option value={4}>4 Slots</option>
+                            <option value={6}>6 Slots</option>
+                         </select>
+                      </div>
+
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">PNG Overlay File</label>
+                         <label className={cn(
+                           "flex items-center justify-center gap-2 w-full p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
+                           newTemplate.image_url 
+                            ? "bg-[#3E6B43]/5 border-[#3E6B43] text-[#3E6B43]" 
+                            : "bg-[var(--color-pawtobooth-light)] border-black/5 text-[var(--color-pawtobooth-dark)]/40 hover:border-black/20"
+                         )}>
+                            {isUploading ? (
+                              <div className="w-4 h-4 border-2 border-current/20 border-t-current rounded-full animate-spin" />
+                            ) : (
+                              <Upload className="w-4 h-4" />
+                            )}
+                            <span className="text-[10px] font-black uppercase tracking-widest truncate">
+                              {newTemplate.image_url ? 'Change File' : 'Choose PNG'}
+                            </span>
+                            <input type="file" className="hidden" accept="image/png" onChange={handleFileUpload} disabled={isUploading} />
+                         </label>
+                      </div>
+                   </div>
+                   {newTemplate.image_url && (
+                     <div className="mt-2 text-center">
+                        <p className="text-[8px] font-mono text-green-600 uppercase tracking-widest">✓ File Uploaded Successfully</p>
+                     </div>
+                   )}
 
                   <button 
                     type="submit"
