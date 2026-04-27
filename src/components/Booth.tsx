@@ -529,7 +529,7 @@ export function Booth() {
   return (
     <BoothLayout>
       {/* Global Camera Background */}
-      <div className={`absolute inset-0 z-0 overflow-hidden bg-black flex items-center justify-center transition-opacity duration-1000 ${['summary', 'review'].includes(state) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`absolute inset-0 z-0 overflow-hidden bg-black flex items-center justify-center transition-opacity duration-1000 ${['summary', 'review', 'countdown', 'capture', 'review_shot'].includes(state) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <video 
           ref={videoRef} 
           autoPlay 

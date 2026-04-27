@@ -116,7 +116,7 @@ export function CaptureStage({
       </div>
 
       {/* Floating Status Bar (Bottom of Screen) */}
-      <div className="mt-8 bg-white/90 backdrop-blur-2xl px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-2xl px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
          <div className="flex items-center gap-4">
            <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Status</span>
            <span className="font-black text-base">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
