@@ -21,6 +21,8 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
   const [isSaving, setIsSaving] = useState(false);
   const [fontFamily, setFontFamily] = useState('sans-serif');
   const [stickers, setStickers] = useState<any[]>([]);
+  const [category, setCategory] = useState('General');
+  const [slotCount, setSlotCount] = useState(3);
   const [isDragging, setIsDragging] = useState(false);
   const [dragTarget, setDragTarget] = useState<number | null>(null);
 
@@ -57,7 +59,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
       // 2. Draw Sample Photo Slots (Realistic Preview)
       const margin = 40;
-      const slots = 3;
+      const slots = slotCount;
       const photoH = (h - (margin * (slots + 2))) / (slots + 0.8);
       const photoW = w - (margin * 2);
 
@@ -120,7 +122,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     };
 
     drawPreview();
-  }, [bgColor, textColor, heading, subheading, logo, bgImage, fontFamily, stickers]);
+  }, [bgColor, textColor, heading, subheading, logo, bgImage, fontFamily, stickers, slotCount]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -211,7 +213,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
       // Clear Photo Slots to transparent
       const margin = 40;
-      const slots = 3;
+      const slots = slotCount;
       const photoH = (1800 - (margin * (slots + 2))) / (slots + 0.8);
       const photoW = 600 - (margin * 2);
       exCtx.globalCompositeOperation = 'destination-out';
@@ -259,10 +261,16 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         .getPublicUrl(fileName);
 
       // 3. Save to Database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Authentication required");
+
       const { error: dbError } = await supabase.from('templates').insert({
         name,
-        event_id: eventId,
-        image_url: publicUrl
+        user_id: user.id,
+        event_id: eventId || null,
+        image_url: publicUrl,
+        category: category,
+        slot_count: slotCount
       });
 
       if (dbError) throw dbError;
@@ -293,14 +301,46 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
                  placeholder="Template Name"
                  className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-[var(--color-pawtobooth-dark)] shadow-sm"
                />
-               <select 
-                 value={eventId}
-                 onChange={e => setEventId(e.target.value)}
-                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-sm text-[var(--color-pawtobooth-dark)] shadow-sm"
-               >
-                 <option value="">Assign to Booth...</option>
-                 {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-               </select>
+             <div className="grid grid-cols-3 gap-4">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Assign Booth</label>
+                 <select 
+                   value={eventId}
+                   onChange={e => setEventId(e.target.value)}
+                   className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-xs text-[var(--color-pawtobooth-dark)] shadow-sm"
+                 >
+                   <option value="">Global Template</option>
+                   {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                 </select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Category</label>
+                 <select 
+                   value={category}
+                   onChange={e => setCategory(e.target.value)}
+                   className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-xs text-[var(--color-pawtobooth-dark)] shadow-sm"
+                 >
+                    <option value="General">General</option>
+                    <option value="Wedding">Wedding</option>
+                    <option value="Doodle">Doodle</option>
+                    <option value="Pink">Pink</option>
+                    <option value="Birthday">Birthday</option>
+                    <option value="Corporate">Corporate</option>
+                 </select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Photo Slots</label>
+                 <select 
+                   value={slotCount}
+                   onChange={e => setSlotCount(parseInt(e.target.value))}
+                   className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-xs text-[var(--color-pawtobooth-dark)] shadow-sm font-bold"
+                 >
+                    <option value={3}>3 Slots</option>
+                    <option value={4}>4 Slots</option>
+                    <option value={6}>6 Slots</option>
+                 </select>
+               </div>
+             </div>
             </div>
 
             <div className="space-y-4">

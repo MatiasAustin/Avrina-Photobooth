@@ -60,15 +60,17 @@ export function Booth() {
 
       setEvent(eventData);
 
-      // Fetch templates for this event
+      // Fetch templates for this event + global templates from this user
       const { data: templatesData, error: templatesError } = await supabase
         .from('templates')
         .select('*')
-        .eq('event_id', eventData.id);
+        .eq('user_id', eventData.user_id);
 
       if (!templatesError && templatesData) {
-        setTemplates(templatesData);
-        if (templatesData.length > 0) setSelectedTemplate(templatesData[0]);
+        // Only show templates that are either global (event_id is null) or specific to this event
+        const filteredTemplates = templatesData.filter(t => !t.event_id || t.event_id === eventData.id);
+        setTemplates(filteredTemplates);
+        if (filteredTemplates.length > 0) setSelectedTemplate(filteredTemplates[0]);
       }
 
       setLoading(false);
@@ -342,9 +344,11 @@ export function Booth() {
       if (!ctx) return photos[0];
 
       const stripWidth = 600;
-      const stripHeight = 1800;
       const margin = 40;
-      const slots = 3;
+      const slots = selectedTemplate?.slot_count || 3;
+      
+      const photoSize = stripWidth - (margin * 2);
+      const stripHeight = (photoSize * slots) + (margin * (slots + 1)) + 200;
 
       canvas.width = stripWidth * 2;
       canvas.height = stripHeight;
@@ -371,9 +375,21 @@ export function Booth() {
         }))
       );
 
+      // Load Template Overlay
+      let templateImg: HTMLImageElement | null = null;
+      if (selectedTemplate?.image_url) {
+        templateImg = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = selectedTemplate.image_url;
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+        });
+      }
+
       const drawSingleStrip = (offsetX: number, photoOffset: number) => {
         const photoWidth = stripWidth - (margin * 2);
-        const photoHeight = photoWidth; // Force 1:1 Square
+        const photoHeight = photoWidth;
 
         for (let i = 0; i < slots; i++) {
           const img = loadedImages[i + photoOffset] || loadedImages[i] || loadedImages[0];
@@ -405,19 +421,23 @@ export function Booth() {
           ctx.drawImage(img, sx, sy, sw, sh, offsetX + margin, y, photoWidth, photoHeight);
         }
 
-        // Branding
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 36px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(event?.name?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, offsetX + stripWidth / 2, stripHeight - 140);
-        
-        ctx.font = '20px monospace';
-        ctx.fillStyle = '#999999';
-        ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
+        if (templateImg) {
+          ctx.drawImage(templateImg, offsetX, 0, stripWidth, stripHeight);
+        } else {
+          // Branding
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 36px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(event?.name?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, offsetX + stripWidth / 2, stripHeight - 140);
+          
+          ctx.font = '20px monospace';
+          ctx.fillStyle = '#999999';
+          ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
+        }
       };
 
-      drawSingleStrip(0, 0); // Strip kiri: Foto 1, 2, 3
-      drawSingleStrip(stripWidth, 3); // Strip kanan: Foto 4, 5, 6
+      drawSingleStrip(0, 0); // Strip kiri
+      drawSingleStrip(stripWidth, 0); // Strip kanan
 
       const result = canvas.toDataURL('image/jpeg', 0.8);
       // Fail-safe: if string is too short, the canvas export failed
@@ -562,7 +582,7 @@ export function Booth() {
             selectedTemplate={selectedTemplate}
             countdown={countdown}
             currentShot={currentShot}
-            totalShots={event?.shot_count || 3}
+            totalShots={Math.max(event?.shot_count || 3, selectedTemplate?.slot_count || 0)}
             lastCapturedPhoto={capturedPhotos[capturedPhotos.length - 1]}
             state={state}
             onRetake={handleShotRetake}
@@ -575,6 +595,8 @@ export function Booth() {
         {state === 'review' && (
           <ReviewGallery 
             photos={capturedPhotos}
+            slotCount={selectedTemplate?.slot_count || 3}
+            templateImageUrl={selectedTemplate?.image_url}
             onRetake={handleRetake}
             onFinalize={handleFinalize}
             isTimeout={isTimeout}

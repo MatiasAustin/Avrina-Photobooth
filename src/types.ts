@@ -17,9 +17,12 @@ export interface EventConfig {
 
 export interface PhotoTemplate {
   id: string;
-  event_id: string;
+  user_id: string;
+  event_id?: string;
   name: string;
   image_url: string;
+  category?: string;
+  slot_count: number;
   created_at: string;
 }
 
