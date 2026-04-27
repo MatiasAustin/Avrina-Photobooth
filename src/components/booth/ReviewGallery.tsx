@@ -29,17 +29,47 @@ export function ReviewGallery({
   onFinalize,
   isTimeout = false 
 }: ReviewGalleryProps) {
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  const [activeEditIdx, setActiveEditIdx] = useState<number | null>(null);
-  const [transforms, setTransforms] = useState<PhotoTransform[]>(
-    Array(slotCount).fill({ x: 0, y: 0, scale: 1 })
-  );
+  const updateTransform = (slotIdx: number, updates: Partial<PhotoTransform>) => {
+    setTransforms(prev => {
+      const next = [...prev];
+      next[slotIdx] = { ...next[slotIdx], ...updates };
+      return next;
+    });
+  };
+
+  // Helper to get initial grid positions (scaled to preview UI width roughly 400px)
+  const getInitialGridPos = (idx: number) => {
+    const cols = 2;
+    const row = Math.floor(idx / cols);
+    const col = idx % cols;
+    
+    // Preview card is usually ~400px wide. 4:6 ratio means ~600px height.
+    // We want 2 columns, so each cell is 200px wide.
+    const cellW = 180; // 180px per photo to leave some gap
+    const cellH = 180;
+    
+    return {
+      x: 20 + col * 200, 
+      y: 20 + row * 200,
+      scale: 1.1
+    };
+  };
 
   const handlePhotoClick = (idx: number) => {
     const currentPos = selectedIndices.indexOf(idx);
     if (currentPos !== -1) {
       setSelectedIndices(selectedIndices.filter(i => i !== idx));
     } else if (selectedIndices.length < slotCount) {
+      const nextSlotIdx = selectedIndices.length;
+      const pos = getInitialGridPos(nextSlotIdx);
+      
+      // Update the transform for this slot with initial grid position
+      setTransforms(prev => {
+        const next = [...prev];
+        next[nextSlotIdx] = pos;
+        return next;
+      });
+
       setSelectedIndices([...selectedIndices, idx]);
     }
   };
@@ -180,16 +210,16 @@ export function ReviewGallery({
                     x: transforms[i].x, 
                     y: transforms[i].y, 
                     scale: transforms[i].scale,
-                    width: '55%', // Slightly larger initial size
+                    width: '50%', // 50% of the 4R preview width
                     aspectRatio: '1/1',
                     touchAction: 'none',
                     position: 'absolute',
-                    top: `${10 + (i * 10)}%`, // Stagger initial positions so they don't overlap perfectly
-                    left: '22%',
-                    zIndex: activeEditIdx === i ? 30 : 10 // Active photo always on top
+                    top: 0,
+                    left: 0,
+                    zIndex: activeEditIdx === i ? 30 : 10 
                   }}
                   className={cn(
-                    "cursor-move overflow-hidden bg-neutral-200 shadow-2xl border-4 transition-shadow",
+                    "cursor-move overflow-hidden bg-neutral-200 border-2 transition-shadow",
                     activeEditIdx === i ? "border-[#3E6B43] ring-8 ring-[#3E6B43]/20" : "border-white shadow-lg"
                   )}
                 >
@@ -197,7 +227,7 @@ export function ReviewGallery({
                      src={photos[photoIdx]} 
                      className="w-full h-full object-cover pointer-events-none select-none" 
                    />
-                   <div className="absolute top-2 left-2 w-7 h-7 bg-[#3E6B43] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow-lg">
+                   <div className="absolute top-2 left-2 w-6 h-6 bg-[#3E6B43] text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-lg">
                       {i + 1}
                    </div>
                 </motion.div>

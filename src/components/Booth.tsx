@@ -400,79 +400,59 @@ export function Booth() {
         });
       }
 
-      // Draw Photos
-      const isTwoColumn = slots >= 4 || slots === 3;
-      const cols = isTwoColumn ? 2 : 1;
-      const rows = isTwoColumn ? (slots === 3 ? 3 : slots / 2) : slots;
-      
-      const cellWidth = (canvasWidth - (margin * (cols + 1))) / cols;
-      const cellHeight = (canvasHeight - (margin * (rows + 1))) / rows;
-      
-      // Use shorter side for square photos if needed, but for custom templates 
-      // we usually just want to fill the "hole" area.
-      const photoWidth = cellWidth;
-      const photoHeight = cellHeight;
+      // --- ABSOLUTE POSITIONING LOGIC ---
+      // UI preview card is ~400px wide. Canvas is 1200px.
+      // Scale factor is exactly 3.0
+      const UI_WIDTH = 400;
+      const UI_SCALE = canvasWidth / UI_WIDTH; 
 
-      for (let i = 0; i < (slots === 3 ? 6 : slots); i++) {
-        const photoIdx = slots === 3 ? (i % 3) : i; // For 3 slots, repeat photos in second column
-        const img = loadedImages[photoIdx] || loadedImages[0];
+      // Draw Photos behind template
+      loadedImages.forEach((img, i) => {
+        const transform = transforms ? transforms[i] : { x: 0, y: 0, scale: 1 };
         
-        if (!img || !img.complete || img.naturalWidth === 0) continue;
+        // UI dimensions were width: 50% of card (200px) and aspectRatio 1:1
+        // So canvas dimensions are 200 * 3 = 600px
+        const photoWidth = 200 * UI_SCALE; 
+        const photoHeight = 200 * UI_SCALE;
 
-        const col = i < rows ? 0 : 1;
-        const row = i % rows;
-
-        const x = margin + col * (photoWidth + margin);
-        const y = margin + row * (photoHeight + margin);
-
-        // Center of the cell
-        const centerX = x + photoWidth / 2;
-        const centerY = y + photoHeight / 2;
-
-        // Apply Transform if available
-        const transform = transforms ? transforms[photoIdx] : { x: 0, y: 0, scale: 1 };
-        
-        // Scale and Position adjustments
-        // transforms are normalized (relative to cell size)
+        const x = (transform.x || 0) * UI_SCALE;
+        const y = (transform.y || 0) * UI_SCALE;
         const scale = transform.scale || 1;
-        const offsetX = (transform.x || 0) * photoWidth;
-        const offsetY = (transform.y || 0) * photoHeight;
 
         ctx.save();
-        // Create a clipping region for this hole
+        // Clipping region to match the photo square
         ctx.beginPath();
         ctx.rect(x, y, photoWidth, photoHeight);
         ctx.clip();
 
-        // Draw image centered and transformed
+        // Draw image centered in the slot with zoom scale
         const imgAspect = img.naturalWidth / img.naturalHeight;
-        const targetAspect = photoWidth / photoHeight;
-        
-        let drawW, drawH;
-        if (imgAspect > targetAspect) {
-          drawH = photoHeight * scale;
-          drawW = drawH * imgAspect;
+        const drawW = photoWidth * scale;
+        const drawH = photoHeight * scale;
+
+        let imgDrawW, imgDrawH;
+        if (imgAspect > 1) { // Landscape
+          imgDrawH = drawH;
+          imgDrawW = drawH * imgAspect;
         } else {
-          drawW = photoWidth * scale;
-          drawH = drawW / imgAspect;
+          imgDrawW = drawW;
+          imgDrawH = drawW / imgAspect;
         }
 
         ctx.drawImage(
           img, 
-          centerX - drawW / 2 + offsetX, 
-          centerY - drawH / 2 + offsetY, 
-          drawW, 
-          drawH
+          x + (photoWidth/2) - (imgDrawW/2), 
+          y + (photoHeight/2) - (imgDrawH/2), 
+          imgDrawW, 
+          imgDrawH
         );
         ctx.restore();
-      }
+      });
 
-      // Draw Template Overlay on top of EVERYTHING
+      // Draw Template Overlay on TOP
       if (templateImg) {
-        // Draw once over the entire 4x6 sheet
         ctx.drawImage(templateImg, 0, 0, canvasWidth, canvasHeight);
       } else {
-        // Fallback Branding for 2-column
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
