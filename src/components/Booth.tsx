@@ -11,6 +11,7 @@ import { CaptureStage } from './booth/CaptureStage';
 import { ReviewGallery } from './booth/ReviewGallery';
 import { SessionSummary } from './booth/SessionSummary';
 import { BoothLayout } from './booth/BoothLayout';
+import { cn } from '../lib/utils';
 
 export function Booth() {
   const { slug } = useParams<{ slug: string }>();
@@ -665,6 +666,35 @@ export function Booth() {
         )}
       </AnimatePresence>
       </div>
+
+      {/* Global Floating Status Bar (Only during session) */}
+      {['countdown', 'capture', 'review_shot'].includes(state) && (
+        <div 
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-[1000] shadow-2xl text-[var(--color-pawtobooth-dark)]"
+          style={{ width: 'fit-content', minWidth: '400px' }}
+        >
+           <div className="flex items-center gap-4">
+              <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Photo</span>
+              <span className="font-black text-xl text-[#3E6B43]">{currentShot + 1} <span className="text-black/10">/</span> {Math.max(event?.shot_count || 3, selectedTemplate?.slot_count || 0)}</span>
+           </div>
+           
+           <div className="w-[1px] h-8 bg-black/5" />
+           
+           <div className={cn("flex items-center gap-4", isTimeout && "text-red-500")}>
+              <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Session</span>
+              <span className={cn("font-black text-xl", isTimeout && "animate-pulse")}>
+                {(() => {
+                  const s = globalTimeLeft;
+                  if (s === null) return '--:--';
+                  const mins = Math.floor(s / 60);
+                  const secs = s % 60;
+                  return `${mins}:${secs.toString().padStart(2, '0')}`;
+                })()}
+              </span>
+           </div>
+        </div>
+      )}
+
       <canvas ref={canvasRef} className="hidden" />
     </BoothLayout>
   );

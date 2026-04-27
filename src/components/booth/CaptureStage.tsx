@@ -112,32 +112,6 @@ export function CaptureStage({
         )}
       </div>
 
-      {/* Floating Status Bar - Inline Style Bottom Force */}
-      <div 
-        className="bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-[110] shadow-2xl text-[var(--color-pawtobooth-dark)]"
-        style={{
-          position: 'absolute',
-          bottom: '40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'fit-content',
-          minWidth: '400px',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-         <div className="flex items-center gap-4">
-            <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Photo</span>
-            <span className="font-black text-xl text-[#3E6B43]">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
-         </div>
-         
-         <div className="w-[1px] h-8 bg-black/5" />
-         
-         <div className={cn("flex items-center gap-4", isTimeout && "text-red-500")}>
-            <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Session</span>
-            <span className={cn("font-black text-xl", isTimeout && "animate-pulse")}>{formatTime(globalTimeLeft)}</span>
-         </div>
-      </div>
     </motion.div>
   );
 }
