@@ -6,14 +6,14 @@ interface BoothHeroProps {
 
 export function BoothHero({ onStart }: BoothHeroProps) {
   return (
-    <motion.div 
+    <motion.div
       key="idle"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.05 }}
       className="z-10 text-center space-y-12 bg-black/40 p-16 rounded-[4rem] backdrop-blur-md border border-white/10"
     >
-      <div className="space-y-4">
+      <div className="space-y-4" style={{ bottom: "40px", position: "relative", margin: "15%" }}>
         <h1 className="text-7xl md:text-8xl font-sans font-bold tracking-tighter text-white drop-shadow-2xl">
           AVRINA <span className="text-white/40 italic">v1.0</span>
         </h1>
@@ -21,8 +21,8 @@ export function BoothHero({ onStart }: BoothHeroProps) {
           Freeze your moment
         </p>
       </div>
-      
-      <button 
+
+      <button
         onClick={onStart}
         className="group relative px-12 py-6 bg-white text-black font-bold text-xl uppercase tracking-widest rounded-full hover:scale-105 transition-transform"
       >
