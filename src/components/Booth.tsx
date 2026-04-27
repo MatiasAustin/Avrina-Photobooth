@@ -343,15 +343,14 @@ export function Booth() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return photos[0];
 
-      const stripWidth = 600;
-      const margin = 40;
+      // 4x6 Ratio: 1200x1800
+      const canvasWidth = 1200;
+      const canvasHeight = 1800;
+      const margin = 60;
       const slots = selectedTemplate?.slot_count || 3;
       
-      const photoSize = stripWidth - (margin * 2);
-      const stripHeight = (photoSize * slots) + (margin * (slots + 1)) + 200;
-
-      canvas.width = stripWidth * 2;
-      canvas.height = stripHeight;
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
 
       // Solid color background first
       ctx.fillStyle = '#ffffff';
@@ -387,57 +386,57 @@ export function Booth() {
         });
       }
 
-      const drawSingleStrip = (offsetX: number, photoOffset: number) => {
-        const photoWidth = stripWidth - (margin * 2);
-        const photoHeight = photoWidth;
+      // Draw Photos
+      const isTwoColumn = slots >= 4 || slots === 3;
+      const cols = isTwoColumn ? 2 : 1;
+      const rows = isTwoColumn ? (slots === 3 ? 3 : slots / 2) : slots;
+      
+      const cellWidth = (canvasWidth - (margin * (cols + 1))) / cols;
+      const cellHeight = (canvasHeight - (margin * (rows + 1))) / rows;
+      
+      // Use shorter side for square photos if needed, but for custom templates 
+      // we usually just want to fill the "hole" area.
+      const photoWidth = cellWidth;
+      const photoHeight = cellHeight;
 
-        for (let i = 0; i < slots; i++) {
-          const img = loadedImages[i + photoOffset] || loadedImages[i] || loadedImages[0];
-          if (!img || !img.complete || img.naturalWidth === 0) {
-            ctx.fillStyle = '#eeeeee';
-            ctx.fillRect(offsetX + margin, margin + i * (photoHeight + margin), photoWidth, photoHeight);
-            continue;
-          }
+      for (let i = 0; i < (slots === 3 ? 6 : slots); i++) {
+        const photoIdx = slots === 3 ? (i % 3) : i; // For 3 slots, repeat photos in second column
+        const img = loadedImages[photoIdx] || loadedImages[0];
+        
+        if (!img || !img.complete || img.naturalWidth === 0) continue;
 
-          const y = margin + i * (photoHeight + margin);
+        const col = i < rows ? 0 : 1;
+        const row = i % rows;
 
-          // Center-Crop "Object-Cover" Logic
-          const imgAspect = img.naturalWidth / img.naturalHeight;
-          const targetAspect = photoWidth / photoHeight;
-          let sx, sy, sw, sh;
+        const x = margin + col * (photoWidth + margin);
+        const y = margin + row * (photoHeight + margin);
 
-          if (imgAspect > targetAspect) {
-            sh = img.naturalHeight;
-            sw = sh * targetAspect;
-            sx = (img.naturalWidth - sw) / 2;
-            sy = 0;
-          } else {
-            sw = img.naturalWidth;
-            sh = sw / targetAspect;
-            sx = 0;
-            sy = (img.naturalHeight - sh) / 2;
-          }
-          
-          ctx.drawImage(img, sx, sy, sw, sh, offsetX + margin, y, photoWidth, photoHeight);
-        }
+        // Object-Cover logic to fill the cell
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const targetAspect = photoWidth / photoHeight;
+        let sx, sy, sw, sh;
 
-        if (templateImg) {
-          ctx.drawImage(templateImg, offsetX, 0, stripWidth, stripHeight);
+        if (imgAspect > targetAspect) {
+          sh = img.naturalHeight; sw = sh * targetAspect;
+          sx = (img.naturalWidth - sw) / 2; sy = 0;
         } else {
-          // Branding
-          ctx.fillStyle = '#000000';
-          ctx.font = 'bold 36px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(event?.name?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, offsetX + stripWidth / 2, stripHeight - 140);
-          
-          ctx.font = '20px monospace';
-          ctx.fillStyle = '#999999';
-          ctx.fillText(new Date().toLocaleDateString(), offsetX + stripWidth / 2, stripHeight - 80);
+          sw = img.naturalWidth; sh = sw / targetAspect;
+          sx = 0; sy = (img.naturalHeight - sh) / 2;
         }
-      };
+        
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, photoWidth, photoHeight);
+      }
 
-      drawSingleStrip(0, 0); // Strip kiri
-      drawSingleStrip(stripWidth, 0); // Strip kanan
+      // Draw Template Overlay on top of EVERYTHING
+      if (templateImg) {
+        ctx.drawImage(templateImg, 0, 0, canvasWidth, canvasHeight);
+      } else {
+        // Fallback Branding for 2-column
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(event?.name?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, canvasWidth / 2, canvasHeight - 100);
+      }
 
       const result = canvas.toDataURL('image/jpeg', 0.8);
       // Fail-safe: if string is too short, the canvas export failed

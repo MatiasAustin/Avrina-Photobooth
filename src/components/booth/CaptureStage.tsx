@@ -1,6 +1,7 @@
 import { RefObject } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { PhotoTemplate, BoothState } from '../../types';
+import { cn } from '../../lib/utils';
 
 interface CaptureStageProps {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -35,106 +36,116 @@ export function CaptureStage({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const isReview = state === 'review_shot';
+
   return (
     <motion.div 
       key="camera"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="z-10 absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+      className="z-10 absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-pawtobooth-beige)]/40 backdrop-blur-sm"
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-center">
-        {/* Captured Photo Overlay - Only in review_shot */}
-        {state === 'review_shot' && lastCapturedPhoto && (
-          <motion.div 
-            initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="absolute inset-0 z-20 flex items-center justify-center p-8 pointer-events-auto bg-[var(--color-pawtobooth-beige)]/80 backdrop-blur-md"
-          >
-             <div className="relative w-full max-w-2xl aspect-square">
-                <img src={lastCapturedPhoto} className="w-full h-full object-cover rounded-[3rem] shadow-sm border-4 border-black/5" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent flex flex-col justify-end p-8 gap-6 rounded-2xl">
-                   <div className="space-y-1">
-                      <h3 className="text-4xl font-black uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Shot #{currentShot + 1} Captured!</h3>
-                      {isTimeout ? (
-                        <p className="text-red-500 font-mono text-[10px] uppercase tracking-widest leading-none">Time's Up: Retake disabled</p>
-                      ) : (
-                        <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-sm uppercase tracking-widest leading-none">Review your pose or retake it</p>
-                      )}
-                   </div>
-                   <div className="flex gap-4 text-[var(--color-pawtobooth-dark)]">
-                      <button 
-                        onClick={onRetake}
-                        disabled={isTimeout}
-                        className={`flex-1 py-5 backdrop-blur-xl border border-black/10 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs transition-all ${
-                          isTimeout ? 'opacity-20 cursor-not-allowed bg-transparent' : 'bg-black/5 hover:bg-black/10'
-                        }`}
-                      >
-                        Retake Shot
-                      </button>
-                      <button 
-                        onClick={onNext}
-                        className="flex-1 py-5 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-[var(--color-pawtobooth-dark)] active:scale-[0.98] transition-all shadow-md"
-                      >
-                        {currentShot + 1 >= totalShots ? 'Finalize Session' : 'Next Photo'}
-                      </button>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* Template Overlay Preview - Lower opacity during live preview so user can see themselves */}
-        {selectedTemplate && (
-          <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 flex items-center justify-center ${state === 'review_shot' ? 'opacity-30' : 'opacity-40'}`}>
-            <img src={selectedTemplate.image_url} className="w-full h-full object-cover mix-blend-screen" referrerPolicy="no-referrer" />
-          </div>
-        )}
-
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {countdown > 0 && (
-            <motion.span 
-              key={countdown}
-              initial={{ scale: 2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-[15rem] md:text-[20rem] font-bold text-[var(--color-pawtobooth-dark)] drop-shadow-lg z-30"
-            >
-              {countdown}
-            </motion.span>
+      {/* 4x6 Aspect Ratio Container (Standard Photobooth Strip Layout) */}
+      <div className="relative h-[85vh] aspect-[4/6] max-w-[90vw] bg-white rounded-[3rem] shadow-2xl overflow-hidden border-8 border-white pointer-events-auto">
+        
+        {/* Camera/Photo Area */}
+        <div className="absolute inset-0 z-0">
+          {isReview && lastCapturedPhoto ? (
+            <motion.img 
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              src={lastCapturedPhoto} 
+              className="w-full h-full object-cover" 
+            />
+          ) : (
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover scale-x-[-1]" 
+            />
           )}
         </div>
 
-        {/* 1:1 Safe Area Mask (Indicates the actual square crop) */}
-        {state !== 'review_shot' && (
-          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-            {/* Darkened Sides for Square crop (assuming screen is 16:9, we darken the sides to show a 1:1 square in the middle) */}
-            <div className="absolute inset-y-0 left-0 w-[calc(50%-50vh)] bg-white/60 backdrop-blur-[2px] pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-[calc(50%-50vh)] bg-white/60 backdrop-blur-[2px] pointer-events-none" />
-            
-            {/* Center Area Border/Indicator */}
-            <div className="h-full aspect-square border-2 border-white/60 relative flex flex-col items-center justify-start p-6">
-               <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/80 shadow-sm" />
-               <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/80 shadow-sm" />
-               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/80 shadow-sm" />
-               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/80 shadow-sm" />
-               
-               <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/80 tracking-[0.3em] uppercase bg-white/60 px-3 py-1 rounded-full backdrop-blur-md shadow-sm">Square Safe Area</p>
-            </div>
+        {/* Template Overlay - The Masterpiece */}
+        {selectedTemplate?.image_url && (
+          <div className={cn(
+            "absolute inset-0 z-10 pointer-events-none transition-opacity duration-500",
+            isReview ? "opacity-100" : "opacity-60"
+          )}>
+             <img 
+               src={selectedTemplate.image_url} 
+               className="w-full h-full object-cover" 
+               referrerPolicy="no-referrer" 
+             />
           </div>
         )}
-        
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl px-8 py-4 rounded-full border border-black/5 flex items-center gap-8 text-sm font-mono uppercase tracking-widest z-30 shadow-md pointer-events-auto text-[var(--color-pawtobooth-dark)]">
-           <div className="flex items-center gap-3">
-             <span className="text-[var(--color-pawtobooth-dark)]/60">Status</span>
-             <span className="font-bold">{currentShot + 1} / {totalShots}</span>
-           </div>
-           
-           <div className="w-[1px] h-6 bg-black/10" />
-           
-           <div className={`flex items-center gap-3 ${isTimeout ? 'text-red-500' : ''}`}>
-             <span className="text-[var(--color-pawtobooth-dark)]/60 italic">Time Left</span>
-             <span className={`font-bold ${isTimeout ? 'animate-pulse' : ''}`}>{formatTime(globalTimeLeft)}</span>
-           </div>
-        </div>
+
+        {/* Countdown Overlay */}
+        <AnimatePresence>
+          {countdown > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 2 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+            >
+              <span className="text-[12rem] font-black text-white drop-shadow-[0_0_40px_rgba(0,0,0,0.5)] italic">
+                {countdown}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Action Controls Overlay (only during review) */}
+        {isReview && (
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col gap-6"
+          >
+             <div className="space-y-1">
+                <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot #{currentShot + 1} Captured!</h3>
+                <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Pose looks great! Next one?</p>
+             </div>
+             
+             <div className="flex gap-4">
+                <button 
+                  onClick={onRetake}
+                  disabled={isTimeout}
+                  className={cn(
+                    "flex-1 py-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] text-white transition-all hover:bg-white/20",
+                    isTimeout && "opacity-20 cursor-not-allowed"
+                  )}
+                >
+                  Retake Shot
+                </button>
+                <button 
+                  onClick={onNext}
+                  className="flex-1 py-5 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#2d5032] active:scale-[0.98] transition-all shadow-xl"
+                >
+                  {currentShot + 1 >= totalShots ? 'Finalize Session' : 'Next Photo'}
+                </button>
+             </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Floating Status Bar (Bottom of Screen) */}
+      <div className="mt-8 bg-white/90 backdrop-blur-2xl px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
+         <div className="flex items-center gap-4">
+           <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Status</span>
+           <span className="font-black text-base">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
+         </div>
+         
+         <div className="w-[1px] h-8 bg-black/5" />
+         
+         <div className={cn("flex items-center gap-4", isTimeout && "text-red-500")}>
+           <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Time Left</span>
+           <span className={cn("font-black text-base", isTimeout && "animate-pulse")}>{formatTime(globalTimeLeft)}</span>
+         </div>
       </div>
     </motion.div>
   );
