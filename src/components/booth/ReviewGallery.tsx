@@ -208,20 +208,21 @@ export function ReviewGallery({
                     });
                   }}
                   style={{ 
-                    x: transforms[i].x * 100 + '%', 
-                    y: transforms[i].y * 100 + '%', 
+                    left: (transforms[i].x || 0) * 100 + '%', 
+                    top: (transforms[i].y || 0) * 100 + '%', 
                     scale: transforms[i].scale,
                     width: '45%', 
                     aspectRatio: '1/1',
                     touchAction: 'none',
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
                     zIndex: activeEditIdx === i ? 30 : 10 
                   }}
                   className={cn(
-                    "cursor-move overflow-hidden bg-neutral-200 border-2 transition-shadow",
-                    activeEditIdx === i ? "border-[#3E6B43] ring-8 ring-[#3E6B43]/20" : "border-white shadow-lg"
+                    "cursor-move overflow-hidden border-2 transition-shadow",
+                    // Adding bg-blue-500 for debug visibility
+                    activeEditIdx === i 
+                      ? "border-[#3E6B43] ring-8 ring-[#3E6B43]/20 bg-[#3E6B43]/20" 
+                      : "border-white shadow-lg bg-blue-500/20"
                   )}
                 >
                    <img 
@@ -234,12 +235,12 @@ export function ReviewGallery({
                 </motion.div>
               ))}
 
-              {/* Layer 2: Template Overlay (Fixed on Top, semi-transparent during edit) */}
+              {/* Layer 2: Template Overlay (Permanently semi-transparent for debugging) */}
               {templateImageUrl && (
                 <div 
                   className={cn(
-                    "absolute inset-0 pointer-events-none transition-opacity duration-300",
-                    activeEditIdx !== null ? "z-20 opacity-50" : "z-[25] opacity-100"
+                    "absolute inset-0 pointer-events-none transition-opacity duration-300 z-20",
+                    activeEditIdx !== null ? "opacity-40" : "opacity-70"
                   )}
                 >
                    <img src={templateImageUrl} className="w-full h-full object-cover" />
