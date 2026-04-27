@@ -6,8 +6,14 @@
 }
 
 @layer base {
+  :root {
+    --color-pawtobooth-beige: #F5F1E6;
+    --color-pawtobooth-green: #3E6B43;
+    --color-pawtobooth-dark: #2B4C2F;
+    --color-pawtobooth-light: #EBE4D5;
+  }
   body {
-    @apply bg-black text-neutral-100 antialiased selection:bg-white selection:text-black;
+    @apply bg-[#F5F1E6] text-[#2B4C2F] antialiased selection:bg-[#3E6B43] selection:text-[#F5F1E6];
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -45,5 +51,5 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/5 rounded-full hover:bg-white/20 transition-colors;
+  @apply bg-[#3E6B43]/20 rounded-full hover:bg-[#3E6B43]/40 transition-colors;
 }

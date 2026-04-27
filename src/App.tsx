@@ -10,6 +10,7 @@ import { PublicGallery } from './components/gallery/PublicGallery';
 import { Launchpad } from './components/Launchpad';
 import { DemoBooth } from './components/DemoBooth';
 import { DevDashboard } from './components/dev/DevDashboard';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -40,7 +41,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans selection:bg-white selection:text-black">
+    <SettingsProvider>
+      <div className="min-h-screen bg-[var(--color-pawtobooth-beige)] text-[var(--color-pawtobooth-dark)] font-sans selection:bg-[var(--color-pawtobooth-green)] selection:text-[var(--color-pawtobooth-beige)]">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
@@ -67,5 +69,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
+    </SettingsProvider>
   );
 }

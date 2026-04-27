@@ -10,4 +10,4 @@ export const SUPPORT_WA_NUMBER = "6281234567890";
 export const SUBSCRIPTION_PRICE = 150000;
 
 // Platform Name
-export const PLATFORM_NAME = "Avrina Photobooth";
+export const PLATFORM_NAME = "Pawtobooth";

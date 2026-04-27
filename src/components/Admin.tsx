@@ -12,6 +12,7 @@ import { PremiumModal } from './admin/PremiumModal';
 import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
 import { UserProfile } from './admin/UserProfile';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface AdminProps {
   session: any;
@@ -25,6 +26,7 @@ export function Admin({ session }: AdminProps) {
   const [loading, setLoading] = useState(true);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const { settings } = useSettings();
 
   const fetchData = async () => {
     if (session?.user) {
@@ -120,36 +122,36 @@ export function Admin({ session }: AdminProps) {
   const isPremium = profile?.subscription_tier === 'pro';
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden text-white font-sans">
+    <div className="flex h-screen bg-[var(--color-pawtobooth-beige)] overflow-hidden text-[var(--color-pawtobooth-dark)] font-sans">
       <AdminSidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         isPremium={isPremium}
       />
 
-      <main className="flex-1 overflow-y-auto bg-neutral-950 pb-20">
-        <header className="p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-neutral-950/80 backdrop-blur-xl z-20">
+      <main className="flex-1 overflow-y-auto bg-[var(--color-pawtobooth-beige)] pb-20">
+        <header className="p-8 border-b border-black/5 flex items-center justify-between sticky top-0 bg-[var(--color-pawtobooth-beige)]/80 backdrop-blur-xl z-20">
           <div>
-             <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-1">
+             <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60 mb-1">
                Managed Services / {activeTab}
              </h2>
              <p className="text-xl font-black uppercase tracking-tight italic">
-               {(profile?.full_name || 'Admin')} • Avrina v1.0
+               {(profile?.full_name || 'Admin')} • {settings.appName} v1.0
              </p>
           </div>
           <div className="flex items-center gap-4">
              {isPremium && (
-               <div className="px-4 py-2 bg-blue-600/10 border border-blue-600/30 rounded-full flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest">
+               <div className="px-4 py-2 bg-[#3E6B43]/10 border border-[#3E6B43]/30 rounded-full flex items-center gap-2 text-[10px] font-black text-[#3E6B43] uppercase tracking-widest">
                  <Crown className="w-3 h-3 fill-current" /> Professional
                </div>
              )}
-             <div className="px-4 py-2 bg-neutral-900 border border-white/10 rounded-full flex items-center gap-2 text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
+             <div className="px-4 py-2 bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-full flex items-center gap-2 text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/80 uppercase tracking-widest">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                 Network Online
              </div>
              <button 
                onClick={handleLogout}
-               className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500 hover:text-white transition-all text-neutral-400"
+               className="p-3 rounded-xl bg-[var(--color-pawtobooth-light)] border border-black/10 hover:bg-red-500 hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/80"
                title="Sign Out"
              >
                 <LogOut className="w-5 h-5" />
@@ -173,7 +175,7 @@ export function Admin({ session }: AdminProps) {
             />
           ) : loading ? (
              <div className="flex items-center justify-center py-20">
-                <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+                <div className="w-12 h-12 border-2 border-[#3E6B43]/30 border-t-[#3E6B43] rounded-full animate-spin" />
              </div>
           ) : (
             <>
@@ -187,7 +189,7 @@ export function Admin({ session }: AdminProps) {
                   />
                   <div className="space-y-6">
                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Recent Sessions</h3>
+                        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Recent Sessions</h3>
                      </div>
                      <SessionGrid sessions={sessions} />
                   </div>

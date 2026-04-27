@@ -19,7 +19,10 @@ export function DevDashboard({ session }: { session: any }) {
   const [settings, setSettings] = useState({
     support_whatsapp: '',
     subscription_price: '150000',
-    qris_image_url: ''
+    qris_image_url: '',
+    app_name: '',
+    app_logo_url: '',
+    app_favicon_url: ''
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -31,6 +34,9 @@ export function DevDashboard({ session }: { session: any }) {
         if (s.key === 'support_whatsapp') newSettings.support_whatsapp = s.value;
         if (s.key === 'subscription_price') newSettings.subscription_price = s.value;
         if (s.key === 'qris_image_url') newSettings.qris_image_url = s.value;
+        if (s.key === 'app_name') newSettings.app_name = s.value;
+        if (s.key === 'app_logo_url') newSettings.app_logo_url = s.value;
+        if (s.key === 'app_favicon_url') newSettings.app_favicon_url = s.value;
       });
       setSettings(newSettings);
     }
@@ -219,12 +225,42 @@ export function DevDashboard({ session }: { session: any }) {
     }
   };
 
+  const handleAssetUpload = async (e: React.ChangeEvent<HTMLInputElement>, settingKey: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setSavingSettings(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${settingKey}_${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('platform-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('platform-assets')
+        .getPublicUrl(filePath);
+
+      await saveSetting(settingKey, publicUrl);
+      alert(`${settingKey} updated successfully!`);
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed. Pastikan Anda sudah membuat bucket 'platform-assets' di Supabase.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[var(--color-pawtobooth-beige)] text-[var(--color-pawtobooth-dark)] font-sans selection:bg-[var(--color-pawtobooth-green)] selection:text-[var(--color-pawtobooth-beige)]">
       {/* Background Decor */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/5 blur-[120px] rounded-full" />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-50">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#3E6B43]/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#3E6B43]/5 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative max-w-7xl mx-auto p-8 space-y-12">
@@ -248,14 +284,14 @@ export function DevDashboard({ session }: { session: any }) {
              </div>
           </div>
           
-          <div className="flex bg-neutral-900/50 p-1.5 rounded-[24px] border border-white/5 backdrop-blur-xl">
+          <div className="flex bg-[var(--color-pawtobooth-light)] p-1.5 rounded-[24px] border border-black/5 backdrop-blur-xl">
              <button 
                onClick={() => setActiveTab('operators')}
                className={cn(
                  "px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
                  activeTab === 'operators' 
-                  ? "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
-                  : "text-neutral-500 hover:text-white"
+                  ? "bg-white text-[var(--color-pawtobooth-dark)] shadow-[0_10px_30px_rgba(0,0,0,0.05)]" 
+                  : "text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)]"
                )}
              >
                <div className="flex items-center gap-2">
@@ -267,8 +303,8 @@ export function DevDashboard({ session }: { session: any }) {
                className={cn(
                  "px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
                  activeTab === 'settings' 
-                  ? "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
-                  : "text-neutral-500 hover:text-white"
+                  ? "bg-white text-[var(--color-pawtobooth-dark)] shadow-[0_10px_30px_rgba(0,0,0,0.05)]" 
+                  : "text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)]"
                )}
              >
                <div className="flex items-center gap-2">
@@ -470,7 +506,66 @@ export function DevDashboard({ session }: { session: any }) {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-10">
-                       <div className="bg-neutral-900/40 p-8 rounded-[40px] border border-white/5 backdrop-blur-sm space-y-6">
+                        {/* Branding Settings */}
+                        <div className="bg-white p-8 rounded-[40px] border border-black/5 shadow-sm space-y-6">
+                           <div className="flex items-center gap-4 text-[#3E6B43]">
+                              <div className="w-10 h-10 bg-[#3E6B43]/10 rounded-2xl flex items-center justify-center">
+                                <Crown className="w-5 h-5" />
+                              </div>
+                              <h4 className="text-sm font-black uppercase tracking-widest">Platform Branding</h4>
+                           </div>
+                           
+                           <div className="space-y-3">
+                              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60">Application Name</label>
+                              <input 
+                                type="text" 
+                                value={settings.app_name}
+                                onChange={(e) => setSettings({ ...settings, app_name: e.target.value })}
+                                onBlur={(e) => saveSetting('app_name', e.target.value)}
+                                className="w-full bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-2xl px-6 py-5 font-mono text-sm focus:border-[#3E6B43] outline-none transition-all text-[var(--color-pawtobooth-dark)] placeholder:text-black/30"
+                                placeholder="e.g. Pawtobooth"
+                              />
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-3">
+                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60">Logo URL</label>
+                                 <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={settings.app_logo_url}
+                                      onChange={(e) => setSettings({ ...settings, app_logo_url: e.target.value })}
+                                      onBlur={(e) => saveSetting('app_logo_url', e.target.value)}
+                                      className="flex-1 w-full bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-2xl px-4 py-3 font-mono text-xs focus:border-[#3E6B43] outline-none transition-all text-[var(--color-pawtobooth-dark)]"
+                                      placeholder="https://..."
+                                    />
+                                    <label className="px-4 py-3 bg-[#3E6B43] text-white rounded-2xl cursor-pointer hover:bg-[#2B4C2F] transition-all flex items-center justify-center">
+                                       <Activity className="w-4 h-4" />
+                                       <input type="file" className="hidden" onChange={(e) => handleAssetUpload(e, 'app_logo_url')} accept="image/*" />
+                                    </label>
+                                 </div>
+                              </div>
+                              <div className="space-y-3">
+                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60">Favicon URL</label>
+                                 <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={settings.app_favicon_url}
+                                      onChange={(e) => setSettings({ ...settings, app_favicon_url: e.target.value })}
+                                      onBlur={(e) => saveSetting('app_favicon_url', e.target.value)}
+                                      className="flex-1 w-full bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-2xl px-4 py-3 font-mono text-xs focus:border-[#3E6B43] outline-none transition-all text-[var(--color-pawtobooth-dark)]"
+                                      placeholder="https://..."
+                                    />
+                                    <label className="px-4 py-3 bg-[#3E6B43] text-white rounded-2xl cursor-pointer hover:bg-[#2B4C2F] transition-all flex items-center justify-center">
+                                       <Activity className="w-4 h-4" />
+                                       <input type="file" className="hidden" onChange={(e) => handleAssetUpload(e, 'app_favicon_url')} accept="image/*" />
+                                    </label>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                       <div className="bg-white p-8 rounded-[40px] border border-black/5 shadow-sm space-y-6">
                           <div className="flex items-center gap-4 text-blue-500">
                              <div className="w-10 h-10 bg-blue-600/10 rounded-2xl flex items-center justify-center">
                                <Users className="w-5 h-5" />
@@ -492,7 +587,7 @@ export function DevDashboard({ session }: { session: any }) {
                           </div>
                        </div>
 
-                       <div className="bg-neutral-900/40 p-8 rounded-[40px] border border-white/5 backdrop-blur-sm space-y-6">
+                       <div className="bg-white p-8 rounded-[40px] border border-black/5 shadow-sm space-y-6">
                           <div className="flex items-center gap-4 text-green-500">
                              <div className="w-10 h-10 bg-green-600/10 rounded-2xl flex items-center justify-center">
                                <DollarSign className="w-5 h-5" />
@@ -517,7 +612,7 @@ export function DevDashboard({ session }: { session: any }) {
                        </div>
                     </div>
 
-                    <div className="bg-neutral-900/40 p-10 rounded-[48px] border border-white/5 backdrop-blur-sm space-y-8 flex flex-col items-center text-center">
+                    <div className="bg-white p-10 rounded-[48px] border border-black/5 shadow-sm space-y-8 flex flex-col items-center text-center">
                        <div className="space-y-2">
                           <h4 className="text-sm font-black uppercase tracking-widest text-white">Payment Gateway Asset</h4>
                           <p className="text-[10px] text-neutral-500 italic max-w-[200px]">Displayed to customers during the checkout process.</p>
@@ -560,7 +655,7 @@ export function DevDashboard({ session }: { session: any }) {
                  </div>
 
                  {/* Status Footer */}
-                 <div className="p-10 bg-blue-600 border border-white/10 rounded-[48px] flex flex-col md:flex-row md:items-center gap-8 justify-between shadow-[0_20px_50px_rgba(37,99,235,0.2)]">
+                 <div className="p-10 bg-[#3E6B43] border border-black/5 rounded-[48px] flex flex-col md:flex-row md:items-center gap-8 justify-between shadow-md">
                     <div className="flex items-center gap-6">
                        <div className="w-16 h-16 bg-white/20 rounded-[24px] flex items-center justify-center text-white backdrop-blur-md shadow-inner">
                           <Activity className="w-8 h-8" />
