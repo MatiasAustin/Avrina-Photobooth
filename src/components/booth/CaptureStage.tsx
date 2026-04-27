@@ -45,9 +45,18 @@ export function CaptureStage({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="z-[100] absolute inset-0 bg-[var(--color-pawtobooth-beige)]"
+      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
     >
-      {/* Square Capture Container - Forced Absolute Centering */}
-      <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vh] aspect-square max-w-[90vw] bg-black rounded-[2rem] shadow-2xl overflow-hidden border-[12px] border-white z-20">
+      {/* Square Capture Container - Inline Style Centering */}
+      <div 
+        className="w-[75vh] aspect-square max-w-[90vw] bg-black rounded-[2rem] shadow-2xl overflow-hidden border-[12px] border-white z-20"
+        style={{ 
+          position: 'absolute', 
+          top: '45%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)' 
+        }}
+      >
         
         {/* Camera Area */}
         <div className="absolute inset-0 z-0">
@@ -103,8 +112,20 @@ export function CaptureStage({
         )}
       </div>
 
-      {/* Floating Status Bar - Forced Absolute Bottom */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-[110] shadow-2xl text-[var(--color-pawtobooth-dark)]">
+      {/* Floating Status Bar - Inline Style Bottom Force */}
+      <div 
+        className="bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-[110] shadow-2xl text-[var(--color-pawtobooth-dark)]"
+        style={{
+          position: 'absolute',
+          bottom: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'fit-content',
+          minWidth: '400px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
          <div className="flex items-center gap-4">
             <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Photo</span>
             <span className="font-black text-xl text-[#3E6B43]">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
