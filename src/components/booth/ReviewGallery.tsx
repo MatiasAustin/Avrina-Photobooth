@@ -29,6 +29,8 @@ export function ReviewGallery({
   onFinalize,
   isTimeout = false 
 }: ReviewGalleryProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const updateTransform = (slotIdx: number, updates: Partial<PhotoTransform>) => {
     setTransforms(prev => {
       const next = [...prev];
@@ -37,20 +39,16 @@ export function ReviewGallery({
     });
   };
 
-  // Helper to get initial grid positions (scaled to preview UI width roughly 400px)
+  // Helper to get initial grid positions (Normalized 0-1)
   const getInitialGridPos = (idx: number) => {
     const cols = 2;
     const row = Math.floor(idx / cols);
     const col = idx % cols;
     
-    // Preview card is usually ~400px wide. 4:6 ratio means ~600px height.
-    // We want 2 columns, so each cell is 200px wide.
-    const cellW = 180; // 180px per photo to leave some gap
-    const cellH = 180;
-    
+    // Normalize to 0-1 range
     return {
-      x: 20 + col * 200, 
-      y: 20 + row * 200,
+      x: 0.05 + col * 0.45, 
+      y: 0.05 + row * 0.3,
       scale: 1.1
     };
   };
@@ -63,7 +61,6 @@ export function ReviewGallery({
       const nextSlotIdx = selectedIndices.length;
       const pos = getInitialGridPos(nextSlotIdx);
       
-      // Update the transform for this slot with initial grid position
       setTransforms(prev => {
         const next = [...prev];
         next[nextSlotIdx] = pos;
@@ -191,7 +188,10 @@ export function ReviewGallery({
         </div>
 
         <div className="bg-white p-6 rounded-[50px] border border-black/5 shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative group">
-           <div className="relative aspect-[4/6] bg-neutral-100 rounded-[2rem] overflow-hidden shadow-inner">
+           <div 
+             ref={containerRef}
+             className="relative aspect-[4/6] bg-neutral-100 rounded-[2rem] overflow-hidden shadow-inner"
+           >
               
               {/* Layer 0: Selected Photos Background */}
               {selectedIndices.map((photoIdx, i) => (
@@ -201,16 +201,20 @@ export function ReviewGallery({
                   dragMomentum={false}
                   onDragStart={() => setActiveEditIdx(i)}
                   onDrag={(e, info) => {
+                    if (!containerRef.current) return;
+                    const rect = containerRef.current.getBoundingClientRect();
+                    
+                    // Update transform with normalized delta
                     updateTransform(i, { 
-                      x: transforms[i].x + info.delta.x,
-                      y: transforms[i].y + info.delta.y 
+                      x: transforms[i].x + (info.delta.x / rect.width),
+                      y: transforms[i].y + (info.delta.y / rect.height) 
                     });
                   }}
                   style={{ 
-                    x: transforms[i].x, 
-                    y: transforms[i].y, 
+                    x: transforms[i].x * 100 + '%', // Use percentage of card width
+                    y: transforms[i].y * 100 + '%', // Use percentage of card height
                     scale: transforms[i].scale,
-                    width: '50%', // 50% of the 4R preview width
+                    width: '45%', // Default cell width (~45% of card)
                     aspectRatio: '1/1',
                     touchAction: 'none',
                     position: 'absolute',

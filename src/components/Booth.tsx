@@ -400,23 +400,17 @@ export function Booth() {
         });
       }
 
-      // --- ABSOLUTE POSITIONING LOGIC ---
-      // UI preview card is ~400px wide. Canvas is 1200px.
-      // Scale factor is exactly 3.0
-      const UI_WIDTH = 400;
-      const UI_SCALE = canvasWidth / UI_WIDTH; 
-
+      // --- NORMALIZED POSITIONING LOGIC (0-1) ---
       // Draw Photos behind template
       loadedImages.forEach((img, i) => {
         const transform = transforms ? transforms[i] : { x: 0, y: 0, scale: 1 };
         
-        // UI dimensions were width: 50% of card (200px) and aspectRatio 1:1
-        // So canvas dimensions are 200 * 3 = 600px
-        const photoWidth = 200 * UI_SCALE; 
-        const photoHeight = 200 * UI_SCALE;
+        // Match UI width of 45% of card
+        const photoWidth = canvasWidth * 0.45; 
+        const photoHeight = photoWidth; // 1:1 aspect
 
-        const x = (transform.x || 0) * UI_SCALE;
-        const y = (transform.y || 0) * UI_SCALE;
+        const x = (transform.x || 0) * canvasWidth;
+        const y = (transform.y || 0) * canvasHeight;
         const scale = transform.scale || 1;
 
         ctx.save();
