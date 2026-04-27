@@ -111,7 +111,7 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
       {onCancel && (
         <button
           onClick={onCancel}
-          className="mx-auto px-6 py-2 bg-black/5 hover:bg-black/10 backdrop-blur-md rounded-full text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)] font-black text-[8px] uppercase tracking-[0.2em] transition-all"
+          className="mx-auto mt-2 px-8 py-3 bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white backdrop-blur-md rounded-full font-black text-[9px] uppercase tracking-[0.2em] transition-all shadow-sm border border-red-500/20"
         >
           ← Cancel Session
         </button>

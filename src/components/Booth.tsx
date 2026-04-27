@@ -528,7 +528,11 @@ export function Booth() {
 
       <div className="relative z-10 w-full h-full">
         <AnimatePresence mode="wait">
-          {state === 'idle' && <BoothHero onStart={handleStart} />}
+          {state === 'idle' && (
+            <div className="absolute inset-x-0 bottom-0 pb-20 flex justify-center z-50">
+              <BoothHero onStart={handleStart} />
+            </div>
+          )}
         
         {state === 'payment' && (
           <div className="absolute inset-x-0 bottom-0 pb-20 flex justify-center z-50">
