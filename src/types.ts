@@ -10,6 +10,8 @@ export interface EventConfig {
   is_active: boolean;
   session_timeout: number; // in minutes
   qris_image_url?: string;
+  camera_filter?: string;
+  is_mirrored?: boolean;
   created_at: string;
 }
 

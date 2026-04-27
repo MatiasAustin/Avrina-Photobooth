@@ -40,26 +40,18 @@ export function CaptureStage({
       key="camera"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="z-10 relative flex flex-col items-center gap-8"
+      className="z-10 absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
     >
-      <div className="relative rounded-[3rem] overflow-hidden border-[12px] border-neutral-900 shadow-[0_0_80px_rgba(0,0,0,0.5)] bg-black group">
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          muted 
-          className={`z-0 w-full max-w-[80vw] h-auto aspect-video object-cover scale-x-[-1] transition-opacity duration-500 ${state === 'review_shot' ? 'opacity-30' : 'opacity-100'}`}
-        />
-        
+      <div className="relative w-full h-full flex flex-col items-center justify-center">
         {/* Captured Photo Overlay - Only in review_shot */}
         {state === 'review_shot' && lastCapturedPhoto && (
           <motion.div 
             initial={{ scale: 1.1, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="absolute inset-0 z-20 flex items-center justify-center p-4"
+            className="absolute inset-0 z-20 flex items-center justify-center p-8 pointer-events-auto bg-black/60 backdrop-blur-md"
           >
-             <div className="relative w-full h-full">
-                <img src={lastCapturedPhoto} className="w-full h-full object-cover rounded-2xl shadow-2xl" />
+             <div className="relative w-full max-w-2xl aspect-square">
+                <img src={lastCapturedPhoto} className="w-full h-full object-cover rounded-[3rem] shadow-2xl border-4 border-white/20" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-8 gap-6 rounded-2xl">
                    <div className="space-y-1">
                       <h3 className="text-4xl font-black uppercase italic tracking-tighter text-white">Shot #{currentShot + 1} Captured!</h3>
@@ -93,7 +85,7 @@ export function CaptureStage({
 
         {/* Template Overlay Preview - Lower opacity during live preview so user can see themselves */}
         {selectedTemplate && (
-          <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 ${state === 'review_shot' ? 'opacity-30' : 'opacity-40'}`}>
+          <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 flex items-center justify-center ${state === 'review_shot' ? 'opacity-30' : 'opacity-40'}`}>
             <img src={selectedTemplate.image_url} className="w-full h-full object-cover mix-blend-screen" referrerPolicy="no-referrer" />
           </div>
         )}
@@ -104,7 +96,7 @@ export function CaptureStage({
               key={countdown}
               initial={{ scale: 2, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="text-[12rem] font-bold text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)] z-30"
+              className="text-[15rem] md:text-[20rem] font-bold text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)] z-30"
             >
               {countdown}
             </motion.span>
@@ -114,9 +106,9 @@ export function CaptureStage({
         {/* 1:1 Safe Area Mask (Indicates the actual square crop) */}
         {state !== 'review_shot' && (
           <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-            {/* Darkened Sides */}
-            <div className="absolute inset-y-0 left-0 w-[calc(50%-25%)] bg-black/60 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-[calc(50%-25%)] bg-black/60 pointer-events-none" />
+            {/* Darkened Sides for Square crop (assuming screen is 16:9, we darken the sides to show a 1:1 square in the middle) */}
+            <div className="absolute inset-y-0 left-0 w-[calc(50%-50vh)] bg-black/60 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-[calc(50%-50vh)] bg-black/60 pointer-events-none" />
             
             {/* Center Area Border/Indicator */}
             <div className="h-full aspect-square border-2 border-white/20 relative flex flex-col items-center justify-start p-6">
@@ -130,15 +122,15 @@ export function CaptureStage({
           </div>
         )}
         
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-6 py-2 rounded-full border border-white/10 flex items-center gap-6 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl">
-           <div className="flex items-center gap-2">
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl px-8 py-4 rounded-full border border-white/10 flex items-center gap-8 text-sm font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto">
+           <div className="flex items-center gap-3">
              <span className="text-white/40">Status</span>
-             <span className="text-white">{currentShot + 1} / {totalShots}</span>
+             <span className="text-white font-bold">{currentShot + 1} / {totalShots}</span>
            </div>
            
-           <div className="w-[1px] h-4 bg-white/10" />
+           <div className="w-[1px] h-6 bg-white/10" />
            
-           <div className={`flex items-center gap-2 ${isTimeout ? 'text-red-500' : 'text-white'}`}>
+           <div className={`flex items-center gap-3 ${isTimeout ? 'text-red-500' : 'text-white'}`}>
              <span className="text-white/40 italic">Time Left</span>
              <span className={`font-bold ${isTimeout ? 'animate-pulse' : ''}`}>{formatTime(globalTimeLeft)}</span>
            </div>

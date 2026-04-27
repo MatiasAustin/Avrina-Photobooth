@@ -152,14 +152,18 @@ export function Booth() {
   };
 
   useEffect(() => {
-    const isCaptureState = ['countdown', 'capture', 'review_shot'].includes(state);
-    if (isCaptureState) {
-      const timeout = setTimeout(startCamera, 100);
-      return () => clearTimeout(timeout);
+    if (event && !['summary', 'review'].includes(state)) {
+      startCamera();
     } else {
-      stopCamera();
+      // Don't strictly stop the camera on 'review' so it doesn't flicker if they retake,
+      // but we do stop it on summary or when unmounting.
+      if (state === 'summary') stopCamera();
     }
-  }, [state]);
+    
+    return () => {
+      // Only stop on full unmount to preserve stream across state changes
+    };
+  }, [state, event]);
 
   // Real-time Payment Confirmation Listener
   useEffect(() => {
@@ -249,10 +253,17 @@ export function Booth() {
         context.fillStyle = '#000000';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Draw Video (Mirrored)
+        // 2. Draw Video (Respecting Mirror & Filter)
         context.save();
-        context.translate(canvas.width, 0);
-        context.scale(-1, 1);
+        if (event?.is_mirrored !== false) {
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+        }
+        
+        if (event?.camera_filter) {
+          context.filter = event.camera_filter;
+        }
+
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         context.restore();
 
@@ -502,8 +513,21 @@ export function Booth() {
 
   return (
     <BoothLayout>
-      <AnimatePresence mode="wait">
-        {state === 'idle' && <BoothHero onStart={handleStart} />}
+      {/* Global Camera Background */}
+      <div className={`absolute inset-0 z-0 overflow-hidden bg-black flex items-center justify-center transition-opacity duration-1000 ${['summary', 'review', 'payment'].includes(state) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          muted 
+          style={{ filter: event?.camera_filter || '' }}
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${state === 'idle' ? 'opacity-30' : 'opacity-100'} ${event?.is_mirrored !== false ? 'scale-x-[-1]' : ''}`}
+        />
+      </div>
+
+      <div className="relative z-10 w-full h-full">
+        <AnimatePresence mode="wait">
+          {state === 'idle' && <BoothHero onStart={handleStart} />}
         
         {state === 'payment' && (
           <PaymentGate 
@@ -566,6 +590,7 @@ export function Booth() {
           />
         )}
       </AnimatePresence>
+      </div>
       <canvas ref={canvasRef} className="hidden" />
     </BoothLayout>
   );

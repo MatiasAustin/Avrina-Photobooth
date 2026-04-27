@@ -1,5 +1,5 @@
-import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe, Copy, Check, Upload, ImageIcon } from 'lucide-react';
-import React, { useState } from 'react';
+import { Plus, Calendar, Clock, Camera, DollarSign, Settings, Trash2, X, Save, Globe, Copy, Check, Upload, ImageIcon, Sliders } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 
@@ -9,8 +9,32 @@ interface EventListProps {
   onUpdate: () => void;
 }
 
+const parseFilters = (filterStr: string | undefined) => {
+  const filters = { brightness: 100, contrast: 100, saturate: 100, sepia: 0 };
+  if (!filterStr) return filters;
+  
+  const bMatch = filterStr.match(/brightness\((\d+)%\)/);
+  if (bMatch) filters.brightness = parseInt(bMatch[1]);
+  
+  const cMatch = filterStr.match(/contrast\((\d+)%\)/);
+  if (cMatch) filters.contrast = parseInt(cMatch[1]);
+  
+  const sMatch = filterStr.match(/saturate\((\d+)%\)/);
+  if (sMatch) filters.saturate = parseInt(sMatch[1]);
+  
+  const sepMatch = filterStr.match(/sepia\((\d+)%\)/);
+  if (sepMatch) filters.sepia = parseInt(sepMatch[1]);
+  
+  return filters;
+};
+
+const serializeFilters = (f: {brightness: number, contrast: number, saturate: number, sepia: number}) => {
+  return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) sepia(${f.sepia}%)`;
+};
+
 export function EventList({ userId, events, onUpdate }: EventListProps) {
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  const [cameraFilters, setCameraFilters] = useState({ brightness: 100, contrast: 100, saturate: 100, sepia: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isUploadingQris, setIsUploadingQris] = useState(false);
@@ -110,8 +134,11 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
       qris_enabled: false,
       is_active: true,
       session_timeout: 10,
-      qris_image_url: ''
+      qris_image_url: '',
+      camera_filter: '',
+      is_mirrored: true
     });
+    setCameraFilters({ brightness: 100, contrast: 100, saturate: 100, sepia: 0 });
   };
 
   return (
@@ -180,7 +207,10 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                     <Globe className="w-5 h-5" />
                   </button>
                   <button 
-                    onClick={() => setEditingEvent(event)}
+                    onClick={() => {
+                      setEditingEvent(event);
+                      setCameraFilters(parseFilters(event.camera_filter));
+                    }}
                     className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all text-neutral-400"
                     title="Settings"
                   >
@@ -339,6 +369,103 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                           >
                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_active ? 'left-5.5' : 'left-0.5'}`} />
                           </button>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-white/10 space-y-6">
+                     <div className="flex items-center gap-2">
+                        <Sliders className="w-5 h-5 text-blue-400" />
+                        <h4 className="font-bold uppercase tracking-widest text-sm">Camera Configuration</h4>
+                     </div>
+                     
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Mirror Camera</label>
+                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                          <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Flip Horizontally</span>
+                          <button 
+                            type="button"
+                            onClick={() => setEditingEvent({...editingEvent, is_mirrored: editingEvent.is_mirrored === false ? true : false})}
+                            className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_mirrored !== false ? 'bg-blue-500' : 'bg-neutral-700'}`}
+                          >
+                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_mirrored !== false ? 'left-5.5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4 p-6 bg-black/40 border border-white/5 rounded-2xl">
+                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Live Filter Adjustments</label>
+                        
+                        {/* Brightness */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                             <span>Brightness</span>
+                             <span>{cameraFilters.brightness}%</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="200" 
+                            value={cameraFilters.brightness}
+                            onChange={(e) => {
+                              const newFilters = {...cameraFilters, brightness: parseInt(e.target.value)};
+                              setCameraFilters(newFilters);
+                              setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
+                            }}
+                            className="w-full accent-blue-500"
+                          />
+                        </div>
+
+                        {/* Contrast */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                             <span>Contrast</span>
+                             <span>{cameraFilters.contrast}%</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="200" 
+                            value={cameraFilters.contrast}
+                            onChange={(e) => {
+                              const newFilters = {...cameraFilters, contrast: parseInt(e.target.value)};
+                              setCameraFilters(newFilters);
+                              setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
+                            }}
+                            className="w-full accent-blue-500"
+                          />
+                        </div>
+
+                        {/* Saturation */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                             <span>Saturation</span>
+                             <span>{cameraFilters.saturate}%</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="200" 
+                            value={cameraFilters.saturate}
+                            onChange={(e) => {
+                              const newFilters = {...cameraFilters, saturate: parseInt(e.target.value)};
+                              setCameraFilters(newFilters);
+                              setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
+                            }}
+                            className="w-full accent-blue-500"
+                          />
+                        </div>
+
+                        {/* Sepia */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                             <span>Vintage (Sepia)</span>
+                             <span>{cameraFilters.sepia}%</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="100" 
+                            value={cameraFilters.sepia}
+                            onChange={(e) => {
+                              const newFilters = {...cameraFilters, sepia: parseInt(e.target.value)};
+                              setCameraFilters(newFilters);
+                              setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
+                            }}
+                            className="w-full accent-blue-500"
+                          />
                         </div>
                      </div>
                   </div>
