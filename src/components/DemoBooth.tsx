@@ -227,6 +227,19 @@ export function DemoBooth() {
     document.body.removeChild(link);
   };
 
+  // Automatic Progression for Demo
+  useEffect(() => {
+    if (state !== 'review_shot') return;
+    const t = setTimeout(handleShotNext, 2500);
+    return () => clearTimeout(t);
+  }, [state, currentShot]);
+
+  const handleSelectiveRetake = (idx: number) => {
+    setCurrentShot(idx);
+    setState('countdown');
+    startCountdown();
+  };
+
   return (
     <BoothLayout>
        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-yellow-400 text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
@@ -254,11 +267,7 @@ export function DemoBooth() {
             totalShots={MOCK_EVENT.shot_count}
             lastCapturedPhoto={capturedPhotos[capturedPhotos.length - 1]}
             state={state}
-            onRetake={() => {
-                setCapturedPhotos(prev => prev.slice(0, -1));
-                setState('countdown');
-                startCountdown();
-            }}
+            onRetake={() => {}} // Auto-advance handles this
             onNext={handleShotNext}
           />
         )}
@@ -273,6 +282,7 @@ export function DemoBooth() {
                 setCurrentShot(0);
                 setState('template_selection');
             }}
+            onSelectiveRetake={handleSelectiveRetake}
             onFinalize={handleFinalize}
           />
         )}

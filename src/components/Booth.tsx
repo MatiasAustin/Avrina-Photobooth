@@ -579,7 +579,7 @@ export function Booth() {
             totalShots={Math.max(event?.shot_count || 3, selectedTemplate?.slot_count || 0)}
             lastCapturedPhoto={capturedPhotos[capturedPhotos.length - 1]}
             state={state}
-            onRetake={handleShotRetake}
+            onRetake={() => {}} // Not used anymore as we have auto-advance
             onNext={handleShotNext}
             isTimeout={isTimeout}
             globalTimeLeft={globalTimeLeft}
@@ -592,7 +592,10 @@ export function Booth() {
             slotCount={selectedTemplate?.slot_count || 3}
             templateImageUrl={selectedTemplate?.image_url}
             onRetake={handleRetake}
-            onSelectiveRetake={handleSelectiveRetake}
+            onSelectiveRetake={(idx) => {
+              setCurrentShot(idx);
+              setState('countdown');
+            }}
             onFinalize={handleFinalize}
             isTimeout={isTimeout}
           />
