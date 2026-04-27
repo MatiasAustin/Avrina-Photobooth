@@ -153,23 +153,23 @@ export function DevDashboard({ session }: { session: any }) {
 
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-8 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.1),transparent_70%)]" />
+      <div className="min-h-screen bg-[var(--color-pawtobooth-beige)] flex items-center justify-center p-8 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.05),transparent_70%)]" />
         <div className="relative text-center space-y-10 max-w-sm">
           <motion.div 
             initial={{ scale: 0.5, rotate: -10, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
-            className="w-32 h-32 bg-red-600/10 rounded-[40px] flex items-center justify-center mx-auto border border-red-600/20 shadow-[0_0_50px_rgba(220,38,38,0.2)]"
+            className="w-32 h-32 bg-red-500/10 rounded-[40px] flex items-center justify-center mx-auto border border-red-500/20 shadow-sm"
           >
-             <Shield className="w-16 h-16 text-red-600 drop-shadow-2xl" />
+             <Shield className="w-16 h-16 text-red-600 drop-shadow-sm" />
           </motion.div>
           <div className="space-y-4">
-            <h1 className="text-5xl font-black uppercase tracking-tighter text-white">System <span className="text-red-600">Locked</span></h1>
-            <p className="text-neutral-500 text-sm italic font-medium leading-relaxed uppercase tracking-widest">Operator account does not have root privileges for this zone.</p>
+            <h1 className="text-5xl font-black uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">System <span className="text-red-600">Locked</span></h1>
+            <p className="text-[var(--color-pawtobooth-dark)]/60 text-sm italic font-medium leading-relaxed uppercase tracking-widest">Operator account does not have root privileges for this zone.</p>
           </div>
           <button 
             onClick={() => navigate('/')} 
-            className="w-full py-5 bg-white text-black font-black uppercase text-xs tracking-[0.3em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl"
+            className="w-full py-5 bg-[#3E6B43] text-white font-black uppercase text-xs tracking-[0.3em] rounded-2xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md"
           >
             Return to Surface
           </button>
@@ -317,16 +317,16 @@ export function DevDashboard({ session }: { session: any }) {
         {/* Global Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
            {[
-             { label: 'Total Operators', value: stats.total, icon: Users, color: 'text-neutral-400' },
+             { label: 'Total Operators', value: stats.total, icon: Users, color: 'text-[var(--color-pawtobooth-dark)]/40' },
              { label: 'Premium Accounts', value: stats.premium, icon: Crown, color: 'text-blue-500' },
-             { label: 'Estimated MRR', value: `Rp ${(stats.revenue / 1000).toLocaleString()}k`, icon: DollarSign, color: 'text-green-500' }
+             { label: 'Estimated MRR', value: `Rp ${(stats.revenue / 1000).toLocaleString()}k`, icon: DollarSign, color: 'text-[#3E6B43]' }
            ].map((stat, i) => (
-             <div key={i} className="p-8 rounded-[40px] bg-neutral-900/40 border border-white/5 backdrop-blur-md space-y-4 group hover:border-white/10 transition-colors">
+             <div key={i} className="p-8 rounded-[40px] bg-white border border-black/5 shadow-sm space-y-4 group hover:border-black/10 transition-colors">
                 <div className="flex items-center justify-between">
-                   <div className={cn("p-3 rounded-2xl bg-white/5", stat.color)}>
+                   <div className={cn("p-3 rounded-2xl bg-black/5", stat.color)}>
                      <stat.icon className="w-5 h-5" />
                    </div>
-                   <span className="text-[10px] font-black font-mono text-neutral-500 uppercase tracking-widest">{stat.label}</span>
+                   <span className="text-[10px] font-black font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">{stat.label}</span>
                 </div>
                 <p className="text-4xl font-black tracking-tighter">{stat.value}</p>
              </div>
@@ -345,20 +345,20 @@ export function DevDashboard({ session }: { session: any }) {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-6"
               >
-                <div className="bg-neutral-900/40 border border-white/5 rounded-[48px] overflow-hidden backdrop-blur-sm shadow-2xl">
-                  <div className="p-10 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="bg-white border border-black/5 rounded-[48px] overflow-hidden backdrop-blur-sm shadow-sm">
+                  <div className="p-10 border-b border-black/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
                      <div className="space-y-1">
                         <h3 className="text-xl font-black uppercase tracking-tight">Active Operator Database</h3>
-                        <p className="text-xs text-neutral-500 font-medium italic">Manage and monitor all platform participants.</p>
+                        <p className="text-xs text-[var(--color-pawtobooth-dark)]/60 font-medium italic">Manage and monitor all platform participants.</p>
                      </div>
                      <div className="relative">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-pawtobooth-dark)]/60" />
                         <input 
                           type="text" 
                           placeholder="Search name, email, or ID..."
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          className="bg-black/50 border border-white/5 rounded-[20px] pl-14 pr-8 py-4 text-sm focus:border-blue-600 focus:bg-black/80 outline-none transition-all w-full md:w-80 font-medium"
+                          className="bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-[20px] pl-14 pr-8 py-4 text-sm focus:border-[#3E6B43] focus:bg-white outline-none transition-all w-full md:w-80 font-medium text-[var(--color-pawtobooth-dark)]"
                         />
                      </div>
                   </div>
@@ -366,7 +366,7 @@ export function DevDashboard({ session }: { session: any }) {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+                        <tr className="border-b border-black/5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">
                           <th className="px-10 py-8">Operator Identity</th>
                           <th className="px-10 py-8">Activity Metrics</th>
                           <th className="px-10 py-8">Platform Status</th>
@@ -374,19 +374,19 @@ export function DevDashboard({ session }: { session: any }) {
                           <th className="px-10 py-8">Management</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 text-sm font-medium">
+                      <tbody className="divide-y divide-black/5 text-sm font-medium">
                         {filteredProfiles.map((p) => (
-                          <tr key={p.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <tr key={p.id} className="group hover:bg-black/[0.02] transition-colors">
                             <td className="px-10 py-8">
                               <div className="flex items-center gap-5">
-                                 <div className="w-12 h-12 bg-white/5 rounded-[18px] border border-white/10 flex items-center justify-center font-black text-sm text-neutral-400 group-hover:bg-blue-600/10 group-hover:border-blue-600/20 group-hover:text-blue-500 transition-all duration-500">
+                                 <div className="w-12 h-12 bg-black/5 rounded-[18px] border border-black/5 flex items-center justify-center font-black text-sm text-[var(--color-pawtobooth-dark)]/40 group-hover:bg-[#3E6B43]/10 group-hover:border-[#3E6B43]/20 group-hover:text-[#3E6B43] transition-all duration-500">
                                    {p.full_name?.[0] || '?'}
                                  </div>
                                  <div className="space-y-0.5">
-                                    <p className="font-black text-white text-base">{p.full_name || 'Unnamed Operator'}</p>
+                                    <p className="font-black text-[var(--color-pawtobooth-dark)] text-base">{p.full_name || 'Unnamed Operator'}</p>
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); copyToClipboard(p.id); }}
-                                      className="text-[10px] text-neutral-500 font-mono hover:text-blue-500 transition-colors flex items-center gap-2 group/id"
+                                      className="text-[10px] text-[var(--color-pawtobooth-dark)]/60 font-mono hover:text-[#3E6B43] transition-colors flex items-center gap-2 group/id"
                                     >
                                       {p.id.slice(0, 12)}... <Copy className="w-3 h-3 opacity-0 group-hover/id:opacity-100 transition-all" />
                                     </button>
@@ -395,13 +395,13 @@ export function DevDashboard({ session }: { session: any }) {
                             </td>
                             <td className="px-10 py-8">
                                <div className="flex items-center gap-6">
-                                  <div className="text-center px-6 border-r border-white/5">
-                                     <p className="text-white font-black text-lg">{p.eventCount}</p>
-                                     <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-black">Events</p>
+                                  <div className="text-center px-6 border-r border-black/5">
+                                     <p className="text-[var(--color-pawtobooth-dark)] font-black text-lg">{p.eventCount}</p>
+                                     <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest font-black">Events</p>
                                   </div>
                                   <div className="text-center">
-                                     <p className="text-white font-black text-lg">{p.sessionCount}</p>
-                                     <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-black">Photos</p>
+                                     <p className="text-[var(--color-pawtobooth-dark)] font-black text-lg">{p.sessionCount}</p>
+                                     <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest font-black">Photos</p>
                                   </div>
                                </div>
                             </td>
@@ -410,8 +410,8 @@ export function DevDashboard({ session }: { session: any }) {
                                  <div className={cn(
                                    "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.1em]",
                                    p.subscription_tier === 'pro' 
-                                    ? "bg-blue-600/10 text-blue-500 border border-blue-600/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" 
-                                    : "bg-white/5 text-neutral-500 border border-white/10"
+                                    ? "bg-blue-600/10 text-blue-500 border border-blue-600/20 shadow-sm" 
+                                    : "bg-black/5 text-[var(--color-pawtobooth-dark)]/60 border border-black/5"
                                  )}>
                                    {p.subscription_tier === 'pro' ? <Crown className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
                                    {p.subscription_tier === 'pro' ? 'Professional' : 'Free Tier'}
@@ -424,7 +424,7 @@ export function DevDashboard({ session }: { session: any }) {
                                  )}
                                </div>
                             </td>
-                            <td className="px-10 py-8 text-neutral-500 font-mono text-xs uppercase">
+                            <td className="px-10 py-8 text-[var(--color-pawtobooth-dark)]/60 font-mono text-xs uppercase">
                               {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </td>
                             <td className="px-10 py-8">
@@ -432,14 +432,14 @@ export function DevDashboard({ session }: { session: any }) {
                                   {p.subscription_tier === 'free' ? (
                                     <button 
                                       onClick={() => updateUserTier(p.id, 'pro')} 
-                                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all"
+                                      className="px-5 py-2.5 bg-[#3E6B43] hover:bg-[var(--color-pawtobooth-dark)] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:scale-105 active:scale-95 transition-all"
                                     >
                                       Set Pro
                                     </button>
                                   ) : (
                                     <button 
                                       onClick={() => updateUserTier(p.id, 'free')} 
-                                      className="px-5 py-2.5 bg-neutral-800 text-neutral-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-700 transition-all"
+                                      className="px-5 py-2.5 bg-black/5 text-[var(--color-pawtobooth-dark)]/60 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black/10 transition-all"
                                     >
                                       Revoke Pro
                                     </button>
@@ -450,8 +450,8 @@ export function DevDashboard({ session }: { session: any }) {
                                        className={cn(
                                          "p-2.5 rounded-xl transition-all border",
                                          activeMenu === p.id 
-                                          ? "bg-white text-black border-white shadow-xl scale-110" 
-                                          : "text-neutral-500 hover:text-white bg-white/5 border-white/5"
+                                          ? "bg-[#3E6B43] text-white border-[#3E6B43] shadow-md scale-110" 
+                                          : "text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] bg-black/5 border-black/5"
                                        )}
                                      >
                                         <MoreHorizontal className="w-5 h-5" />
@@ -463,11 +463,11 @@ export function DevDashboard({ session }: { session: any }) {
                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                            animate={{ opacity: 1, y: 0, scale: 1 }}
                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                           className="absolute right-0 top-full mt-4 w-52 bg-neutral-900 border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-2xl"
+                                           className="absolute right-0 top-full mt-4 w-52 bg-white border border-black/5 rounded-[24px] shadow-lg z-50 overflow-hidden text-[var(--color-pawtobooth-dark)]"
                                          >
                                             <button 
                                               onClick={() => handleRoleToggle(p.id, p.role)} 
-                                              className="w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 flex items-center gap-3 border-b border-white/5 transition-colors"
+                                              className="w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-black/5 flex items-center gap-3 border-b border-black/5 transition-colors"
                                             >
                                                <Shield className="w-4 h-4 text-blue-500" /> {p.role === 'admin' ? 'Change to User' : 'Grant Admin'}
                                             </button>
@@ -500,8 +500,8 @@ export function DevDashboard({ session }: { session: any }) {
                 className="max-w-4xl mx-auto space-y-12 pb-32"
               >
                  <div className="text-center space-y-4">
-                    <h2 className="text-5xl font-black uppercase tracking-tighter text-white">Platform <span className="text-blue-600 italic underline decoration-white/10">Configuration</span></h2>
-                    <p className="text-neutral-500 font-medium italic text-lg max-w-xl mx-auto">Master controls for subscription fees, support channels, and payment assets.</p>
+                    <h2 className="text-5xl font-black uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">Platform <span className="text-[#3E6B43] italic underline decoration-[#3E6B43]/20">Configuration</span></h2>
+                    <p className="text-[var(--color-pawtobooth-dark)]/60 font-medium italic text-lg max-w-xl mx-auto">Master controls for subscription fees, support channels, and payment assets.</p>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -574,57 +574,57 @@ export function DevDashboard({ session }: { session: any }) {
                           </div>
                           
                           <div className="space-y-3">
-                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Support WhatsApp Number</label>
+                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60">Support WhatsApp Number</label>
                              <input 
                                type="text" 
                                value={settings.support_whatsapp}
                                onChange={(e) => setSettings({ ...settings, support_whatsapp: e.target.value })}
                                onBlur={(e) => saveSetting('support_whatsapp', e.target.value)}
-                               className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-5 font-mono text-sm focus:border-blue-600 outline-none transition-all text-white placeholder:text-neutral-700 shadow-inner"
+                               className="w-full bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-2xl px-6 py-5 font-mono text-sm focus:border-blue-600 outline-none transition-all text-[var(--color-pawtobooth-dark)] placeholder:text-[var(--color-pawtobooth-dark)]/40 shadow-sm"
                                placeholder="e.g. 62812345678"
                              />
-                             <p className="text-[9px] text-neutral-600 italic font-medium">Customer redirect for manual payment confirmation.</p>
+                             <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/60 italic font-medium">Customer redirect for manual payment confirmation.</p>
                           </div>
                        </div>
 
                        <div className="bg-white p-8 rounded-[40px] border border-black/5 shadow-sm space-y-6">
-                          <div className="flex items-center gap-4 text-green-500">
-                             <div className="w-10 h-10 bg-green-600/10 rounded-2xl flex items-center justify-center">
+                          <div className="flex items-center gap-4 text-[#3E6B43]">
+                             <div className="w-10 h-10 bg-[#3E6B43]/10 rounded-2xl flex items-center justify-center">
                                <DollarSign className="w-5 h-5" />
                              </div>
                              <h4 className="text-sm font-black uppercase tracking-widest">Pricing Model</h4>
                           </div>
 
                           <div className="space-y-3">
-                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Subscription Price (IDR)</label>
+                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60">Subscription Price (IDR)</label>
                              <div className="relative">
-                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-600 font-bold">IDR</span>
+                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--color-pawtobooth-dark)]/60 font-bold">IDR</span>
                                 <input 
                                   type="number" 
                                   value={settings.subscription_price}
                                   onChange={(e) => setSettings({ ...settings, subscription_price: e.target.value })}
                                   onBlur={(e) => saveSetting('subscription_price', e.target.value)}
-                                  className="w-full bg-black/50 border border-white/10 rounded-2xl pl-16 pr-6 py-5 font-mono text-sm focus:border-green-600 outline-none transition-all text-white shadow-inner"
+                                  className="w-full bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-2xl pl-16 pr-6 py-5 font-mono text-sm focus:border-[#3E6B43] outline-none transition-all text-[var(--color-pawtobooth-dark)] shadow-sm"
                                 />
                              </div>
-                             <p className="text-[9px] text-neutral-600 italic font-medium">Platform-wide monthly fee for Professional access.</p>
+                             <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/60 italic font-medium">Platform-wide monthly fee for Professional access.</p>
                           </div>
                        </div>
                     </div>
 
                     <div className="bg-white p-10 rounded-[48px] border border-black/5 shadow-sm space-y-8 flex flex-col items-center text-center">
                        <div className="space-y-2">
-                          <h4 className="text-sm font-black uppercase tracking-widest text-white">Payment Gateway Asset</h4>
-                          <p className="text-[10px] text-neutral-500 italic max-w-[200px]">Displayed to customers during the checkout process.</p>
+                          <h4 className="text-sm font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]">Payment Gateway Asset</h4>
+                          <p className="text-[10px] text-[var(--color-pawtobooth-dark)]/60 italic max-w-[200px]">Displayed to customers during the checkout process.</p>
                        </div>
 
-                       <div className="relative group aspect-square w-full max-w-[280px] bg-black/40 border-2 border-white/10 rounded-[40px] overflow-hidden flex flex-col items-center justify-center p-8 gap-4 border-dashed hover:border-blue-500/50 transition-all shadow-2xl">
+                       <div className="relative group aspect-square w-full max-w-[280px] bg-[var(--color-pawtobooth-light)] border-2 border-black/10 rounded-[40px] overflow-hidden flex flex-col items-center justify-center p-8 gap-4 border-dashed hover:border-[#3E6B43]/50 transition-all shadow-sm">
                           {settings.qris_image_url ? (
                             <>
                               <img src={settings.qris_image_url} alt="QRIS" className="w-full h-full object-contain" />
-                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 text-center p-8">
-                                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Change QRIS Asset</p>
-                                 <label className="px-8 py-3.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl">
+                              <div className="absolute inset-0 bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 text-center p-8">
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/60">Change QRIS Asset</p>
+                                 <label className="px-8 py-3.5 bg-[#3E6B43] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-md">
                                     Upload New File
                                     <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
                                  </label>
@@ -632,22 +632,22 @@ export function DevDashboard({ session }: { session: any }) {
                             </>
                           ) : (
                             <>
-                               <div className="p-8 bg-white/5 rounded-3xl border border-white/5">
-                                  <QrCode className="w-10 h-10 text-neutral-700" />
+                               <div className="p-8 bg-white rounded-3xl border border-black/5 shadow-sm">
+                                  <QrCode className="w-10 h-10 text-[var(--color-pawtobooth-dark)]/40" />
                                 </div>
                                <div className="space-y-4">
-                                  <label className="px-8 py-3.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-lg block">
+                                  <label className="px-8 py-3.5 bg-[#3E6B43] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm block">
                                      Select QRIS Image
                                      <input type="file" className="hidden" onChange={handleQRISUpload} accept="image/*" />
                                   </label>
-                                  <p className="text-[9px] text-neutral-600 font-medium uppercase tracking-[0.2em]">PNG or JPG • Max 2MB</p>
+                                  <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/60 font-medium uppercase tracking-[0.2em]">PNG or JPG • Max 2MB</p>
                                </div>
                             </>
                           )}
                           {savingSettings && (
-                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-20">
-                               <Zap className="w-10 h-10 animate-spin text-blue-500" />
-                               <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">Syncing to Cloud...</p>
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-20">
+                               <Zap className="w-10 h-10 animate-spin text-[#3E6B43]" />
+                               <p className="text-[10px] font-black uppercase tracking-widest text-[#3E6B43]">Syncing to Cloud...</p>
                             </div>
                           )}
                        </div>

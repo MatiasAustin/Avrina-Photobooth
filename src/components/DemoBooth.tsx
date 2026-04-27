@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PLATFORM_NAME } from '../lib/constants';
 import { AnimatePresence, motion } from 'motion/react';
 import { BoothState } from '../types';
 import { BoothHero } from './booth/BoothHero';
@@ -12,7 +13,7 @@ import { BoothLayout } from './booth/BoothLayout';
 // Mock data for trials
 const MOCK_EVENT = {
   id: 'demo-event',
-  name: 'AVRINA TRIAL BOOTH',
+  name: `${PLATFORM_NAME.toUpperCase()} TRIAL BOOTH`,
   timer: 3,
   shot_count: 6,
   price: 0,
@@ -200,7 +201,7 @@ export function DemoBooth() {
     ctx.font = 'black 36px sans-serif';
     ctx.textAlign = 'center';
     ctx.letterSpacing = '6px';
-    ctx.fillText('AVRINA TRIAL', stripWidth/2, stripHeight - 90);
+    ctx.fillText(`${PLATFORM_NAME.toUpperCase()} TRIAL`, stripWidth/2, stripHeight - 90);
     
     ctx.font = '14px monospace';
     ctx.fillStyle = '#999999';

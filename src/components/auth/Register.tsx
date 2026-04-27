@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { Camera, Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { PLATFORM_NAME } from '../../lib/constants';
 
 export function Register() {
   const [email, setEmail] = useState('');
@@ -33,9 +34,9 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-black relative overflow-hidden text-white">
-      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-white/5 rounded-full blur-[120px]" />
-      <div className="absolute bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-white/5 rounded-full blur-[120px]" />
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-pawtobooth-beige)] relative overflow-hidden text-[var(--color-pawtobooth-dark)]">
+      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-[#3E6B43]/10 rounded-full blur-[120px]" />
+      <div className="absolute bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-[#3E6B43]/10 rounded-full blur-[120px]" />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
@@ -43,11 +44,11 @@ export function Register() {
         className="w-full max-w-md space-y-12 relative z-10"
       >
         <div className="text-center space-y-4">
-           <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <Camera className="w-8 h-8 text-white" />
+           <div className="w-16 h-16 bg-white border border-black/5 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-sm">
+              <Camera className="w-8 h-8 text-[#3E6B43]" />
            </div>
-           <h1 className="text-4xl font-bold tracking-tight uppercase leading-none">Join <span className="text-white/30">Avrina</span></h1>
-           <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em] leading-relaxed">
+           <h1 className="text-4xl font-bold tracking-tight uppercase leading-none text-[var(--color-pawtobooth-dark)]">Join <span className="text-[#3E6B43]">{PLATFORM_NAME}</span></h1>
+           <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-[0.2em] leading-relaxed">
              Freeze your moment • Start your SaaS journey
            </p>
         </div>
@@ -55,14 +56,14 @@ export function Register() {
         <form onSubmit={handleRegister} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-4">Full Name</label>
+              <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-4">Full Name</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-pawtobooth-dark)]/40" />
                 <input 
                   type="text" 
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-neutral-900/50 border border-white/10 py-4 pl-12 pr-4 rounded-2xl focus:border-white/30 transition-all outline-none"
+                  className="w-full bg-white border border-black/5 py-4 pl-12 pr-4 rounded-2xl focus:border-[#3E6B43] focus:bg-white text-[var(--color-pawtobooth-dark)] shadow-sm transition-all outline-none"
                   placeholder="John Doe"
                   required 
                 />
@@ -70,14 +71,14 @@ export function Register() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-4">Email Address</label>
+              <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-4">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-pawtobooth-dark)]/40" />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-neutral-900/50 border border-white/10 py-4 pl-12 pr-4 rounded-2xl focus:border-white/30 transition-all outline-none"
+                  className="w-full bg-white border border-black/5 py-4 pl-12 pr-4 rounded-2xl focus:border-[#3E6B43] focus:bg-white text-[var(--color-pawtobooth-dark)] shadow-sm transition-all outline-none"
                   placeholder="name@example.com"
                   required 
                 />
@@ -85,14 +86,14 @@ export function Register() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-4">Password</label>
+              <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-4">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-pawtobooth-dark)]/40" />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-neutral-900/50 border border-white/10 py-4 pl-12 pr-4 rounded-2xl focus:border-white/30 transition-all outline-none"
+                  className="w-full bg-white border border-black/5 py-4 pl-12 pr-4 rounded-2xl focus:border-[#3E6B43] focus:bg-white text-[var(--color-pawtobooth-dark)] shadow-sm transition-all outline-none"
                   placeholder="••••••••"
                   required 
                 />
@@ -110,14 +111,14 @@ export function Register() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-[#3E6B43] hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md"
           >
-            {loading ? <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> : <>Create Account <ArrowRight className="w-4 h-4" /></>}
+            {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <>Create Account <ArrowRight className="w-4 h-4" /></>}
           </button>
         </form>
 
-        <p className="text-center text-neutral-500 text-xs">
-          Already have an account? <Link to="/login" className="text-white font-bold hover:underline">Sign In</Link>
+        <p className="text-center text-[var(--color-pawtobooth-dark)]/60 text-xs">
+          Already have an account? <Link to="/login" className="text-[#3E6B43] font-bold hover:underline">Sign In</Link>
         </p>
       </motion.div>
     </div>

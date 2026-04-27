@@ -34,7 +34,7 @@ export default function App() {
       <div className="min-h-screen bg-black flex items-center justify-center text-white font-sans">
         <div className="space-y-4 text-center">
           <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-medium tracking-widest uppercase">Connecting to Avrina Network...</p>
+          <p className="text-sm font-medium tracking-widest uppercase">Connecting to Pawtobooth Network...</p>
         </div>
       </div>
     );

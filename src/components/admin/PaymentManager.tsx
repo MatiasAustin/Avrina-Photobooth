@@ -74,26 +74,26 @@ export function PaymentManager() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tight italic">Pending <span className="text-white/20">Payments</span></h2>
-          <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest mt-1">Confirm cash or QRIS payments to unlock booths</p>
+          <h2 className="text-3xl font-black uppercase tracking-tight italic text-[var(--color-pawtobooth-dark)]">Pending <span className="text-[#3E6B43]">Payments</span></h2>
+          <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest mt-1">Confirm cash or QRIS payments to unlock booths</p>
         </div>
         
         <button 
           onClick={() => { setLoading(true); fetchPending(); }}
-          className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-neutral-400 group"
+          className="p-4 rounded-2xl bg-white border border-black/5 hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/60 shadow-sm group"
         >
           <RefreshCcw className={cn("w-5 h-5", loading && "animate-spin")} />
         </button>
       </div>
 
       {pendingSessions.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 bg-white/5 rounded-[40px] border border-dashed border-white/10">
-          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
-             <Check className="w-8 h-8 text-neutral-700" />
+        <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 bg-[var(--color-pawtobooth-light)]/50 rounded-[40px] border border-dashed border-black/5">
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
+             <Check className="w-8 h-8 text-[var(--color-pawtobooth-dark)]/20" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-white/40 font-black uppercase tracking-widest text-sm">All Clear</h3>
-            <p className="text-neutral-600 font-mono text-[10px] uppercase">No pending payments at the moment</p>
+            <h3 className="text-[var(--color-pawtobooth-dark)]/60 font-black uppercase tracking-widest text-sm">All Clear</h3>
+            <p className="text-[var(--color-pawtobooth-dark)]/40 font-mono text-[10px] uppercase">No pending payments at the moment</p>
           </div>
         </div>
       ) : (
@@ -101,19 +101,19 @@ export function PaymentManager() {
           {pendingSessions.map((session) => (
             <div 
               key={session.id}
-              className="bg-neutral-900 border border-white/5 p-6 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 hover:border-white/20 transition-all group"
+              className="bg-white border border-black/5 p-6 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-lg hover:-translate-y-1 transition-all group shadow-sm"
             >
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5">
-                   <Wallet className="w-6 h-6 text-neutral-500" />
+                <div className="w-14 h-14 bg-[var(--color-pawtobooth-light)] rounded-2xl flex items-center justify-center border border-black/5">
+                   <Wallet className="w-6 h-6 text-[var(--color-pawtobooth-dark)]/40" />
                 </div>
                 <div>
-                   <h4 className="text-lg font-black uppercase tracking-tight italic">{session.events?.name || 'Unknown Booth'}</h4>
+                   <h4 className="text-lg font-black uppercase tracking-tight italic text-[var(--color-pawtobooth-dark)]">{session.events?.name || 'Unknown Booth'}</h4>
                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Amount:</span>
-                      <span className="text-[10px] font-mono text-white uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded">Rp {session.events?.price?.toLocaleString() || 0}</span>
-                      <div className="w-1 h-1 bg-neutral-700 rounded-full" />
-                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest flex items-center gap-1">
+                      <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">Amount:</span>
+                      <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)] uppercase tracking-widest bg-[var(--color-pawtobooth-light)] border border-black/5 px-2 py-0.5 rounded">Rp {session.events?.price?.toLocaleString() || 0}</span>
+                      <div className="w-1 h-1 bg-[var(--color-pawtobooth-dark)]/20 rounded-full" />
+                      <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {new Date(session.created_at).toLocaleTimeString()}
                       </span>
                    </div>
@@ -122,13 +122,13 @@ export function PaymentManager() {
 
               <div className="flex items-center gap-3 w-full md:w-auto">
                  <div className="text-right hidden md:block mr-4">
-                    <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Session ID</p>
-                    <p className="text-[10px] font-mono text-white/40 uppercase">{session.id.slice(0, 8)}...</p>
+                    <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">Session ID</p>
+                    <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)] uppercase">{session.id.slice(0, 8)}...</p>
                  </div>
                  <button 
                    type="button"
                    onClick={() => handleDismiss(session.id)}
-                   className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-500 text-neutral-500 transition-all"
+                   className="p-4 rounded-2xl bg-[var(--color-pawtobooth-light)] border border-black/5 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-500 text-[var(--color-pawtobooth-dark)]/40 transition-all"
                    title="Batalkan session ini"
                  >
                    <X className="w-4 h-4" />
@@ -136,12 +136,12 @@ export function PaymentManager() {
                  <button 
                    disabled={confirmingId === session.id}
                    onClick={() => handleConfirm(session.id)}
-                   className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] disabled:opacity-50"
+                   className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-[var(--color-pawtobooth-dark)] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-[#3E6B43] active:scale-95 transition-all shadow-md hover:-translate-y-0.5 disabled:opacity-50"
                  >
                    {confirmingId === session.id ? (
                      <RefreshCcw className="w-4 h-4 animate-spin" />
                    ) : (
-                     <Check className="w-4 h-4 border-2 border-black rounded-full" />
+                     <Check className="w-4 h-4 border-2 border-current rounded-full" />
                    )}
                    Confirm Paid
                  </button>

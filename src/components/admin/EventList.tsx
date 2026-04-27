@@ -144,10 +144,10 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Global Booth Network</h3>
+          <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Global Booth Network</h3>
           <button 
             onClick={createNew}
-            className="bg-white text-black px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:scale-105 transition-transform"
+            className="bg-[var(--color-pawtobooth-dark)] text-white px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:scale-105 transition-transform shadow-sm"
           >
             <Plus className="w-4 h-4" /> Deploy New Booth
           </button>
@@ -155,15 +155,15 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
 
        <div className="grid gap-4">
           {events.length === 0 && (
-            <div className="p-20 text-center border-2 border-dashed border-white/5 rounded-[40px]">
-               <Calendar className="w-12 h-12 text-neutral-800 mx-auto mb-4" />
-               <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest">No active booths deployed</p>
+            <div className="p-20 text-center border-2 border-dashed border-black/5 rounded-[40px] bg-[var(--color-pawtobooth-light)]/50">
+               <Calendar className="w-12 h-12 text-[var(--color-pawtobooth-dark)]/20 mx-auto mb-4" />
+               <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-xs uppercase tracking-widest">No active booths deployed</p>
             </div>
           )}
           {events.map((event) => (
-            <div key={event.id} className="p-6 bg-neutral-900/40 border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-neutral-900/60 transition-all group">
+            <div key={event.id} className="p-6 bg-white border border-black/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-all group">
                <div className="flex items-center gap-6 flex-1 w-full">
-                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-white/30 group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all">
+                  <div className="w-16 h-16 bg-[var(--color-pawtobooth-light)] rounded-2xl flex items-center justify-center border border-black/5 text-[var(--color-pawtobooth-dark)]/40 group-hover:scale-110 group-hover:bg-[#3E6B43] group-hover:text-white group-hover:border-[#3E6B43] transition-all">
                      <Globe className="w-8 h-8" />
                   </div>
                   <div className="space-y-1">
@@ -173,8 +173,8 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                           {event.is_active ? 'Live' : 'Offline'}
                         </span>
                      </div>
-                     <div className="flex items-center gap-4 text-[10px] font-mono text-neutral-500 uppercase tracking-tighter">
-                        <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer" onClick={() => window.open(`/booth/${event.slug}`, '_blank')}>
+                     <div className="flex items-center gap-4 text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-tighter">
+                        <span className="flex items-center gap-1 hover:text-[var(--color-pawtobooth-dark)] transition-colors cursor-pointer" onClick={() => window.open(`/booth/${event.slug}`, '_blank')}>
                            <Globe className="w-3 h-3"/> /{event.slug}
                         </span>
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {event.timer}s Delay</span>
@@ -189,8 +189,8 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                     className={cn(
                       "p-3 rounded-xl border transition-all flex items-center gap-2",
                       copiedId === event.id 
-                        ? "bg-green-500 border-green-500 text-white" 
-                        : "bg-white/5 border-white/10 text-neutral-400 hover:bg-white hover:text-black"
+                        ? "bg-[#3E6B43] border-[#3E6B43] text-white" 
+                        : "bg-[var(--color-pawtobooth-light)] border-black/5 text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43] hover:text-white"
                     )}
                     title="Copy Booth Link"
                   >
@@ -201,7 +201,7 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                   </button>
                   <button 
                     onClick={() => window.open(`/booth/${event.slug}`, '_blank')}
-                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all text-neutral-400"
+                    className="p-3 bg-[var(--color-pawtobooth-light)] rounded-xl border border-black/5 hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/60"
                     title="Launch Booth"
                   >
                     <Globe className="w-5 h-5" />
@@ -211,14 +211,14 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                       setEditingEvent(event);
                       setCameraFilters(parseFilters(event.camera_filter));
                     }}
-                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white hover:text-black transition-all text-neutral-400"
+                    className="p-3 bg-[var(--color-pawtobooth-light)] rounded-xl border border-black/5 hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/60"
                     title="Settings"
                   >
                     <Settings className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => handleDelete(event.id)}
-                    className="p-3 bg-neutral-800 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                    className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -229,11 +229,11 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
 
        {/* Editor Modal */}
        {editingEvent && (
-         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm">
-            <div className="w-full max-w-lg bg-neutral-900 border border-white/10 rounded-[40px] p-8 space-y-8 animate-in fade-in zoom-in duration-300">
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-white border border-black/10 shadow-2xl rounded-[40px] p-8 space-y-8 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold uppercase tracking-tight">Configure Booth</h3>
-                  <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-white/10 rounded-full">
+                  <h3 className="text-xl font-bold uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">Configure Booth</h3>
+                  <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-black/5 text-[var(--color-pawtobooth-dark)]/60 rounded-full">
                      <X className="w-5 h-5" />
                   </button>
                </div>
@@ -241,70 +241,70 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                <form onSubmit={handleUpdate} className="space-y-6">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Booth Name</label>
+                      <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Booth Name</label>
                       <input 
                         value={editingEvent.name}
                         onChange={e => setEditingEvent({...editingEvent, name: e.target.value})}
-                        className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 transition-colors"
+                        className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none transition-colors text-[var(--color-pawtobooth-dark)]"
                       />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">URL Slug</label>
+                       <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">URL Slug</label>
                        <input 
                          value={editingEvent.slug}
                          onChange={e => setEditingEvent({...editingEvent, slug: e.target.value.toLowerCase().replace(/ /g, '-')})}
-                         className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono"
+                         className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none transition-colors font-mono text-[var(--color-pawtobooth-dark)]"
                        />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Timer (s)</label>
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Timer (s)</label>
                         <input 
                           type="number"
                           value={editingEvent.timer}
                           onChange={e => setEditingEvent({...editingEvent, timer: parseInt(e.target.value)})}
-                          className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20"
+                          className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none text-[var(--color-pawtobooth-dark)]"
                         />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Photos</label>
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Photos</label>
                         <input 
                           type="number"
                           value={editingEvent.shot_count}
                           onChange={e => setEditingEvent({...editingEvent, shot_count: parseInt(e.target.value)})}
-                          className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20"
+                          className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none text-[var(--color-pawtobooth-dark)]"
                         />
                      </div>
                   </div>
 
                   <div className="space-y-2">
-                     <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Price (Rp)</label>
+                     <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Price (Rp)</label>
                      <input 
                        type="number"
                        value={editingEvent.price}
                        onChange={e => setEditingEvent({...editingEvent, price: parseInt(e.target.value)})}
-                       className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono"
+                       className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none font-mono text-[var(--color-pawtobooth-dark)]"
                      />
                   </div>
 
                   <div className="space-y-3">
-                      <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">QRIS Image</label>
+                      <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">QRIS Image</label>
                       
                       {/* Preview with action buttons */}
                       {(qrisPreview || editingEvent.qris_image_url) && (
                         <div className="space-y-3">
-                          <div className="bg-white rounded-2xl p-3 aspect-square max-h-[200px] flex items-center justify-center overflow-hidden">
+                          <div className="bg-[var(--color-pawtobooth-light)] rounded-2xl p-3 aspect-square max-h-[200px] flex items-center justify-center overflow-hidden border border-black/5">
                             <img 
                               src={qrisPreview || editingEvent.qris_image_url} 
                               alt="QRIS Preview" 
-                              className="max-h-full max-w-full object-contain"
+                              className="max-h-full max-w-full object-contain mix-blend-multiply"
                             />
                           </div>
                           {/* Action Buttons */}
                           <div className="flex gap-2">
-                            <label className={`flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-white hover:text-black transition-all ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <label className={`flex-1 flex items-center justify-center gap-2 py-3 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)] ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
                               {isUploadingQris ? (
                                 <div className="w-4 h-4 border-2 border-current/20 border-t-current rounded-full animate-spin" />
                               ) : (
@@ -325,17 +325,17 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                         </div>
                       )}
 
-                      {/* Upload Button — only when no image */}
+                        {/* Upload Button — only when no image */}
                       {!qrisPreview && !editingEvent.qris_image_url && (
-                        <label className={`flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-white/30 hover:bg-white/5 transition-all ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label className={`flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-black/10 rounded-2xl cursor-pointer hover:border-[#3E6B43] hover:bg-[#3E6B43]/5 transition-all bg-[var(--color-pawtobooth-light)] ${isUploadingQris ? 'opacity-50 pointer-events-none' : ''}`}>
                           {isUploadingQris ? (
-                            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-[#3E6B43]/30 border-t-[#3E6B43] rounded-full animate-spin" />
                           ) : (
                             <>
-                              <ImageIcon className="w-8 h-8 text-neutral-600" />
+                              <ImageIcon className="w-8 h-8 text-[var(--color-pawtobooth-dark)]/40" />
                               <div className="text-center">
-                                <p className="text-xs font-black uppercase text-neutral-400 tracking-widest">Upload QRIS</p>
-                                <p className="text-[9px] font-mono text-neutral-600 mt-1">PNG, JPG up to 5MB</p>
+                                <p className="text-xs font-black uppercase text-[var(--color-pawtobooth-dark)]/60 tracking-widest">Upload QRIS</p>
+                                <p className="text-[9px] font-mono text-[var(--color-pawtobooth-dark)]/40 mt-1">PNG, JPG up to 5MB</p>
                               </div>
                             </>
                           )}
@@ -344,61 +344,61 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                       )}
 
                       {isUploadingQris && (
-                        <p className="text-[9px] font-mono text-neutral-500 text-center animate-pulse">Uploading...</p>
+                        <p className="text-[9px] font-mono text-[var(--color-pawtobooth-dark)]/40 text-center animate-pulse">Uploading...</p>
                       )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Session Timeout (min)</label>
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Session Timeout (min)</label>
                         <input 
                           type="number"
                           value={editingEvent.session_timeout}
                           onChange={e => setEditingEvent({...editingEvent, session_timeout: parseInt(e.target.value)})}
-                          className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 font-mono text-glow"
+                          className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] focus:outline-none font-mono text-[var(--color-pawtobooth-dark)]"
                         />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Active Status</label>
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 h-[58px]">
-                          <span className="text-[8px] font-mono text-neutral-400 uppercase tracking-widest">Live</span>
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Active Status</label>
+                        <div className="flex items-center justify-between p-4 bg-[var(--color-pawtobooth-light)] rounded-2xl border border-black/5 h-[58px]">
+                          <span className="text-[8px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">Live</span>
                           <button 
                             type="button"
                             onClick={() => setEditingEvent({...editingEvent, is_active: !editingEvent.is_active})}
-                            className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_active ? 'bg-green-500' : 'bg-neutral-700'}`}
+                            className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_active ? 'bg-green-500' : 'bg-black/10'}`}
                           >
-                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_active ? 'left-5.5' : 'left-0.5'}`} />
+                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${editingEvent.is_active ? 'left-[22px]' : 'left-0.5'}`} />
                           </button>
                         </div>
                      </div>
                   </div>
 
-                  <div className="pt-6 border-t border-white/10 space-y-6">
+                  <div className="pt-6 border-t border-black/5 space-y-6">
                      <div className="flex items-center gap-2">
-                        <Sliders className="w-5 h-5 text-blue-400" />
-                        <h4 className="font-bold uppercase tracking-widest text-sm">Camera Configuration</h4>
+                        <Sliders className="w-5 h-5 text-[#3E6B43]" />
+                        <h4 className="font-bold uppercase tracking-widest text-sm text-[var(--color-pawtobooth-dark)]">Camera Configuration</h4>
                      </div>
                      
                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest pl-2">Mirror Camera</label>
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                          <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Flip Horizontally</span>
-                          <button 
-                            type="button"
-                            onClick={() => setEditingEvent({...editingEvent, is_mirrored: editingEvent.is_mirrored === false ? true : false})}
-                            className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_mirrored !== false ? 'bg-blue-500' : 'bg-neutral-700'}`}
-                          >
-                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editingEvent.is_mirrored !== false ? 'left-5.5' : 'left-0.5'}`} />
-                          </button>
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest pl-2">Mirror Camera</label>
+                        <div className="flex items-center justify-between p-4 bg-[var(--color-pawtobooth-light)] rounded-2xl border border-black/5">
+                          <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">Flip Horizontally</span>
+                            <button 
+                              type="button"
+                              onClick={() => setEditingEvent({...editingEvent, is_mirrored: editingEvent.is_mirrored === false ? true : false})}
+                              className={`w-10 h-5 rounded-full relative transition-colors ${editingEvent.is_mirrored !== false ? 'bg-[#3E6B43]' : 'bg-black/10'}`}
+                            >
+                               <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${editingEvent.is_mirrored !== false ? 'left-[22px]' : 'left-0.5'}`} />
+                            </button>
                         </div>
                      </div>
 
-                     <div className="space-y-4 p-6 bg-black/40 border border-white/5 rounded-2xl">
-                        <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Live Filter Adjustments</label>
+                     <div className="space-y-4 p-6 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-2xl">
+                        <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest">Live Filter Adjustments</label>
                         
                         {/* Brightness */}
                         <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-[var(--color-pawtobooth-dark)]/60">
                              <span>Brightness</span>
                              <span>{cameraFilters.brightness}%</span>
                           </div>
@@ -410,13 +410,13 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                               setCameraFilters(newFilters);
                               setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
                             }}
-                            className="w-full accent-blue-500"
+                            className="w-full accent-[#3E6B43]"
                           />
                         </div>
 
                         {/* Contrast */}
                         <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-[var(--color-pawtobooth-dark)]/60">
                              <span>Contrast</span>
                              <span>{cameraFilters.contrast}%</span>
                           </div>
@@ -428,13 +428,13 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                               setCameraFilters(newFilters);
                               setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
                             }}
-                            className="w-full accent-blue-500"
+                            className="w-full accent-[#3E6B43]"
                           />
                         </div>
 
                         {/* Saturation */}
                         <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-[var(--color-pawtobooth-dark)]/60">
                              <span>Saturation</span>
                              <span>{cameraFilters.saturate}%</span>
                           </div>
@@ -446,13 +446,13 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                               setCameraFilters(newFilters);
                               setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
                             }}
-                            className="w-full accent-blue-500"
+                            className="w-full accent-[#3E6B43]"
                           />
                         </div>
 
                         {/* Sepia */}
                         <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
+                          <div className="flex justify-between text-[10px] font-mono uppercase text-[var(--color-pawtobooth-dark)]/60">
                              <span>Vintage (Sepia)</span>
                              <span>{cameraFilters.sepia}%</span>
                           </div>
@@ -464,7 +464,7 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                               setCameraFilters(newFilters);
                               setEditingEvent({...editingEvent, camera_filter: serializeFilters(newFilters)});
                             }}
-                            className="w-full accent-blue-500"
+                            className="w-full accent-[#3E6B43]"
                           />
                         </div>
                      </div>
@@ -473,9 +473,9 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                   <button 
                     type="submit"
                     disabled={isSaving}
-                    className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+                    className="w-full py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-2xl flex items-center justify-center gap-2 hover:bg-[#3E6B43] transition-colors"
                   >
-                     {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-black/20 border-t-black rounded-full" /> : <Save className="w-4 h-4" />}
+                     {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save className="w-4 h-4" />}
                      Commit Deployment
                   </button>
                </form>

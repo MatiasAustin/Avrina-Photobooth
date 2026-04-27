@@ -4,6 +4,7 @@ import { Mail, Shield, Crown, Save, ExternalLink, User, Lock, Trash2, AlertTrian
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface UserProfileProps {
   profile: any;
@@ -12,6 +13,7 @@ interface UserProfileProps {
 
 export function UserProfile({ profile, onUpdate }: UserProfileProps) {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [shopName, setShopName] = useState(profile?.full_name || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,42 +95,42 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-neutral-500">Store Settings</h3>
+        <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Store Settings</h3>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-[var(--color-pawtobooth-dark)]">
         {/* Main Settings Form */}
         <div className="lg:col-span-2 space-y-12">
-          <form onSubmit={handleSave} className="bg-neutral-900/50 border border-white/5 rounded-[40px] p-10 space-y-8">
+          <form onSubmit={handleSave} className="bg-[var(--color-pawtobooth-light)]/50 border border-black/5 rounded-[40px] p-10 space-y-8 shadow-sm">
             <div className="space-y-6">
                <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 flex items-center gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/60 flex items-center gap-2">
                     <User className="w-3 h-3" /> Nama Toko / Brand Name
                   </label>
                   <input 
                     type="text"
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
-                    placeholder="Contoh: Avrina Photostudio"
-                    className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-600 transition-all font-bold text-lg"
+                    placeholder="Contoh: Pawtobooth Photostudio"
+                    className="w-full bg-white border border-black/5 rounded-2xl px-6 py-4 outline-none focus:border-[#3E6B43] transition-all font-bold text-lg shadow-sm"
                     required
                   />
-                  <p className="text-[10px] text-neutral-600 font-medium">Nama ini akan muncul di header dashboard dan galeri publik Anda.</p>
+                  <p className="text-[10px] text-[var(--color-pawtobooth-dark)]/40 font-medium">Nama ini akan muncul di header dashboard dan galeri publik Anda.</p>
                </div>
 
                <div className="space-y-4 pt-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 flex items-center gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/60 flex items-center gap-2">
                     <Mail className="w-3 h-3" /> Alamat Email Terdaftar
                   </label>
-                  <div className="w-full bg-neutral-800/20 border border-white/5 text-neutral-500 rounded-2xl px-6 py-4 font-mono text-sm flex items-center justify-between">
+                  <div className="w-full bg-[var(--color-pawtobooth-dark)]/5 border border-black/5 text-[var(--color-pawtobooth-dark)]/60 rounded-2xl px-6 py-4 font-mono text-sm flex items-center justify-between">
                     {profile?.email || 'Not available'}
                     <Lock className="w-3 h-4 opacity-30" />
                   </div>
-                  <p className="text-[10px] text-neutral-600 font-medium italic">Email tidak dapat diubah secara manual demi alasan keamanan.</p>
+                  <p className="text-[10px] text-[var(--color-pawtobooth-dark)]/40 font-medium italic">Email tidak dapat diubah secara manual demi alasan keamanan.</p>
                </div>
             </div>
 
-            <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+            <div className="pt-6 border-t border-black/5 flex items-center justify-between">
                {message && (
                  <span className={cn(
                    "text-xs font-bold",
@@ -140,7 +142,7 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
                <button 
                  type="submit"
                  disabled={isSaving || shopName === profile?.full_name}
-                 className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100"
+                 className="flex items-center gap-3 px-8 py-4 bg-[var(--color-pawtobooth-dark)] text-white hover:bg-[#3E6B43] shadow-md rounded-2xl font-black uppercase text-xs tracking-widest hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:hover:translate-y-0"
                >
                  <Save className="w-4 h-4" /> {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                </button>
@@ -155,15 +157,15 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
              </div>
              
              <div className="bg-red-500/5 border border-red-500/10 rounded-[40px] overflow-hidden divide-y divide-red-500/10">
-                {profile?.subscription_tier === 'pro' && (
+                 {profile?.subscription_tier === 'pro' && (
                   <div className="p-8 flex items-center justify-between group hover:bg-red-500/5 transition-all">
                     <div className="space-y-1">
                        <p className="font-black text-sm uppercase tracking-tight">Cancel Subscription</p>
-                       <p className="text-xs text-neutral-500">Kembali ke paket Free. Anda akan kehilangan akses ke fitur premium.</p>
+                       <p className="text-xs text-[var(--color-pawtobooth-dark)]/60">Kembali ke paket Free. Anda akan kehilangan akses ke fitur premium.</p>
                     </div>
                     <button 
                       onClick={() => setShowConfirmCancel(true)}
-                      className="px-6 py-3 border border-red-500/20 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                      className="px-6 py-3 border border-red-500/20 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all bg-white"
                     >
                       Batalkan Layanan
                     </button>
@@ -173,7 +175,7 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
                 <div className="p-8 flex items-center justify-between group hover:bg-red-500/5 transition-all">
                   <div className="space-y-1">
                      <p className="font-black text-sm uppercase tracking-tight">Delete Account</p>
-                     <p className="text-xs text-neutral-500">Hapus seluruh data toko, event, dan sesi foto secara permanen.</p>
+                     <p className="text-xs text-[var(--color-pawtobooth-dark)]/60">Hapus seluruh data toko, event, dan sesi foto secara permanen.</p>
                   </div>
                   <button 
                     onClick={() => setShowConfirmDelete(true)}
@@ -191,41 +193,41 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
            <div className={cn(
              "rounded-[40px] p-8 border space-y-8",
              profile?.subscription_tier === 'pro' 
-              ? "bg-blue-600/5 border-blue-600/20" 
-              : "bg-black border-white/5"
+              ? "bg-[#3E6B43]/5 border-[#3E6B43]/20" 
+              : "bg-white border-black/5 shadow-sm"
            )}>
               <div className="flex items-center justify-between">
                  <div className={cn(
-                   "w-12 h-12 rounded-2xl flex items-center justify-center",
-                   profile?.subscription_tier === 'pro' ? "bg-blue-600 text-white" : "bg-white/5 text-neutral-500"
+                   "w-12 h-12 rounded-2xl flex items-center justify-center border",
+                   profile?.subscription_tier === 'pro' ? "bg-[#3E6B43] text-white border-[#3E6B43]" : "bg-[var(--color-pawtobooth-light)] text-[var(--color-pawtobooth-dark)]/40 border-black/5"
                  )}>
                    {profile?.subscription_tier === 'pro' ? <Crown className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
                  </div>
-                 <span className="text-[10px] font-mono text-neutral-500">STATUS AKUN</span>
+                 <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40">STATUS AKUN</span>
               </div>
 
               <div className="space-y-2">
-                 <h4 className="text-2xl font-black uppercase tracking-tighter">
+                 <h4 className="text-2xl font-black uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">
                    {profile?.subscription_tier === 'pro' ? 'Professional' : 'Free Tier'}
                  </h4>
-                 <p className="text-xs text-neutral-500 leading-relaxed">
+                 <p className="text-xs text-[var(--color-pawtobooth-dark)]/60 leading-relaxed">
                    {profile?.subscription_tier === 'pro' 
-                    ? "Akses tak terbatas ke semua fitur Avrina aktif." 
+                    ? `Akses tak terbatas ke semua fitur ${settings.appName} aktif.` 
                     : "Beberapa fitur premium terkunci. Tingkatkan untuk akses penuh."}
                  </p>
               </div>
 
               {profile?.subscription_tier !== 'pro' && (
-                <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2">
+                <button className="w-full py-4 bg-[#3E6B43] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[var(--color-pawtobooth-dark)] transition-colors flex items-center justify-center gap-2 shadow-sm">
                   Upgrade Sekarang <ExternalLink className="w-3 h-3" />
                 </button>
               )}
            </div>
 
-           <div className="bg-neutral-900 border border-white/5 rounded-[40px] p-8 space-y-4">
-              <h5 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Bantuan</h5>
-              <p className="text-xs text-neutral-500 leading-relaxed">Butuh bantuan teknis atau ingin memindahkan akun ke email lain?</p>
-              <a href="mailto:support@avrina.com" className="text-blue-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:underline">
+           <div className="bg-white border border-black/5 shadow-sm rounded-[40px] p-8 space-y-4">
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/60">Bantuan</h5>
+              <p className="text-xs text-[var(--color-pawtobooth-dark)]/60 leading-relaxed">Butuh bantuan teknis atau ingin memindahkan akun ke email lain?</p>
+              <a href={`mailto:support@${settings.appName.toLowerCase().replace(/ /g, '')}.com`} className="text-[#3E6B43] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:underline">
                  Hubungi Support <ExternalLink className="w-3 h-3" />
               </a>
            </div>
@@ -235,27 +237,27 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
       {/* Confirmation Modals */}
       <AnimatePresence>
         {(showConfirmCancel || showConfirmDelete) && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-neutral-900 border border-white/10 rounded-[40px] p-10 max-w-md w-full space-y-8 shadow-2xl"
+              className="bg-white border border-black/10 rounded-[40px] p-10 max-w-md w-full space-y-8 shadow-2xl"
             >
                <div className="flex items-center justify-between">
                   <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
                      <AlertTriangle className="w-6 h-6" />
                   </div>
-                  <button onClick={() => { setShowConfirmCancel(false); setShowConfirmDelete(false); }} className="p-2 text-neutral-500 hover:text-white">
+                  <button onClick={() => { setShowConfirmCancel(false); setShowConfirmDelete(false); }} className="p-2 text-[var(--color-pawtobooth-dark)]/40 hover:bg-black/5 rounded-full transition-colors">
                      <X className="w-5 h-5" />
                   </button>
                </div>
 
                <div className="space-y-2">
-                  <h3 className="text-xl font-black uppercase tracking-tight">
+                  <h3 className="text-xl font-black uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">
                     {showConfirmCancel ? 'Batalkan Langganan?' : 'Hapus Seluruh Data?'}
                   </h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed">
+                  <p className="text-sm text-[var(--color-pawtobooth-dark)]/60 leading-relaxed">
                     {showConfirmCancel 
                       ? 'Layanan Anda akan segera dihentikan dan fitur premium akan langsung terkunci. Anda yakin?' 
                       : 'Tindakan ini tidak bisa dibatalkan. Seluruh event, foto, dan profil toko Anda akan dihapus permanen dari sistem kami.'}
@@ -265,7 +267,7 @@ export function UserProfile({ profile, onUpdate }: UserProfileProps) {
                <div className="grid grid-cols-2 gap-4">
                   <button 
                     onClick={() => { setShowConfirmCancel(false); setShowConfirmDelete(false); }}
-                    className="py-4 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10"
+                    className="py-4 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black/5 text-[var(--color-pawtobooth-dark)]"
                   >
                     Batal
                   </button>

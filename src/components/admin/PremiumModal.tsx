@@ -19,28 +19,28 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           />
           
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-xl bg-neutral-900 border border-white/10 rounded-[40px] overflow-hidden shadow-3xl"
+            className="relative w-full max-w-xl bg-white border border-black/10 rounded-[40px] overflow-hidden shadow-2xl"
           >
             {/* Header Decor */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#3E6B43]/20 to-transparent pointer-events-none" />
             
             <div className="p-10 pt-16 space-y-8 text-center">
               <div className="flex justify-center">
-                <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-600/20">
+                <div className="w-20 h-20 bg-[#3E6B43] rounded-3xl flex items-center justify-center shadow-xl shadow-[#3E6B43]/20 border border-[#3E6B43]/50">
                    <Crown className="w-10 h-10 text-white" />
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-3xl font-black uppercase tracking-tight">Unlock Professional <br/><span className="text-blue-500 italic">Capabilities</span></h2>
-                <p className="text-neutral-400 text-sm max-w-sm mx-auto leading-relaxed">
+                <h2 className="text-3xl font-black uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">Unlock Professional <br/><span className="text-[#3E6B43] italic">Capabilities</span></h2>
+                <p className="text-[var(--color-pawtobooth-dark)]/80 text-sm max-w-sm mx-auto leading-relaxed">
                   Fitur ini hanya tersedia untuk pengguna Professional. Tingkatkan akun Anda untuk mengelola event tanpa batas.
                 </p>
               </div>
@@ -54,8 +54,8 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
                   "Advanced Revenue Analytics",
                   "Priority Email Support"
                 ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-tight text-neutral-300">
-                    <Check className="w-4 h-4 text-blue-500" /> {feat}
+                  <div key={i} className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">
+                    <Check className="w-4 h-4 text-[#3E6B43]" /> {feat}
                   </div>
                 ))}
               </div>
@@ -63,13 +63,13 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
               <div className="pt-4 space-y-4">
                 <button 
                   onClick={() => navigate('/register')}
-                  className="w-full py-5 bg-white text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-[#3E6B43] shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
                 >
                   <Zap className="w-4 h-4 fill-current" /> Upgrade ke Pro - Rp 150k
                 </button>
                 <button 
                   onClick={onClose}
-                  className="w-full py-4 text-neutral-500 font-bold uppercase text-[10px] tracking-widest hover:text-white transition-colors"
+                  className="w-full py-4 text-[var(--color-pawtobooth-dark)]/40 font-bold uppercase text-[10px] tracking-widest hover:text-[var(--color-pawtobooth-dark)]/80 transition-colors"
                 >
                   Maybe Later
                 </button>
@@ -78,7 +78,7 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
 
             <button 
               onClick={onClose}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 transition-colors text-neutral-500"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 transition-colors text-[var(--color-pawtobooth-dark)]/40"
             >
               <X className="w-5 h-5" />
             </button>

@@ -11,10 +11,10 @@ interface AdminStatsProps {
 
 export function AdminStats({ sessionCount, revenue, queueCount, eventCount }: AdminStatsProps) {
   const stats = [
-    { label: 'Total Sessions', value: sessionCount, icon: Users, color: 'text-blue-400' },
-    { label: 'Total Revenue', value: `Rp ${revenue.toLocaleString()}`, icon: DollarSign, color: 'text-green-400' },
-    { label: 'Print Queue', value: queueCount, icon: Printer, color: 'text-purple-400' },
-    { label: 'Active Events', value: eventCount, icon: Calendar, color: 'text-orange-400' },
+    { label: 'Total Sessions', value: sessionCount, icon: Users, color: 'text-blue-600' },
+    { label: 'Total Revenue', value: `Rp ${revenue.toLocaleString()}`, icon: DollarSign, color: 'text-[#3E6B43]' },
+    { label: 'Print Queue', value: queueCount, icon: Printer, color: 'text-purple-600' },
+    { label: 'Active Events', value: eventCount, icon: Calendar, color: 'text-orange-600' },
   ];
 
   return (
@@ -25,13 +25,13 @@ export function AdminStats({ sessionCount, revenue, queueCount, eventCount }: Ad
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
-          className="p-6 bg-neutral-900 border border-white/5 rounded-[32px] space-y-4"
+          className="p-6 bg-white border border-black/5 rounded-[32px] space-y-4 shadow-sm"
         >
-          <div className={cn("p-3 rounded-2xl bg-white/5 w-fit", stat.color)}>
+          <div className={cn("p-3 rounded-2xl bg-[var(--color-pawtobooth-light)] w-fit", stat.color)}>
             <stat.icon className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <p className="text-neutral-500 text-xs font-bold uppercase tracking-wider">{stat.label}</p>
+            <p className="text-[var(--color-pawtobooth-dark)]/60 text-xs font-bold uppercase tracking-wider">{stat.label}</p>
             <p className="text-3xl font-bold tracking-tight">{stat.value}</p>
           </div>
         </motion.div>

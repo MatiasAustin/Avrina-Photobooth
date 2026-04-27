@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export function PrintNode() {
+  const { settings } = useSettings();
   const [isListening, setIsListening] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({ printed: 0, pending: 0 });
@@ -100,15 +102,15 @@ export function PrintNode() {
         
         {/* Control Panel */}
         <div className="lg:col-span-2 space-y-6">
-           <div className="bg-neutral-900 border border-white/5 rounded-[40px] p-10 space-y-12">
+           <div className="bg-white border border-black/5 rounded-[40px] p-10 space-y-12 shadow-sm">
               <div className="flex items-center justify-between">
                  <div className="space-y-2">
-                    <h2 className="text-3xl font-bold uppercase italic tracking-tighter">Remote Print Node</h2>
-                    <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
+                    <h2 className="text-3xl font-bold uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Remote Print Node</h2>
+                    <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
                  </div>
                  <button 
                   onClick={() => setIsListening(!isListening)}
-                  className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-black hover:scale-105'}`}
+                  className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] hover:bg-[#3E6B43] hover:-translate-y-0.5'}`}
                  >
                     {isListening ? (
                       <><Pause className="w-4 h-4" /> Stop Listener</>
@@ -119,35 +121,35 @@ export function PrintNode() {
               </div>
 
               <div className="grid grid-cols-2 gap-8">
-                 <div className="p-8 bg-black/40 rounded-3xl border border-white/5 space-y-2">
-                    <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest">Jobs Completed</p>
-                    <p className="text-5xl font-black">{stats.printed}</p>
+                 <div className="p-8 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-2 shadow-sm">
+                    <p className="text-[var(--color-pawtobooth-dark)]/60 text-[10px] font-mono uppercase tracking-widest">Jobs Completed</p>
+                    <p className="text-5xl font-black text-[var(--color-pawtobooth-dark)]">{stats.printed}</p>
                  </div>
-                 <div className="p-8 bg-black/40 rounded-3xl border border-white/5 space-y-2">
-                    <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest">Active Queue</p>
-                    <p className={`text-5xl font-black ${stats.pending > 0 ? 'text-yellow-500' : 'text-white'}`}>{stats.pending}</p>
+                 <div className="p-8 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-2 shadow-sm">
+                    <p className="text-[var(--color-pawtobooth-dark)]/60 text-[10px] font-mono uppercase tracking-widest">Active Queue</p>
+                    <p className={`text-5xl font-black ${stats.pending > 0 ? 'text-yellow-500' : 'text-[var(--color-pawtobooth-dark)]'}`}>{stats.pending}</p>
                  </div>
               </div>
 
               <div className="space-y-4">
                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                       <Activity className="w-4 h-4" /> System Logs
+                    <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/80 flex items-center gap-2">
+                       <Activity className="w-4 h-4 text-[#3E6B43]" /> System Logs
                     </h3>
-                    <button onClick={clearLogs} className="text-[10px] text-neutral-600 hover:text-white uppercase transition-colors">Clear</button>
+                    <button onClick={clearLogs} className="text-[10px] text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)] uppercase transition-colors font-bold">Clear</button>
                  </div>
-                 <div className="h-64 bg-black/60 rounded-[32px] border border-white/5 p-6 font-mono text-[10px] overflow-y-auto space-y-2 scrollbar-none">
-                    {logs.length === 0 && <p className="text-neutral-800 italic">Waiting for connection...</p>}
+                 <div className="h-64 bg-[var(--color-pawtobooth-light)]/50 rounded-[32px] border border-black/5 p-6 font-mono text-[10px] overflow-y-auto space-y-2 scrollbar-none shadow-inner">
+                    {logs.length === 0 && <p className="text-[var(--color-pawtobooth-dark)]/40 italic">Waiting for connection...</p>}
                     <AnimatePresence initial={false}>
                        {logs.map(log => (
                          <motion.div 
                            key={log.id} 
                            initial={{ opacity: 0, x: -10 }} 
                            animate={{ opacity: 1, x: 0 }}
-                           className="flex gap-4 border-b border-white/5 pb-2"
+                           className="flex gap-4 border-b border-black/5 pb-2"
                          >
-                            <span className="text-neutral-600 shrink-0">[{log.time}]</span>
-                            <span className={log.type === 'success' ? 'text-green-500' : log.type === 'error' ? 'text-red-500' : 'text-neutral-300'}>
+                            <span className="text-[var(--color-pawtobooth-dark)]/40 shrink-0">[{log.time}]</span>
+                            <span className={log.type === 'success' ? 'text-[#3E6B43] font-bold' : log.type === 'error' ? 'text-red-500 font-bold' : 'text-[var(--color-pawtobooth-dark)]/80'}>
                                {log.message}
                             </span>
                          </motion.div>
@@ -160,12 +162,12 @@ export function PrintNode() {
 
         {/* Instructions/Status */}
         <div className="space-y-8 h-fit lg:sticky lg:top-24">
-           <div className="p-8 bg-neutral-900 border border-white/5 rounded-[40px] space-y-8">
+           <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-8">
               <div className="flex items-center gap-4 text-yellow-500">
                  <AlertTriangle className="w-8 h-8" />
-                 <h3 className="text-xl font-bold uppercase italic leading-none">Operator Checklist</h3>
+                 <h3 className="text-xl font-bold uppercase italic leading-none text-[var(--color-pawtobooth-dark)]">Operator Checklist</h3>
               </div>
-              <ul className="space-y-6 text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+              <ul className="space-y-6 text-[10px] font-mono uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/80">
                  <li className="flex items-start gap-3">
                     <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1 shrink-0" />
                     <span>Run browser with <code>--kiosk-printing</code> flag for silent operation.</span>
@@ -178,20 +180,20 @@ export function PrintNode() {
                     <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1 shrink-0" />
                     <span>Disable "Print Headers/Footers" in browser print dialog.</span>
                  </li>
-                 <li className="flex items-start gap-3 text-white">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    <span>Avrina Realtime Link Active</span>
+                 <li className="flex items-start gap-3 text-[#3E6B43]">
+                    <CheckCircle2 className="w-4 h-4 text-[#3E6B43] shrink-0" />
+                    <span className="font-bold">{settings.appName} Realtime Link Active</span>
                  </li>
               </ul>
            </div>
 
-           <div className="p-8 bg-blue-500/10 border border-blue-500/20 rounded-[40px] flex items-center gap-6">
-              <div className="w-12 h-12 bg-blue-500 text-white rounded-2xl flex items-center justify-center border border-white/10 shrink-0">
+           <div className="p-8 bg-[#3E6B43]/10 border border-[#3E6B43]/20 rounded-[40px] flex items-center gap-6">
+              <div className="w-12 h-12 bg-[#3E6B43] text-white rounded-2xl flex items-center justify-center border border-white/50 shrink-0 shadow-md">
                  <RefreshCw className="w-6 h-6 animate-spin-slow" />
               </div>
               <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Node Strategy</p>
-                 <p className="text-xs font-mono uppercase tracking-tighter text-blue-200/60 leading-tight">This node handles prints for ALL booths in your network simultaneously.</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-[#3E6B43]">Node Strategy</p>
+                 <p className="text-xs font-mono uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]/60 leading-tight">This node handles prints for ALL booths in your network simultaneously.</p>
               </div>
            </div>
         </div>

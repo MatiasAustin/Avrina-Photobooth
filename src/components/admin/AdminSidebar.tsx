@@ -1,6 +1,7 @@
 import { LogOut, Calendar, ImageIcon, Printer, TrendingUp, Camera, Zap, CreditCard, Crown, Shield, User, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -10,6 +11,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: AdminSidebarProps) {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, pro: false },
     { id: 'subscription', label: 'Subscription', icon: Shield, pro: false },
@@ -22,12 +24,12 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
   ];
 
   return (
-    <aside className="w-64 border-r border-white/5 bg-neutral-900/50 flex flex-col">
-      <div className="p-8 border-b border-white/5 flex items-center gap-3">
-        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-          <Camera className="text-black w-5 h-5" />
+    <aside className="w-64 border-r border-black/5 bg-[var(--color-pawtobooth-light)] flex flex-col">
+      <div className="p-8 border-b border-black/5 flex items-center gap-3">
+        <div className="w-8 h-8 bg-[#3E6B43] rounded-lg flex items-center justify-center">
+          <Camera className="text-white w-5 h-5" />
         </div>
-        <h1 className="font-bold tracking-tighter text-xl uppercase">Avrina <span className="text-white/20">Admin</span></h1>
+        <h1 className="font-bold tracking-tighter text-xl uppercase text-[var(--color-pawtobooth-dark)]">{settings.appName.split(' ')[0]} <span className="text-[#3E6B43]">{settings.appName.split(' ')[1] || 'Admin'}</span></h1>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
@@ -47,10 +49,10 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
               className={cn(
                 "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group",
                 activeTab === item.id 
-                  ? "bg-white text-black shadow-lg" 
+                  ? "bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] shadow-sm" 
                   : isLocked 
-                    ? "text-neutral-600 cursor-not-allowed" 
-                    : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                    ? "text-[var(--color-pawtobooth-dark)]/30 cursor-not-allowed" 
+                    : "text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43]/10 hover:text-[#3E6B43]"
               )}
             >
               <div className="flex items-center gap-3">
@@ -58,9 +60,9 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
                 <span className={isLocked ? "opacity-50" : ""}>{item.label}</span>
               </div>
               {isLocked ? (
-                <Lock className="w-3 h-3 text-neutral-600" />
+                <Lock className="w-3 h-3 text-[var(--color-pawtobooth-dark)]/30" />
               ) : item.pro && (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-600/10 text-blue-500 text-[8px] font-black uppercase tracking-tighter border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#3E6B43]/10 text-[#3E6B43] text-[8px] font-black uppercase tracking-tighter border border-[#3E6B43]/20 group-hover:bg-[#3E6B43] group-hover:text-white transition-all">
                   <Crown className="w-2 h-2 fill-current" /> PRO
                 </div>
               )}
@@ -69,17 +71,17 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
         })}
       </nav>
 
-      <div className="p-4 space-y-2 border-t border-white/5">
+      <div className="p-4 space-y-2 border-t border-black/5">
         <button 
           onClick={() => navigate('/launchpad')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-white/5 text-white hover:bg-white hover:text-black transition-all border border-white/10"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-[#3E6B43] text-white hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-sm"
         >
           <Zap className="w-4 h-4 text-glow" />
           Station Launchpad
         </button>
         <button 
           onClick={() => navigate('/')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-neutral-500 hover:text-white hover:bg-white/5 transition-all"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] hover:bg-black/5 transition-all"
         >
           <LogOut className="w-4 h-4" />
           Exit to Public

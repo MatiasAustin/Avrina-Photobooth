@@ -23,25 +23,25 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
       className="z-10 w-full max-w-lg flex flex-col gap-6"
     >
       {/* Header — Price & Title */}
-      <div className="text-center space-y-2">
-        <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-[0.3em]">Payment Required</p>
+      <div className="text-center space-y-2 text-[var(--color-pawtobooth-dark)]">
+        <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-[0.3em]">Payment Required</p>
         <h2 className="text-6xl font-black uppercase tracking-tight italic">{formatted}</h2>
-        <p className="text-neutral-400 font-mono text-xs">
+        <p className="text-[var(--color-pawtobooth-dark)]/80 font-mono text-xs">
           Bayar sekarang untuk memulai sesi foto Anda
         </p>
       </div>
 
       {/* Card */}
-      <div className="bg-neutral-900/80 backdrop-blur-3xl border border-white/10 rounded-[40px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.5)]">
+      <div className="bg-white/90 backdrop-blur-3xl border border-black/5 rounded-[40px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.05)] text-[var(--color-pawtobooth-dark)]">
 
         {/* Tab Toggle */}
-        <div className="flex border-b border-white/5">
+        <div className="flex border-b border-black/5">
           {qrisImageUrl && (
             <button
               onClick={() => setActiveTab('qris')}
               className={cn(
                 'flex-1 py-5 flex items-center justify-center gap-2 font-black uppercase text-xs tracking-[0.2em] transition-all',
-                activeTab === 'qris' ? 'text-white border-b-2 border-white' : 'text-neutral-600 hover:text-neutral-400'
+                activeTab === 'qris' ? 'text-[#3E6B43] border-b-2 border-[#3E6B43]' : 'text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)]/80'
               )}
             >
               <SmartphoneNfc className="w-4 h-4" /> QRIS
@@ -51,7 +51,7 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
             onClick={() => setActiveTab('cash')}
             className={cn(
               'flex-1 py-5 flex items-center justify-center gap-2 font-black uppercase text-xs tracking-[0.2em] transition-all',
-              activeTab === 'cash' ? 'text-white border-b-2 border-white' : 'text-neutral-600 hover:text-neutral-400'
+              activeTab === 'cash' ? 'text-[#3E6B43] border-b-2 border-[#3E6B43]' : 'text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)]/80'
             )}
           >
             <CircleDollarSign className="w-4 h-4" /> Tunai / Cash
@@ -78,21 +78,21 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
                   `Tunggu konfirmasi dari staff kami`,
                 ].map((step, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-white/10 text-[9px] font-black text-white flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                    <p className="text-xs text-neutral-400 font-mono leading-relaxed">{step}</p>
+                    <span className="w-5 h-5 rounded-full bg-[#3E6B43]/10 text-[9px] font-black text-[#3E6B43] flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <p className="text-xs text-[var(--color-pawtobooth-dark)]/80 font-mono leading-relaxed">{step}</p>
                   </div>
                 ))}
               </div>
 
               {/* QRIS Image */}
               <div className="relative group mx-auto w-fit">
-                <div className="absolute -inset-3 bg-white/5 rounded-[28px] blur-xl group-hover:bg-white/10 transition-all duration-500" />
-                <div className="relative bg-white p-5 rounded-[28px] shadow-2xl">
+                <div className="absolute -inset-3 bg-black/5 rounded-[28px] blur-xl group-hover:bg-black/10 transition-all duration-500" />
+                <div className="relative bg-white p-5 rounded-[28px] shadow-lg border border-black/5">
                   <img src={qrisImageUrl} alt="QRIS" className="w-52 h-52 object-contain" />
                 </div>
               </div>
 
-              <p className="text-center text-[9px] font-mono text-neutral-600 uppercase tracking-widest">
+              <p className="text-center text-[9px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest">
                 Scan menggunakan GoPay · OVO · DANA · m-Banking
               </p>
             </motion.div>
@@ -108,14 +108,14 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
               className="p-8 space-y-6"
             >
               <div className="flex flex-col items-center gap-6 py-4">
-                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                  <Wallet className="w-10 h-10 text-neutral-400" />
+                <div className="w-20 h-20 rounded-full bg-[var(--color-pawtobooth-light)] border border-black/5 flex items-center justify-center">
+                  <Wallet className="w-10 h-10 text-[var(--color-pawtobooth-dark)]/40" />
                 </div>
 
                 <div className="text-center space-y-2">
                   <h3 className="text-2xl font-black uppercase italic">Bayar ke Staff</h3>
-                  <p className="text-neutral-500 font-mono text-xs leading-relaxed">
-                    Silakan bayar tunai sebesar <span className="text-white font-bold">{formatted}</span> langsung ke staff yang berjaga di dekat booth ini.
+                  <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-xs leading-relaxed">
+                    Silakan bayar tunai sebesar <span className="text-[#3E6B43] font-bold">{formatted}</span> langsung ke staff yang berjaga di dekat booth ini.
                   </p>
                 </div>
 
@@ -127,9 +127,9 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
                     `Staff akan mengkonfirmasi pembayaran Anda`,
                     `Booth akan otomatis terbuka setelah dikonfirmasi`,
                   ].map((step, i) => (
-                    <div key={i} className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0">
-                      <span className="w-5 h-5 rounded-full bg-white/10 text-[9px] font-black text-white flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                      <p className="text-xs text-neutral-400 font-mono leading-relaxed">{step}</p>
+                    <div key={i} className="flex items-start gap-3 py-3 border-b border-black/5 last:border-0">
+                      <span className="w-5 h-5 rounded-full bg-[#3E6B43]/10 text-[9px] font-black text-[#3E6B43] flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                      <p className="text-xs text-[var(--color-pawtobooth-dark)]/80 font-mono leading-relaxed">{step}</p>
                     </div>
                   ))}
                 </div>
@@ -144,17 +144,17 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.4 }}
-        className="bg-white/5 border border-white/10 rounded-3xl p-5 flex items-center gap-4"
+        className="bg-white border border-black/5 shadow-sm rounded-3xl p-5 flex items-center gap-4 text-[var(--color-pawtobooth-dark)]"
       >
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-            <RefreshCcw className="w-5 h-5 text-white animate-spin" />
+          <div className="w-10 h-10 rounded-full bg-[var(--color-pawtobooth-light)] border border-black/5 flex items-center justify-center">
+            <RefreshCcw className="w-5 h-5 text-[#3E6B43] animate-spin" />
           </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse border-2 border-neutral-900" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse border-2 border-white" />
         </div>
         <div>
           <p className="text-sm font-black uppercase tracking-wider">Menunggu Konfirmasi</p>
-          <p className="text-[10px] font-mono text-neutral-500 mt-0.5">
+          <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 mt-0.5">
             Booth akan otomatis terbuka begitu staff mengkonfirmasi pembayaran Anda
           </p>
         </div>
@@ -167,7 +167,7 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
           onClick={onCancel}
-          className="w-full py-4 text-neutral-600 hover:text-neutral-400 font-mono text-[10px] uppercase tracking-widest transition-colors"
+          className="w-full py-4 text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] font-mono text-[10px] uppercase tracking-widest transition-colors"
         >
           ← Batal & Kembali
         </motion.button>

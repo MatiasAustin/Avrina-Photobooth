@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
+import { PLATFORM_NAME } from '../lib/constants';
 import { BoothState, EventConfig, PhotoTemplate, Session } from '../types';
 import { BoothHero } from './booth/BoothHero';
 import { PaymentGate } from './booth/PaymentGate';
@@ -408,7 +409,7 @@ export function Booth() {
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 36px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(event?.name?.toUpperCase() || 'AVRINA NETWORK', offsetX + stripWidth / 2, stripHeight - 140);
+        ctx.fillText(event?.name?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, offsetX + stripWidth / 2, stripHeight - 140);
         
         ctx.font = '20px monospace';
         ctx.fillStyle = '#999999';
@@ -496,17 +497,17 @@ export function Booth() {
   };
 
   if (loading) return (
-    <div className="h-screen bg-black flex items-center justify-center">
-       <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
+    <div className="h-screen bg-[var(--color-pawtobooth-beige)] flex items-center justify-center">
+       <div className="animate-spin w-8 h-8 border-2 border-[#3E6B43]/20 border-t-[#3E6B43] rounded-full" />
     </div>
   );
 
   if (error) return (
-    <div className="h-screen bg-black flex items-center justify-center p-8">
-       <div className="max-w-md w-full bg-neutral-900 border border-white/10 p-12 rounded-[40px] text-center space-y-6">
+    <div className="h-screen bg-[var(--color-pawtobooth-beige)] flex items-center justify-center p-8">
+       <div className="max-w-md w-full bg-white border border-black/5 p-12 rounded-[40px] text-center space-y-6 shadow-sm text-[var(--color-pawtobooth-dark)]">
           <h2 className="text-2xl font-bold uppercase tracking-tight">Access Denied</h2>
-          <p className="text-neutral-500 mb-8">{error}</p>
-          <button onClick={() => navigate('/')} className="w-full py-4 bg-white text-black font-bold rounded-2xl uppercase text-xs tracking-widest">Back to Home</button>
+          <p className="text-[var(--color-pawtobooth-dark)]/60 mb-8">{error}</p>
+          <button onClick={() => navigate('/')} className="w-full py-4 bg-[#3E6B43] text-white font-bold rounded-2xl uppercase text-xs tracking-widest hover:bg-[var(--color-pawtobooth-dark)] shadow-sm">Back to Home</button>
        </div>
     </div>
   );

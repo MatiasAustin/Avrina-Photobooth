@@ -276,27 +276,27 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black flex flex-col lg:flex-row animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[120] bg-white flex flex-col lg:flex-row animate-in fade-in duration-500">
       {/* Editor Sidebar */}
-      <div className="w-full lg:w-96 bg-neutral-900 border-r border-white/5 flex flex-col h-full">
-         <div className="p-6 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-xl font-black italic uppercase tracking-tighter">Design <span className="text-white/20">Studio</span></h2>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5"/></button>
+      <div className="w-full lg:w-96 bg-[var(--color-pawtobooth-light)] border-r border-black/5 flex flex-col h-full">
+         <div className="p-6 border-b border-black/5 flex items-center justify-between">
+            <h2 className="text-xl font-black italic uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">Design <span className="text-[#3E6B43]">Studio</span></h2>
+            <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-[var(--color-pawtobooth-dark)]/60"><X className="w-5 h-5"/></button>
          </div>
 
          <div className="flex-1 overflow-y-auto p-6 space-y-8">
             <div className="space-y-4">
-               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">Project Info</label>
+               <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block">Project Info</label>
                <input 
                  value={name}
                  onChange={e => setName(e.target.value)}
                  placeholder="Template Name"
-                 className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 transition-colors"
+                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-[var(--color-pawtobooth-dark)] shadow-sm"
                />
                <select 
                  value={eventId}
                  onChange={e => setEventId(e.target.value)}
-                 className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 transition-colors text-sm"
+                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-sm text-[var(--color-pawtobooth-dark)] shadow-sm"
                >
                  <option value="">Assign to Booth...</option>
                  {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -304,19 +304,19 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
             </div>
 
             <div className="space-y-4">
-               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><Palette className="w-3 h-3"/> Colors & Background</label>
+               <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><Palette className="w-3 h-3 text-[#3E6B43]"/> Colors & Background</label>
                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                     <p className="text-[8px] text-neutral-600 uppercase font-bold">Paper Color</p>
-                     <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg" />
+                     <p className="text-[8px] text-[var(--color-pawtobooth-dark)]/40 uppercase font-bold">Paper Color</p>
+                     <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg border border-black/5" />
                   </div>
                   <div className="space-y-1">
-                     <p className="text-[8px] text-neutral-600 uppercase font-bold">Text Color</p>
-                     <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg" />
+                     <p className="text-[8px] text-[var(--color-pawtobooth-dark)]/40 uppercase font-bold">Text Color</p>
+                     <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg border border-black/5" />
                   </div>
                </div>
                <div className="flex gap-2">
-                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white hover:text-black transition-all">
+                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#3E6B43] hover:text-white hover:border-[#3E6B43] transition-all text-[var(--color-pawtobooth-dark)]">
                     <ImageIcon className="w-3 h-3" /> {bgImage ? 'Change BG' : 'Upload BG'}
                     <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload('bg', e)} />
                  </label>
@@ -325,11 +325,11 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
             </div>
 
             <div className="space-y-4">
-               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><Type className="w-3 h-3"/> Typography</label>
+               <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><Type className="w-3 h-3 text-[#3E6B43]"/> Typography</label>
                <select 
                  value={fontFamily}
                  onChange={e => setFontFamily(e.target.value)}
-                 className="w-full bg-black/40 border border-white/5 p-4 rounded-xl text-xs uppercase font-bold tracking-widest"
+                 className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs uppercase font-bold tracking-widest text-[var(--color-pawtobooth-dark)] focus:border-[#3E6B43] outline-none shadow-sm"
                >
                  <option value="sans-serif">Modern Sans</option>
                  <option value="serif">Classic Serif</option>
@@ -339,36 +339,36 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
                  value={heading}
                  onChange={e => setHeading(e.target.value)}
                  placeholder="Main Heading"
-                 className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 transition-colors"
+                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-[var(--color-pawtobooth-dark)] shadow-sm"
                />
                <input 
                  value={subheading}
                  onChange={e => setSubheading(e.target.value)}
                  placeholder="Subheading / Date"
-                 className="w-full bg-black/40 border border-white/5 p-4 rounded-xl focus:border-white/20 transition-colors"
+                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-[var(--color-pawtobooth-dark)] shadow-sm"
                />
             </div>
 
             <div className="space-y-4">
-               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><Palette className="w-3 h-3"/> Stickers & Props</label>
+               <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><Palette className="w-3 h-3 text-[#3E6B43]"/> Stickers & Props</label>
                <div className="grid grid-cols-4 gap-2">
                   {['❤️', '✨', '🌸', '🥳', '🎁', '⭐', '💍', '🥂'].map(s => (
                     <button 
                       key={s} 
                       onClick={() => addSticker(s)}
-                      className="aspect-square bg-black/40 border border-white/5 rounded-xl flex items-center justify-center text-xl hover:bg-white hover:text-black transition-all"
+                      className="aspect-square bg-white border border-black/5 shadow-sm rounded-xl flex items-center justify-center text-xl hover:bg-[#3E6B43] hover:text-white transition-all"
                     >
                       {s}
                     </button>
                   ))}
                </div>
-               <p className="text-[8px] text-neutral-600 uppercase tracking-widest text-center mt-2">Tap to add, drag on canvas to position</p>
+               <p className="text-[8px] text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest text-center mt-2">Tap to add, drag on canvas to position</p>
             </div>
 
             <div className="space-y-4">
-               <label className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block flex items-center gap-2"><ImageIcon className="w-3 h-3"/> Branding</label>
+               <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><ImageIcon className="w-3 h-3 text-[#3E6B43]"/> Branding</label>
                <div className="flex gap-2">
-                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white hover:text-black transition-all">
+                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)]">
                     <Upload className="w-3 h-3" /> {logo ? 'Change Logo' : 'Upload PNG Logo'}
                     <input type="file" className="hidden" accept="image/png" onChange={e => handleFileUpload('logo', e)} />
                  </label>
@@ -377,45 +377,45 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
             </div>
          </div>
 
-         <div className="p-6 border-t border-white/5">
+         <div className="p-6 border-t border-black/5 bg-white">
             <button 
               onClick={saveTemplate}
               disabled={isSaving}
-              className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] disabled:opacity-50"
+              className="w-full py-4 bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] font-black uppercase text-xs tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 hover:bg-[#3E6B43] active:scale-95 transition-all shadow-md disabled:opacity-50"
             >
-               {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-black/20 border-t-black rounded-full" /> : <Save className="w-4 h-4" />}
+               {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save className="w-4 h-4" />}
                Deploy Design
             </button>
          </div>
       </div>
 
       {/* Main Preview Area */}
-      <div className="flex-1 bg-neutral-950 flex flex-col items-center justify-center p-12 relative overflow-hidden">
+      <div className="flex-1 bg-[var(--color-pawtobooth-beige)] flex flex-col items-center justify-center p-12 relative overflow-hidden">
          <div className="absolute top-8 left-8 flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Wysiwyg Engine Active</span>
+            <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-pulse" />
+            <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest">Wysiwyg Engine Active</span>
          </div>
 
-         <div className="relative shadow-[0_0_100px_rgba(255,255,255,0.05)] rounded-2xl overflow-hidden animate-in zoom-in duration-700">
+         <div className="relative shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in duration-700 border border-black/5">
             <canvas 
               ref={canvasRef} 
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              className="max-h-[85vh] w-auto bg-white rounded-sm shadow-2xl cursor-crosshair"
+              className="max-h-[85vh] w-auto bg-white rounded-sm cursor-crosshair"
             />
          </div>
 
          <div className="mt-8 flex items-center gap-8">
             <div className="text-center">
-               <p className="text-[8px] font-mono text-neutral-600 uppercase tracking-[0.4em] mb-2">Target Dimensions</p>
-               <p className="text-sm font-bold text-neutral-400">600 x 1800 <span className="text-neutral-700">(Standard 2x6)</span></p>
+               <p className="text-[8px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-[0.4em] mb-2">Target Dimensions</p>
+               <p className="text-sm font-bold text-[var(--color-pawtobooth-dark)]">600 x 1800 <span className="text-[var(--color-pawtobooth-dark)]/40">(Standard 2x6)</span></p>
             </div>
-            <div className="w-px h-8 bg-white/10" />
+            <div className="w-px h-8 bg-black/10" />
             <div className="text-center">
-               <p className="text-[8px] font-mono text-neutral-600 uppercase tracking-[0.4em] mb-2">Alpha Support</p>
-               <p className="text-sm font-bold text-neutral-400">Full PNG Transparency</p>
+               <p className="text-[8px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-[0.4em] mb-2">Alpha Support</p>
+               <p className="text-sm font-bold text-[var(--color-pawtobooth-dark)]">Full PNG Transparency</p>
             </div>
          </div>
       </div>
