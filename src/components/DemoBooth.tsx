@@ -23,9 +23,12 @@ const MOCK_EVENT = {
 const MOCK_TEMPLATES = [
   { 
     id: 't1', 
+    user_id: 'demo-user',
     event_id: 'demo-event',
     name: 'Clean White', 
     image_url: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80',
+    category: 'General',
+    slot_count: 6,
     created_at: new Date().toISOString()
   }
 ];
@@ -263,6 +266,8 @@ export function DemoBooth() {
         {state === 'review' && (
           <ReviewGallery 
             photos={capturedPhotos}
+            slotCount={6}
+            templateImageUrl={null}
             onRetake={() => {
                 setCapturedPhotos([]);
                 setCurrentShot(0);

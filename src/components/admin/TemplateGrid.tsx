@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Image as ImageIcon, X, Save, Palette } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { TemplateEditor } from './TemplateEditor';
+import { cn } from '../../lib/utils';
 
 export function TemplateGrid() {
   const [templates, setTemplates] = useState<any[]>([]);
