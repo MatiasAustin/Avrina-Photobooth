@@ -30,11 +30,11 @@ export function ReviewGallery({
 }: ReviewGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // State definitions (Fixed missing variables)
+  // State definitions (Fixed coordinate system & missing variables)
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [activeEditIdx, setActiveEditIdx] = useState<number | null>(null);
   const [transforms, setTransforms] = useState<PhotoTransform[]>(
-    Array(slotCount).fill({ x: 0, y: 0, scale: 1.1 })
+    Array(slotCount).fill({ x: 0, y: 0, scale: 1.05 })
   );
 
   const updateTransform = (slotIdx: number, updates: Partial<PhotoTransform>) => {
