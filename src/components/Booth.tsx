@@ -215,14 +215,23 @@ export function Booth() {
     return () => clearInterval(timer);
   }, [globalTimeLeft, state]);
 
+  // Automatic Progression Logic
+  useEffect(() => {
+    if (state !== 'review_shot') return;
+
+    const timeout = setTimeout(() => {
+      handleShotNext();
+    }, 2500); // 2.5 seconds preview
+
+    return () => clearTimeout(timeout);
+  }, [state, currentShot]);
+
   const isTimeout = globalTimeLeft !== null && globalTimeLeft <= 0;
 
-  const proceedToCapture = () => {
-    setState('countdown');
-    startCountdown();
-  };
+  // Reliable Countdown Logic
+  useEffect(() => {
+    if (state !== 'countdown') return;
 
-  const startCountdown = () => {
     setCountdown(event?.timer || 5);
     const interval = setInterval(() => {
       setCountdown(prev => {
@@ -234,6 +243,12 @@ export function Booth() {
         return prev - 1;
       });
     }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state, event?.timer]);
+
+  const proceedToCapture = () => {
+    setState('countdown');
   };
 
   const takePhoto = async () => {
@@ -270,63 +285,43 @@ export function Booth() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         context.restore();
 
-        // 3. Draw Template Overlay
-        if (selectedTemplate) {
-          try {
-            const templateImg = new Image();
-            if (selectedTemplate.image_url.startsWith('http')) {
-              templateImg.crossOrigin = "anonymous";
-            }
-            templateImg.src = selectedTemplate.image_url;
-            
-            await new Promise((resolve) => {
-              const timeout = setTimeout(resolve, 2000); 
-              templateImg.onload = () => {
-                context.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
-                clearTimeout(timeout);
-                resolve(null);
-              };
-              templateImg.onerror = () => {
-                console.warn("Template failed to load");
-                clearTimeout(timeout);
-                resolve(null);
-              };
-            });
-          } catch (e) {
-            console.error("Template overlay error", e);
-          }
-        }
-
-        const photoData = canvas.toDataURL('image/jpeg', 0.82);
+        const photoData = canvas.toDataURL('image/jpeg', 0.85);
         
         if (photoData.length > 1000) {
-          setCapturedPhotos(prev => [...prev, photoData]);
+          setCapturedPhotos(prev => {
+            const newPhotos = [...prev];
+            newPhotos[currentShot] = photoData;
+            return newPhotos;
+          });
           setState('review_shot');
         } else {
           console.error("Capture empty");
-          // Fallback: try to advance anyway or alert
           setState('review_shot');
         }
       }
     }
   };
 
-  const handleShotRetake = () => {
-    setCapturedPhotos(prev => prev.slice(0, -1));
-    setState('countdown');
-    startCountdown();
-  };
-
   const handleShotNext = () => {
-    const nextShot = currentShot + 1;
-    if (nextShot < (event?.shot_count || 3)) {
+    const totalRequired = Math.max(event?.shot_count || 3, selectedTemplate?.slot_count || 0);
+    
+    // If we are in the middle of a normal sequence
+    if (capturedPhotos.length < totalRequired) {
+      const nextShot = currentShot + 1;
       setCurrentShot(nextShot);
       setState('countdown');
-      startCountdown();
     } else {
+      // We've taken all photos. 
+      // If we were doing a selective retake, go back to review.
+      // Otherwise, proceed to final review.
       stopCamera();
       setState('review');
     }
+  };
+
+  const handleSelectiveRetake = (index: number) => {
+    setCurrentShot(index);
+    setState('countdown');
   };
 
   const handleRetake = () => {
@@ -597,6 +592,7 @@ export function Booth() {
             slotCount={selectedTemplate?.slot_count || 3}
             templateImageUrl={selectedTemplate?.image_url}
             onRetake={handleRetake}
+            onSelectiveRetake={handleSelectiveRetake}
             onFinalize={handleFinalize}
             isTimeout={isTimeout}
           />

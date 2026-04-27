@@ -104,30 +104,12 @@ export function CaptureStage({
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col gap-6"
+            className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-center gap-2"
           >
-             <div className="space-y-1">
-                <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot #{currentShot + 1} Captured!</h3>
-                <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Pose looks great! Next one?</p>
-             </div>
-             
-             <div className="flex gap-4">
-                <button 
-                  onClick={onRetake}
-                  disabled={isTimeout}
-                  className={cn(
-                    "flex-1 py-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] text-white transition-all hover:bg-white/20",
-                    isTimeout && "opacity-20 cursor-not-allowed"
-                  )}
-                >
-                  Retake Shot
-                </button>
-                <button 
-                  onClick={onNext}
-                  className="flex-1 py-5 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#2d5032] active:scale-[0.98] transition-all shadow-xl"
-                >
-                  {currentShot + 1 >= totalShots ? 'Finalize Session' : 'Next Photo'}
-                </button>
+             <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot #{currentShot + 1} Captured!</h3>
+             <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-ping" />
+                <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Processing next photo...</p>
              </div>
           </motion.div>
         )}

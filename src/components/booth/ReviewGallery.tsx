@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { RefreshCcw, Check, MousePointer2, Image as ImageIcon } from 'lucide-react';
+import { RefreshCcw, Check, MousePointer2, Image as ImageIcon, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { PLATFORM_NAME } from '../../lib/constants';
@@ -9,6 +9,7 @@ interface ReviewGalleryProps {
   slotCount: number;
   templateImageUrl?: string | null;
   onRetake: () => void;
+  onSelectiveRetake: (index: number) => void;
   onFinalize: (arrangedPhotos: string[]) => void;
   isTimeout?: boolean;
 }
@@ -18,6 +19,7 @@ export function ReviewGallery({
   slotCount,
   templateImageUrl,
   onRetake, 
+  onSelectiveRetake,
   onFinalize,
   isTimeout = false 
 }: ReviewGalleryProps) {
@@ -77,39 +79,54 @@ export function ReviewGallery({
             const isSelected = selectionOrder !== -1;
             
             return (
-              <button 
-                key={i} 
-                onClick={() => handlePhotoClick(i)}
-                className={cn(
-                  "relative aspect-square rounded-[3rem] overflow-hidden border-4 transition-all duration-500 group shadow-md",
-                  isSelected ? "border-[#3E6B43] scale-105 shadow-2xl" : "border-black/5 hover:border-black/10 grayscale opacity-60 hover:grayscale-0 hover:opacity-100"
-                )}
-              >
-                <img src={photo} className="w-full h-full object-cover" />
-                
-                {/* Selection Badge */}
-                <AnimatePresence>
-                  {isSelected && (
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-6 right-6 w-12 h-12 bg-[#3E6B43] text-white rounded-full flex items-center justify-center font-black text-xl shadow-xl border-4 border-white"
-                    >
-                      {selectionOrder + 1}
-                    </motion.div>
+              <div key={i} className="relative group">
+                <button 
+                  onClick={() => handlePhotoClick(i)}
+                  className={cn(
+                    "relative w-full aspect-square rounded-[3rem] overflow-hidden border-4 transition-all duration-500 shadow-md",
+                    isSelected ? "border-[#3E6B43] scale-105 shadow-2xl" : "border-black/5 hover:border-black/10 grayscale opacity-60 hover:grayscale-0 hover:opacity-100"
                   )}
-                </AnimatePresence>
+                >
+                  <img src={photo} className="w-full h-full object-cover" />
+                  
+                  {/* Selection Badge */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="absolute top-6 right-6 w-12 h-12 bg-[#3E6B43] text-white rounded-full flex items-center justify-center font-black text-xl shadow-xl border-4 border-white"
+                      >
+                        {selectionOrder + 1}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <div className={cn(
-                  "absolute inset-0 bg-white/20 backdrop-blur-[2px] transition-opacity flex items-center justify-center",
-                  isSelected ? "opacity-0" : "opacity-0 group-hover:opacity-100"
-                )}>
-                   <span className="bg-white text-[var(--color-pawtobooth-dark)] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-md">
-                     Pick Me
-                   </span>
-                </div>
-              </button>
+                  <div className={cn(
+                    "absolute inset-0 bg-white/20 backdrop-blur-[2px] transition-opacity flex items-center justify-center",
+                    isSelected ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+                  )}>
+                     <span className="bg-white text-[var(--color-pawtobooth-dark)] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-md">
+                       Pick Me
+                     </span>
+                  </div>
+                </button>
+
+                {/* Selective Retake Button */}
+                {!isTimeout && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectiveRetake(i);
+                    }}
+                    className="absolute bottom-4 right-4 p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-black/5 text-[#3E6B43] opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Retake</span>
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
@@ -125,7 +142,7 @@ export function ReviewGallery({
                 : "border-black/20 text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)] hover:bg-black/5 bg-white shadow-sm"
             )}
           >
-            <RefreshCcw className="w-4 h-4" /> Start Over
+            <RefreshCcw className="w-4 h-4" /> Reset All
           </button>
           <button 
             onClick={() => onFinalize(arrangedPhotos)}
