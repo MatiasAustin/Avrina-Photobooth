@@ -1,8 +1,7 @@
-import { motion, AnimatePresence, useMotionValue } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { RefreshCcw, Check, MousePointer2, Image as ImageIcon, RotateCcw, Move, ZoomIn } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { cn } from '../../lib/utils';
-import { PLATFORM_NAME } from '../../lib/constants';
 
 interface PhotoTransform {
   x: number;
@@ -30,6 +29,13 @@ export function ReviewGallery({
   isTimeout = false 
 }: ReviewGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // State definitions (Fixed missing variables)
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [activeEditIdx, setActiveEditIdx] = useState<number | null>(null);
+  const [transforms, setTransforms] = useState<PhotoTransform[]>(
+    Array(slotCount).fill({ x: 0, y: 0, scale: 1.1 })
+  );
 
   const updateTransform = (slotIdx: number, updates: Partial<PhotoTransform>) => {
     setTransforms(prev => {
@@ -45,9 +51,9 @@ export function ReviewGallery({
     const row = Math.floor(idx / cols);
     const col = idx % cols;
     
-    // Normalize to 0-1 range
+    // Default 2-column layout starting positions
     return {
-      x: 0.05 + col * 0.45, 
+      x: 0.05 + col * 0.5, 
       y: 0.05 + row * 0.3,
       scale: 1.1
     };
@@ -59,24 +65,16 @@ export function ReviewGallery({
       setSelectedIndices(selectedIndices.filter(i => i !== idx));
     } else if (selectedIndices.length < slotCount) {
       const nextSlotIdx = selectedIndices.length;
-      const pos = getInitialGridPos(nextSlotIdx);
+      const initialPos = getInitialGridPos(nextSlotIdx);
       
       setTransforms(prev => {
         const next = [...prev];
-        next[nextSlotIdx] = pos;
+        next[nextSlotIdx] = initialPos;
         return next;
       });
 
       setSelectedIndices([...selectedIndices, idx]);
     }
-  };
-
-  const updateTransform = (slotIdx: number, updates: Partial<PhotoTransform>) => {
-    setTransforms(prev => {
-      const next = [...prev];
-      next[slotIdx] = { ...next[slotIdx], ...updates };
-      return next;
-    });
   };
 
   const arrangedPhotos = selectedIndices.map(idx => photos[idx]);
@@ -179,7 +177,6 @@ export function ReviewGallery({
       </div>
 
       {/* Right: 4R Preview Canvas */}
-      {/* Right: 4R Preview Canvas */}
       <div className="w-full lg:w-[480px] shrink-0 space-y-8 lg:sticky lg:top-12">
         <div className="space-y-2">
           <h3 className="text-[10px] font-mono uppercase tracking-[0.4em] text-[var(--color-pawtobooth-dark)]/40 text-center flex items-center justify-center gap-3">
@@ -211,10 +208,10 @@ export function ReviewGallery({
                     });
                   }}
                   style={{ 
-                    x: transforms[i].x * 100 + '%', // Use percentage of card width
-                    y: transforms[i].y * 100 + '%', // Use percentage of card height
+                    x: transforms[i].x * 100 + '%', 
+                    y: transforms[i].y * 100 + '%', 
                     scale: transforms[i].scale,
-                    width: '45%', // Default cell width (~45% of card)
+                    width: '45%', 
                     aspectRatio: '1/1',
                     touchAction: 'none',
                     position: 'absolute',
