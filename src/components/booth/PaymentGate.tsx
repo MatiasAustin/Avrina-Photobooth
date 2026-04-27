@@ -17,45 +17,43 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
   return (
     <motion.div
       key="payment"
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="z-10 w-full max-w-lg flex flex-col gap-6"
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="z-50 w-full max-w-sm flex flex-col gap-3"
     >
-      {/* Header — Price & Title */}
-      <div className="text-center space-y-2 text-[var(--color-pawtobooth-dark)]">
-        <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-[0.3em]">Payment Required</p>
-        <h2 className="text-6xl font-black uppercase tracking-tight italic">{formatted}</h2>
-        <p className="text-[var(--color-pawtobooth-dark)]/80 font-mono text-xs">
-          Bayar sekarang untuk memulai sesi foto Anda
-        </p>
-      </div>
-
       {/* Card */}
-      <div className="bg-white/90 backdrop-blur-3xl border border-black/5 rounded-[40px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.05)] text-[var(--color-pawtobooth-dark)]">
-
-        {/* Tab Toggle */}
-        <div className="flex border-b border-black/5">
-          {qrisImageUrl && (
-            <button
-              onClick={() => setActiveTab('qris')}
-              className={cn(
-                'flex-1 py-5 flex items-center justify-center gap-2 font-black uppercase text-xs tracking-[0.2em] transition-all',
-                activeTab === 'qris' ? 'text-[#3E6B43] border-b-2 border-[#3E6B43]' : 'text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)]/80'
+      <div className="bg-white/80 backdrop-blur-2xl border border-white/40 rounded-[32px] overflow-hidden shadow-2xl text-[var(--color-pawtobooth-dark)]">
+        
+        {/* Compact Header */}
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+           <div className="space-y-0.5">
+             <p className="text-[8px] font-black uppercase tracking-widest text-[#3E6B43]">Payment Required</p>
+             <h2 className="text-3xl font-black uppercase tracking-tighter italic">{formatted}</h2>
+           </div>
+           
+           <div className="flex bg-[var(--color-pawtobooth-light)] p-1 rounded-full border border-black/5">
+              {qrisImageUrl && (
+                <button
+                  onClick={() => setActiveTab('qris')}
+                  className={cn(
+                    'px-4 py-1.5 rounded-full font-black uppercase text-[8px] tracking-widest transition-all',
+                    activeTab === 'qris' ? 'bg-[#3E6B43] text-white' : 'text-[var(--color-pawtobooth-dark)]/40'
+                  )}
+                >
+                  QRIS
+                </button>
               )}
-            >
-              <SmartphoneNfc className="w-4 h-4" /> QRIS
-            </button>
-          )}
-          <button
-            onClick={() => setActiveTab('cash')}
-            className={cn(
-              'flex-1 py-5 flex items-center justify-center gap-2 font-black uppercase text-xs tracking-[0.2em] transition-all',
-              activeTab === 'cash' ? 'text-[#3E6B43] border-b-2 border-[#3E6B43]' : 'text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)]/80'
-            )}
-          >
-            <CircleDollarSign className="w-4 h-4" /> Tunai / Cash
-          </button>
+              <button
+                onClick={() => setActiveTab('cash')}
+                className={cn(
+                  'px-4 py-1.5 rounded-full font-black uppercase text-[8px] tracking-widest transition-all',
+                  activeTab === 'cash' ? 'bg-[#3E6B43] text-white' : 'text-[var(--color-pawtobooth-dark)]/40'
+                )}
+              >
+                CASH
+              </button>
+           </div>
         </div>
 
         {/* Tab Content */}
@@ -63,114 +61,60 @@ export function PaymentGate({ price, qrisImageUrl, onCancel }: PaymentGateProps)
           {activeTab === 'qris' && qrisImageUrl && (
             <motion.div
               key="qris"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-              className="p-8 space-y-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="p-6 pt-2 flex items-center gap-6"
             >
-              {/* Steps */}
-              <div className="space-y-2">
-                {[
-                  `Buka aplikasi e-wallet atau m-banking Anda`,
-                  `Scan QR Code di bawah ini`,
-                  `Konfirmasi pembayaran sebesar ${formatted}`,
-                  `Tunggu konfirmasi dari staff kami`,
-                ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-[#3E6B43]/10 text-[9px] font-black text-[#3E6B43] flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                    <p className="text-xs text-[var(--color-pawtobooth-dark)]/80 font-mono leading-relaxed">{step}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* QRIS Image */}
-              <div className="relative group mx-auto w-fit">
-                <div className="absolute -inset-3 bg-black/5 rounded-[28px] blur-xl group-hover:bg-black/10 transition-all duration-500" />
-                <div className="relative bg-white p-5 rounded-[28px] shadow-lg border border-black/5">
-                  <img src={qrisImageUrl} alt="QRIS" className="w-52 h-52 object-contain" />
+              <div className="relative group shrink-0">
+                <div className="relative bg-white p-3 rounded-2xl shadow-sm border border-black/5">
+                  <img src={qrisImageUrl} alt="QRIS" className="w-32 h-32 object-contain" />
                 </div>
               </div>
 
-              <p className="text-center text-[9px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest">
-                Scan menggunakan GoPay · OVO · DANA · m-Banking
-              </p>
+              <div className="space-y-3">
+                 <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-tight">How to pay:</p>
+                    <p className="text-[9px] font-mono text-[var(--color-pawtobooth-dark)]/60 leading-tight">1. Scan QR Code <br/> 2. Pay {formatted} <br/> 3. Wait for confirmation</p>
+                 </div>
+                 <div className="flex items-center gap-2 px-3 py-2 bg-[#3E6B43]/5 rounded-xl border border-[#3E6B43]/10">
+                    <RefreshCcw className="w-3 h-3 text-[#3E6B43] animate-spin" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[#3E6B43]">Syncing...</span>
+                 </div>
+              </div>
             </motion.div>
           )}
 
           {activeTab === 'cash' && (
             <motion.div
               key="cash"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-              className="p-8 space-y-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="p-8 py-10 flex flex-col items-center text-center gap-4"
             >
-              <div className="flex flex-col items-center gap-6 py-4">
-                <div className="w-20 h-20 rounded-full bg-[var(--color-pawtobooth-light)] border border-black/5 flex items-center justify-center">
-                  <Wallet className="w-10 h-10 text-[var(--color-pawtobooth-dark)]/40" />
-                </div>
-
-                <div className="text-center space-y-2">
-                  <h3 className="text-2xl font-black uppercase italic">Bayar ke Staff</h3>
-                  <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-xs leading-relaxed">
-                    Silakan bayar tunai sebesar <span className="text-[#3E6B43] font-bold">{formatted}</span> langsung ke staff yang berjaga di dekat booth ini.
-                  </p>
-                </div>
-
-                {/* Steps */}
-                <div className="w-full space-y-2">
-                  {[
-                    `Siapkan uang tunai ${formatted}`,
-                    `Berikan ke staff yang bertugas`,
-                    `Staff akan mengkonfirmasi pembayaran Anda`,
-                    `Booth akan otomatis terbuka setelah dikonfirmasi`,
-                  ].map((step, i) => (
-                    <div key={i} className="flex items-start gap-3 py-3 border-b border-black/5 last:border-0">
-                      <span className="w-5 h-5 rounded-full bg-[#3E6B43]/10 text-[9px] font-black text-[#3E6B43] flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                      <p className="text-xs text-[var(--color-pawtobooth-dark)]/80 font-mono leading-relaxed">{step}</p>
-                    </div>
-                  ))}
-                </div>
+              <div className="w-12 h-12 rounded-2xl bg-[var(--color-pawtobooth-light)] flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-[#3E6B43]" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black uppercase italic">Bayar ke Staff</h3>
+                <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] max-w-[200px]">
+                  Silakan berikan tunai <span className="text-[#3E6B43] font-bold">{formatted}</span> ke staff booth.
+                </p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Waiting Notification Banner */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white border border-black/5 shadow-sm rounded-3xl p-5 flex items-center gap-4 text-[var(--color-pawtobooth-dark)]"
-      >
-        <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-[var(--color-pawtobooth-light)] border border-black/5 flex items-center justify-center">
-            <RefreshCcw className="w-5 h-5 text-[#3E6B43] animate-spin" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse border-2 border-white" />
-        </div>
-        <div>
-          <p className="text-sm font-black uppercase tracking-wider">Menunggu Konfirmasi</p>
-          <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 mt-0.5">
-            Booth akan otomatis terbuka begitu staff mengkonfirmasi pembayaran Anda
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Cancel Button */}
+      {/* Cancel Button - Subtle */}
       {onCancel && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
+        <button
           onClick={onCancel}
-          className="w-full py-4 text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] font-mono text-[10px] uppercase tracking-widest transition-colors"
+          className="mx-auto px-6 py-2 bg-black/5 hover:bg-black/10 backdrop-blur-md rounded-full text-[var(--color-pawtobooth-dark)]/40 hover:text-[var(--color-pawtobooth-dark)] font-black text-[8px] uppercase tracking-[0.2em] transition-all"
         >
-          ← Batal & Kembali
-        </motion.button>
+          ← Cancel Session
+        </button>
       )}
     </motion.div>
   );

@@ -515,7 +515,7 @@ export function Booth() {
   return (
     <BoothLayout>
       {/* Global Camera Background */}
-      <div className={`absolute inset-0 z-0 overflow-hidden bg-black flex items-center justify-center transition-opacity duration-1000 ${['summary', 'review', 'payment'].includes(state) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`absolute inset-0 z-0 overflow-hidden bg-black flex items-center justify-center transition-opacity duration-1000 ${['summary', 'review'].includes(state) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <video 
           ref={videoRef} 
           autoPlay 
@@ -531,14 +531,16 @@ export function Booth() {
           {state === 'idle' && <BoothHero onStart={handleStart} />}
         
         {state === 'payment' && (
-          <PaymentGate 
-            price={event?.price || 0} 
-            qrisImageUrl={event?.qris_image_url}
-            onCancel={async () => {
-              await cancelPendingSession();
-              setState('idle');
-            }}
-          />
+          <div className="absolute inset-x-0 bottom-0 pb-20 flex justify-center z-50">
+            <PaymentGate 
+              price={event?.price || 0} 
+              qrisImageUrl={event?.qris_image_url}
+              onCancel={async () => {
+                await cancelPendingSession();
+                setState('idle');
+              }}
+            />
+          </div>
         )}
 
         {state === 'template_selection' && (
