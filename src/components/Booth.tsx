@@ -137,20 +137,26 @@ export function Booth() {
 
   const startCamera = async () => {
     try {
+      // 1. Get stream if not exists
       if (!activeStream.current) {
         activeStream.current = await navigator.mediaDevices.getUserMedia({ 
           video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' } 
         });
       }
       
-      const targetRef = ['countdown', 'capture', 'review_shot'].includes(state) 
-        ? captureVideoRef 
-        : videoRef;
+      const isCaptureState = ['countdown', 'capture', 'review_shot'].includes(state);
+      
+      // 2. Explicitly clear the other video first to release the stream binding
+      if (isCaptureState) {
+        if (videoRef.current) videoRef.current.srcObject = null;
+      } else {
+        if (captureVideoRef.current) captureVideoRef.current.srcObject = null;
+      }
 
+      // 3. Assign stream to the correct target
+      const targetRef = isCaptureState ? captureVideoRef : videoRef;
       if (targetRef.current) {
-        if (targetRef.current.srcObject !== activeStream.current) {
-          targetRef.current.srcObject = activeStream.current;
-        }
+        targetRef.current.srcObject = activeStream.current;
         await targetRef.current.play().catch(console.warn);
       }
     } catch (e) {
@@ -593,6 +599,8 @@ export function Booth() {
               price={event?.price || 0} 
               qrisImageUrl={event?.qris_image_url}
               onCancel={async () => {
+                const stream = videoRef.current?.srcObject as MediaStream;
+                stream?.getTracks().forEach(track => track.stop());
                 await cancelPendingSession();
                 setState('idle');
               }}

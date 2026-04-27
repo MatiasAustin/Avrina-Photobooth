@@ -44,12 +44,12 @@ export function CaptureStage({
       key="camera"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="z-10 absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-pawtobooth-beige)] backdrop-blur-xl"
+      className="z-[100] absolute inset-0 bg-[var(--color-pawtobooth-beige)]"
     >
-      {/* Square Capture Container */}
-      <div className="relative w-[80vh] aspect-square max-w-[90vw] bg-black rounded-[2rem] shadow-2xl overflow-hidden border-8 border-white pointer-events-auto">
+      {/* Square Capture Container - Forced Absolute Centering */}
+      <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vh] aspect-square max-w-[90vw] bg-black rounded-[2rem] shadow-2xl overflow-hidden border-[12px] border-white z-20">
         
-        {/* Camera/Photo Area */}
+        {/* Camera Area */}
         <div className="absolute inset-0 z-0">
           {isReview && lastCapturedPhoto ? (
             <motion.img 
@@ -69,7 +69,7 @@ export function CaptureStage({
           )}
         </div>
 
-        {/* Countdown Overlay */}
+        {/* Countdown */}
         <AnimatePresence>
           {countdown > 0 && (
             <motion.div 
@@ -87,14 +87,14 @@ export function CaptureStage({
           )}
         </AnimatePresence>
 
-        {/* Shot Captured Announcement */}
+        {/* Announcement */}
         {isReview && (
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center gap-2"
           >
-             <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot #{currentShot + 1} Captured!</h3>
+             <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot Captured!</h3>
              <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-ping" />
                 <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Next photo in 2s...</p>
@@ -103,8 +103,8 @@ export function CaptureStage({
         )}
       </div>
 
-      {/* Floating Status Bar - Now firmly at the bottom */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
+      {/* Floating Status Bar - Forced Absolute Bottom */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-[110] shadow-2xl text-[var(--color-pawtobooth-dark)]">
          <div className="flex items-center gap-4">
             <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Photo</span>
             <span className="font-black text-xl text-[#3E6B43]">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
