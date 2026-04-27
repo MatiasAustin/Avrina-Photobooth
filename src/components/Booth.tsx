@@ -586,8 +586,8 @@ export function Booth() {
         />
       </div>
 
-      <div className="relative z-10 w-full h-full">
-        <AnimatePresence mode="wait">
+      <div className="relative z-10 w-full h-full min-h-screen">
+        <AnimatePresence>
           {state === 'idle' && (
             <div className="absolute inset-x-0 bottom-0 pb-20 flex justify-center z-50">
               <BoothHero onStart={handleStart} />
@@ -680,9 +680,9 @@ export function Booth() {
            
            <div className="w-[1px] h-8 bg-black/5" />
            
-           <div className={cn("flex items-center gap-4", isTimeout && "text-red-500")}>
+           <div className={cn("flex items-center gap-4", globalTimeLeft !== null && globalTimeLeft <= 0 && "text-red-500")}>
               <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Session</span>
-              <span className={cn("font-black text-xl", isTimeout && "animate-pulse")}>
+              <span className={cn("font-black text-xl", globalTimeLeft !== null && globalTimeLeft <= 0 && "animate-pulse")}>
                 {(() => {
                   const s = globalTimeLeft;
                   if (s === null) return '--:--';

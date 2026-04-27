@@ -44,8 +44,8 @@ export function CaptureStage({
       key="camera"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="z-[100] absolute inset-0 bg-[var(--color-pawtobooth-beige)]"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+      className="z-[100] fixed inset-0 bg-[var(--color-pawtobooth-beige)]"
+      style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}
     >
       {/* Square Capture Container - Inline Style Centering */}
       <div 
