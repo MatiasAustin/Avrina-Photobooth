@@ -44,10 +44,10 @@ export function CaptureStage({
       key="camera"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="z-10 absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-pawtobooth-beige)]/40 backdrop-blur-sm"
+      className="z-10 absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-pawtobooth-beige)] backdrop-blur-xl"
     >
-      {/* 4x6 Aspect Ratio Container (Standard Photobooth Strip Layout) */}
-      <div className="relative h-[85vh] aspect-[4/6] max-w-[90vw] bg-white rounded-[3rem] shadow-2xl overflow-hidden border-8 border-white pointer-events-auto">
+      {/* Square Capture Container */}
+      <div className="relative w-[80vh] aspect-square max-w-[90vw] bg-black rounded-[2rem] shadow-2xl overflow-hidden border-8 border-white pointer-events-auto">
         
         {/* Camera/Photo Area */}
         <div className="absolute inset-0 z-0">
@@ -69,20 +69,6 @@ export function CaptureStage({
           )}
         </div>
 
-        {/* Template Overlay - The Masterpiece */}
-        {selectedTemplate?.image_url && (
-          <div className={cn(
-            "absolute inset-0 z-10 pointer-events-none transition-opacity duration-500",
-            isReview ? "opacity-100" : "opacity-60"
-          )}>
-             <img 
-               src={selectedTemplate.image_url} 
-               className="w-full h-full object-cover" 
-               referrerPolicy="no-referrer" 
-             />
-          </div>
-        )}
-
         {/* Countdown Overlay */}
         <AnimatePresence>
           {countdown > 0 && (
@@ -92,41 +78,43 @@ export function CaptureStage({
               exit={{ opacity: 0, scale: 0.5 }}
               className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
             >
-              <span className="text-[12rem] font-black text-white drop-shadow-[0_0_40px_rgba(0,0,0,0.5)] italic">
-                {countdown}
-              </span>
+              <div className="w-48 h-48 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/50">
+                <span className="text-[8rem] font-black text-white italic drop-shadow-lg">
+                  {countdown}
+                </span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Action Controls Overlay (only during review) */}
+        {/* Shot Captured Announcement */}
         {isReview && (
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-center gap-2"
+            className="absolute inset-x-0 bottom-0 z-40 p-8 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center gap-2"
           >
              <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Shot #{currentShot + 1} Captured!</h3>
              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-ping" />
-                <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Processing next photo...</p>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-ping" />
+                <p className="text-white/60 font-mono text-[10px] uppercase tracking-[0.2em]">Next photo in 2s...</p>
              </div>
           </motion.div>
         )}
       </div>
 
-      {/* Floating Status Bar (Bottom of Screen) */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-2xl px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
+      {/* Floating Status Bar - Now firmly at the bottom */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-10 py-5 rounded-full border border-black/5 flex items-center gap-12 text-xs font-mono uppercase tracking-widest z-30 shadow-2xl pointer-events-auto text-[var(--color-pawtobooth-dark)]">
          <div className="flex items-center gap-4">
-           <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Status</span>
-           <span className="font-black text-base">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
+            <span className="text-[var(--color-pawtobooth-dark)]/40 font-black">Photo</span>
+            <span className="font-black text-xl text-[#3E6B43]">{currentShot + 1} <span className="text-black/10">/</span> {totalShots}</span>
          </div>
          
          <div className="w-[1px] h-8 bg-black/5" />
          
          <div className={cn("flex items-center gap-4", isTimeout && "text-red-500")}>
-           <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Time Left</span>
-           <span className={cn("font-black text-base", isTimeout && "animate-pulse")}>{formatTime(globalTimeLeft)}</span>
+            <span className="text-[var(--color-pawtobooth-dark)]/40 font-black italic">Session</span>
+            <span className={cn("font-black text-xl", isTimeout && "animate-pulse")}>{formatTime(globalTimeLeft)}</span>
          </div>
       </div>
     </motion.div>

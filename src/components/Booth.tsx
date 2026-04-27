@@ -32,6 +32,7 @@ export function Booth() {
   const [globalTimeLeft, setGlobalTimeLeft] = useState<number | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const captureVideoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Initialize event from Supabase
@@ -142,11 +143,15 @@ export function Booth() {
         });
       }
       
-      if (videoRef.current) {
-        if (videoRef.current.srcObject !== activeStream.current) {
-          videoRef.current.srcObject = activeStream.current;
+      const targetRef = ['countdown', 'capture', 'review_shot'].includes(state) 
+        ? captureVideoRef 
+        : videoRef;
+
+      if (targetRef.current) {
+        if (targetRef.current.srcObject !== activeStream.current) {
+          targetRef.current.srcObject = activeStream.current;
         }
-        await videoRef.current.play().catch(console.warn);
+        await targetRef.current.play().catch(console.warn);
       }
     } catch (e) {
       console.error("Camera error", e);
@@ -252,8 +257,9 @@ export function Booth() {
   };
 
   const takePhoto = async () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
+    const activeVideo = ['countdown', 'capture', 'review_shot'].includes(state) ? captureVideoRef.current : videoRef.current;
+    if (activeVideo && canvasRef.current) {
+      const video = activeVideo;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
@@ -330,7 +336,13 @@ export function Booth() {
     setState('template_selection');
   };
 
-  const generatePhotoStrip = async (photos: string[]): Promise<string> => {
+  interface PhotoTransform {
+    x: number;
+    y: number;
+    scale: number;
+  }
+
+  const generatePhotoStrip = async (photos: string[], transforms?: PhotoTransform[]): Promise<string> => {
     try {
       if (!photos || photos.length === 0) return '';
       
@@ -406,24 +418,51 @@ export function Booth() {
         const x = margin + col * (photoWidth + margin);
         const y = margin + row * (photoHeight + margin);
 
-        // Object-Cover logic to fill the cell
+        // Center of the cell
+        const centerX = x + photoWidth / 2;
+        const centerY = y + photoHeight / 2;
+
+        // Apply Transform if available
+        const transform = transforms ? transforms[photoIdx] : { x: 0, y: 0, scale: 1 };
+        
+        // Scale and Position adjustments
+        // transforms are normalized (relative to cell size)
+        const scale = transform.scale || 1;
+        const offsetX = (transform.x || 0) * photoWidth;
+        const offsetY = (transform.y || 0) * photoHeight;
+
+        ctx.save();
+        // Create a clipping region for this hole
+        ctx.beginPath();
+        ctx.rect(x, y, photoWidth, photoHeight);
+        ctx.clip();
+
+        // Draw image centered and transformed
         const imgAspect = img.naturalWidth / img.naturalHeight;
         const targetAspect = photoWidth / photoHeight;
-        let sx, sy, sw, sh;
-
-        if (imgAspect > targetAspect) {
-          sh = img.naturalHeight; sw = sh * targetAspect;
-          sx = (img.naturalWidth - sw) / 2; sy = 0;
-        } else {
-          sw = img.naturalWidth; sh = sw / targetAspect;
-          sx = 0; sy = (img.naturalHeight - sh) / 2;
-        }
         
-        ctx.drawImage(img, sx, sy, sw, sh, x, y, photoWidth, photoHeight);
+        let drawW, drawH;
+        if (imgAspect > targetAspect) {
+          drawH = photoHeight * scale;
+          drawW = drawH * imgAspect;
+        } else {
+          drawW = photoWidth * scale;
+          drawH = drawW / imgAspect;
+        }
+
+        ctx.drawImage(
+          img, 
+          centerX - drawW / 2 + offsetX, 
+          centerY - drawH / 2 + offsetY, 
+          drawW, 
+          drawH
+        );
+        ctx.restore();
       }
 
       // Draw Template Overlay on top of EVERYTHING
       if (templateImg) {
+        // Draw once over the entire 4x6 sheet
         ctx.drawImage(templateImg, 0, 0, canvasWidth, canvasHeight);
       } else {
         // Fallback Branding for 2-column
@@ -445,9 +484,9 @@ export function Booth() {
     }
   };
 
-  const handleFinalize = async (arrangedPhotos: string[]) => {
+  const handleFinalize = async (arrangedPhotos: string[], transforms: PhotoTransform[]) => {
     try {
-      const finalStripBase64 = await generatePhotoStrip(arrangedPhotos);
+      const finalStripBase64 = await generatePhotoStrip(arrangedPhotos, transforms);
       if (!finalStripBase64) throw new Error("Generated strip is empty");
       
       // 1. Upload the final strip to Storage
@@ -572,7 +611,7 @@ export function Booth() {
 
         {['countdown', 'capture', 'review_shot'].includes(state) && (
           <CaptureStage 
-            videoRef={videoRef}
+            videoRef={captureVideoRef}
             selectedTemplate={selectedTemplate}
             countdown={countdown}
             currentShot={currentShot}
