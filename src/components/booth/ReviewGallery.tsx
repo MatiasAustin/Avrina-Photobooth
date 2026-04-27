@@ -152,6 +152,7 @@ export function ReviewGallery({
       </div>
 
       {/* Right: 4R Preview Canvas */}
+      {/* Right: 4R Preview Canvas */}
       <div className="w-full lg:w-[480px] shrink-0 space-y-8 lg:sticky lg:top-12">
         <div className="space-y-2">
           <h3 className="text-[10px] font-mono uppercase tracking-[0.4em] text-[var(--color-pawtobooth-dark)]/40 text-center flex items-center justify-center gap-3">
@@ -160,54 +161,56 @@ export function ReviewGallery({
         </div>
 
         <div className="bg-white p-6 rounded-[50px] border border-black/5 shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative group">
-           <div className="relative aspect-[4/6] bg-neutral-50 rounded-[2rem] overflow-hidden shadow-inner">
+           <div className="relative aspect-[4/6] bg-neutral-100 rounded-[2rem] overflow-hidden shadow-inner">
               
-              {/* Layer 0: Selected Photos Background (Draggable) */}
+              {/* Layer 0: Selected Photos Background */}
               {selectedIndices.map((photoIdx, i) => (
-                <div 
-                  key={`slot-${i}`}
+                <motion.div
+                  key={`slot-${photoIdx}`}
+                  drag
+                  dragMomentum={false}
+                  onDragStart={() => setActiveEditIdx(i)}
+                  onDrag={(e, info) => {
+                    updateTransform(i, { 
+                      x: transforms[i].x + info.delta.x,
+                      y: transforms[i].y + info.delta.y 
+                    });
+                  }}
+                  style={{ 
+                    x: transforms[i].x, 
+                    y: transforms[i].y, 
+                    scale: transforms[i].scale,
+                    width: '55%', // Slightly larger initial size
+                    aspectRatio: '1/1',
+                    touchAction: 'none',
+                    position: 'absolute',
+                    top: `${10 + (i * 10)}%`, // Stagger initial positions so they don't overlap perfectly
+                    left: '22%',
+                    zIndex: activeEditIdx === i ? 30 : 10 // Active photo always on top
+                  }}
                   className={cn(
-                    "absolute inset-0 z-0",
-                    activeEditIdx === i ? "z-20" : "z-10"
+                    "cursor-move overflow-hidden bg-neutral-200 shadow-2xl border-4 transition-shadow",
+                    activeEditIdx === i ? "border-[#3E6B43] ring-8 ring-[#3E6B43]/20" : "border-white shadow-lg"
                   )}
                 >
-                   <motion.div
-                    drag
-                    dragMomentum={false}
-                    onDragStart={() => setActiveEditIdx(i)}
-                    onDrag={(e, info) => {
-                      updateTransform(i, { 
-                        x: transforms[i].x + info.delta.x,
-                        y: transforms[i].y + info.delta.y 
-                      });
-                    }}
-                    style={{ 
-                      x: transforms[i].x, 
-                      y: transforms[i].y, 
-                      scale: transforms[i].scale,
-                      width: '50%', // Start each photo at 50% width of the 4R sheet
-                      aspectRatio: '1/1',
-                      touchAction: 'none'
-                    }}
-                    className={cn(
-                      "absolute cursor-move overflow-hidden bg-neutral-200 shadow-xl border-2 border-transparent transition-shadow",
-                      activeEditIdx === i && "ring-8 ring-[#3E6B43]/30 border-[#3E6B43]"
-                    )}
-                   >
-                     <img 
-                       src={photos[photoIdx]} 
-                       className="w-full h-full object-cover pointer-events-none select-none" 
-                     />
-                     <div className="absolute top-2 left-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-black backdrop-blur-sm">
-                        {i + 1}
-                     </div>
-                   </motion.div>
-                </div>
+                   <img 
+                     src={photos[photoIdx]} 
+                     className="w-full h-full object-cover pointer-events-none select-none" 
+                   />
+                   <div className="absolute top-2 left-2 w-7 h-7 bg-[#3E6B43] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow-lg">
+                      {i + 1}
+                   </div>
+                </motion.div>
               ))}
 
-              {/* Layer 2: Template Overlay (Fixed on Top) */}
+              {/* Layer 2: Template Overlay (Fixed on Top, semi-transparent during edit) */}
               {templateImageUrl && (
-                <div className="absolute inset-0 z-[15] pointer-events-none">
+                <div 
+                  className={cn(
+                    "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                    activeEditIdx !== null ? "z-20 opacity-50" : "z-[25] opacity-100"
+                  )}
+                >
                    <img src={templateImageUrl} className="w-full h-full object-cover" />
                 </div>
               )}
@@ -228,19 +231,32 @@ export function ReviewGallery({
                  initial={{ opacity: 0, y: 10 }}
                  animate={{ opacity: 1, y: 0 }}
                  exit={{ opacity: 0, y: 10 }}
-                 className="mt-6 p-6 bg-neutral-50 rounded-3xl border border-black/5 space-y-4"
+                 className="mt-6 p-8 bg-neutral-50 rounded-[2.5rem] border border-black/5 space-y-6 shadow-sm"
                >
                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#3E6B43]">Zoom Photo #{activeEditIdx + 1}</span>
-                    <button onClick={() => setActiveEditIdx(null)} className="text-[10px] font-black text-black/40 uppercase">Done</button>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#3E6B43] rounded-lg text-white">
+                        <ZoomIn className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-widest text-[var(--color-pawtobooth-dark)]">Size Adjustment #{activeEditIdx + 1}</span>
+                    </div>
+                    <button 
+                      onClick={() => setActiveEditIdx(null)} 
+                      className="px-4 py-2 bg-white border border-black/5 rounded-full text-[10px] font-black text-black/40 uppercase hover:bg-black hover:text-white transition-colors"
+                    >
+                      Done
+                    </button>
                  </div>
-                 <input 
-                    type="range" 
-                    min="0.5" max="2.5" step="0.01"
-                    value={transforms[activeEditIdx].scale}
-                    onChange={(e) => updateTransform(activeEditIdx, { scale: parseFloat(e.target.value) })}
-                    className="w-full accent-[#3E6B43]"
-                 />
+                 <div className="flex items-center gap-4">
+                   <input 
+                      type="range" 
+                      min="0.3" max="3" step="0.01"
+                      value={transforms[activeEditIdx].scale}
+                      onChange={(e) => updateTransform(activeEditIdx, { scale: parseFloat(e.target.value) })}
+                      className="flex-1 accent-[#3E6B43]"
+                   />
+                   <span className="text-[10px] font-mono font-bold text-[#3E6B43]">{Math.round(transforms[activeEditIdx].scale * 100)}%</span>
+                 </div>
                </motion.div>
              )}
            </AnimatePresence>
