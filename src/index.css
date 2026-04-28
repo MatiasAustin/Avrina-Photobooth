@@ -3,17 +3,16 @@
 @theme {
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-pawtobooth-beige: #F5F1E6;
+  --color-pawtobooth-green: #3E6B43;
+  --color-pawtobooth-dark: #2B4C2F;
+  --color-pawtobooth-light: #EBE4D5;
 }
 
 @layer base {
-  :root {
-    --color-pawtobooth-beige: #F5F1E6;
-    --color-pawtobooth-green: #3E6B43;
-    --color-pawtobooth-dark: #2B4C2F;
-    --color-pawtobooth-light: #EBE4D5;
-  }
   body {
-    @apply bg-[#F5F1E6] text-[#2B4C2F] antialiased selection:bg-[#3E6B43] selection:text-[#F5F1E6];
+    @apply bg-pawtobooth-beige text-pawtobooth-dark antialiased selection:bg-pawtobooth-green selection:text-pawtobooth-beige;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -51,5 +50,5 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#3E6B43]/20 rounded-full hover:bg-[#3E6B43]/40 transition-colors;
+  @apply bg-pawtobooth-green/20 rounded-full hover:bg-pawtobooth-green/40 transition-colors;
 }
