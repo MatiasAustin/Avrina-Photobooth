@@ -14,6 +14,7 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
   const { settings } = useSettings();
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, pro: false },
+    { id: 'sessions', label: 'Customer Sessions', icon: Camera, pro: false },
     { id: 'subscription', label: 'Subscription', icon: Shield, pro: false },
     { id: 'profile', label: 'Store Profile', icon: User, pro: false },
     { id: 'events', label: 'Events Registry', icon: Calendar, pro: true },

@@ -11,6 +11,7 @@ import { PrintNode } from './admin/PrintNode';
 import { PremiumModal } from './admin/PremiumModal';
 import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
+import { SessionManager } from './admin/SessionManager';
 import { UserProfile } from './admin/UserProfile';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -19,7 +20,7 @@ interface AdminProps {
 }
 
 export function Admin({ session }: AdminProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'sessions' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);
@@ -190,10 +191,24 @@ export function Admin({ session }: AdminProps) {
                   <div className="space-y-6">
                      <div className="flex items-center justify-between">
                         <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Recent Sessions</h3>
+                        <button 
+                          onClick={() => setActiveTab('sessions')}
+                          className="text-[10px] font-black uppercase tracking-widest text-[#3E6B43] hover:underline"
+                        >
+                          View All
+                        </button>
                      </div>
                      <SessionGrid sessions={sessions} />
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'sessions' && (
+                <SessionManager 
+                  sessions={sessions} 
+                  events={events}
+                  onUpdate={fetchData}
+                />
               )}
 
               {activeTab === 'events' && <EventList userId={session?.user?.id || 'demo-user'} events={events} onUpdate={fetchData} />}

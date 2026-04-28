@@ -31,8 +31,9 @@ export interface Session {
   event_id: string;
   photos: string[] | string; // JSONB
   template_id?: string;
-  payment_status: 'pending' | 'paid' | 'free';
+  payment_status: 'pending' | 'paid' | 'free' | 'cancelled';
   payment_id?: string;
+  final_photo_url?: string;
   created_at: string;
 }
 
