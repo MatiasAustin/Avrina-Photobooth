@@ -198,7 +198,7 @@ export function Admin({ session }: AdminProps) {
                           View All
                         </button>
                      </div>
-                     <SessionGrid sessions={sessions} />
+                     <SessionGrid sessions={sessions} events={events} onDelete={fetchData} />
                   </div>
                 </div>
               )}
