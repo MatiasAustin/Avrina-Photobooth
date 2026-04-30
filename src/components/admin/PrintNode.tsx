@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw } from 'lucide-react';
+import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw, Settings } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
@@ -203,6 +203,55 @@ export function PrintNode() {
 
         {/* Instructions/Status */}
         <div className="space-y-8 h-fit lg:sticky lg:top-24">
+            <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-6">
+               <div className="flex items-center gap-4 text-[#3E6B43]">
+                  <Settings className="w-8 h-8" />
+                  <h3 className="text-xl font-bold uppercase italic leading-none text-[var(--color-pawtobooth-dark)]">Printer Properties</h3>
+               </div>
+               
+               <div className="space-y-4">
+                  <div className="space-y-1">
+                     <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Driver Profile</p>
+                     <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
+                        <option>DNP DS-Series (High Quality)</option>
+                        <option>HiTi P525L (Fast Print)</option>
+                        <option>Canon SELPHY CP1300/1500</option>
+                        <option>Citizen CZ-01</option>
+                        <option>Mitsubishi CP-D80DW</option>
+                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="space-y-1">
+                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Paper Size</p>
+                        <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
+                           <option>4x6 Inch (10x15cm)</option>
+                           <option>2x6 Strip (5x15cm)</option>
+                           <option>5x7 Inch</option>
+                        </select>
+                     </div>
+                     <div className="space-y-1">
+                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Orientation</p>
+                        <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
+                           <option>Portrait</option>
+                           <option>Landscape</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-black/5 space-y-3">
+                     <div className="flex items-center justify-between text-[10px] font-bold">
+                        <span className="opacity-40 uppercase">Auto-Cut</span>
+                        <div className="w-10 h-5 bg-[#3E6B43] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" /></div>
+                     </div>
+                     <div className="flex items-center justify-between text-[10px] font-bold">
+                        <span className="opacity-40 uppercase">High Glossy</span>
+                        <div className="w-10 h-5 bg-[#3E6B43] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" /></div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
            <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-8">
               <div className="flex items-center gap-4 text-yellow-500">
                  <AlertTriangle className="w-8 h-8" />

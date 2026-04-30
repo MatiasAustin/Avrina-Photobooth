@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon, Search, PlusCircle, Bookmark } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { MaskShape, drawMaskPath } from '../../lib/canvas-shapes';
+import { ALL_GOOGLE_FONTS } from '../../lib/fonts';
 
-const GOOGLE_FONTS = [
+const DEFAULT_FONTS = [
   'Inter', 'Playfair Display', 'Dancing Script', 'Montserrat', 'Pacifico', 
-  'Bebas Neue', 'Lobster', 'Roboto', 'Outfit', 'Quicksand', 'Caveat',
-  'Abril Fatface', 'Oswald', 'Kanit', 'Varela Round'
+  'Bebas Neue', 'Lobster', 'Roboto', 'Outfit', 'Quicksand'
 ];
 
 interface TemplateEditorProps {
@@ -72,6 +72,34 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const [previewScale, setPreviewScale] = useState(0.4);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(initialTemplate?.id || null);
+
+  // Font Browser State
+  const [showFontBrowser, setShowFontBrowser] = useState(false);
+  const [fontSearch, setFontSearch] = useState('');
+  const [systemFonts, setSystemFonts] = useState<string[]>(() => {
+    const saved = localStorage.getItem('pawtobooth_saved_fonts');
+    return saved ? JSON.parse(saved) : DEFAULT_FONTS;
+  });
+
+  const injectFont = (font: string) => {
+    if (!font) return;
+    const linkId = `font-${font.replace(/ /g, '-')}`;
+    if (document.getElementById(linkId)) return;
+
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:wght@400;700;900&display=swap`;
+    document.head.appendChild(link);
+  };
+
+  const addFontToSystem = (font: string) => {
+    if (systemFonts.includes(font)) return;
+    const newFonts = [...systemFonts, font];
+    setSystemFonts(newFonts);
+    localStorage.setItem('pawtobooth_saved_fonts', JSON.stringify(newFonts));
+    injectFont(font);
+  };
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -152,6 +180,37 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       }
     }
   }, [initialTemplate]);
+  const loadFont = async (font: string) => {
+    try {
+      await document.fonts.load(`bold 64px "${font}"`);
+      // Force redraw
+      setElements([...elements]);
+    } catch (e) {}
+  };
+
+  // Ensure fonts are loaded
+  useEffect(() => {
+    const loadFonts = async () => {
+      const fontsToLoad = elements
+        .filter(el => el.type === 'text' || el.type === 'timestamp')
+        .map(el => el.font)
+        .filter(Boolean);
+      
+      for (const font of fontsToLoad) {
+        if (font) {
+          try {
+            await document.fonts.load(`bold 64px "${font}"`);
+          } catch (e) {
+            console.warn(`Font failed to load: ${font}`);
+          }
+        }
+      }
+    };
+    loadFonts().then(() => {
+      // Trigger redraw
+      setElements([...elements]);
+    });
+  }, [activeElementId]); // Redraw when something changes
 
   useEffect(() => {
     const drawBgAndSlots = async () => {
@@ -492,11 +551,23 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                        <input value={activeElement.content} onChange={e => updateActiveElement({ content: e.target.value })} className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm" />
                        <div className="flex gap-2">
                          <input type="color" value={activeElement.color} onChange={e => updateActiveElement({ color: e.target.value })} className="w-10 h-10 bg-white rounded-lg border border-[#3E6B43]/20 cursor-pointer" />
-                         <select value={activeElement.font} onChange={e => updateActiveElement({ font: e.target.value })} className="flex-1 bg-white border border-[#3E6B43]/20 rounded-lg text-xs px-2 outline-none font-bold">
-                             {GOOGLE_FONTS.map(f => (
+                         <select 
+                           value={activeElement.font} 
+                           onChange={e => { updateActiveElement({ font: e.target.value }); injectFont(e.target.value); loadFont(e.target.value); }} 
+                           className="flex-1 bg-white border border-[#3E6B43]/20 rounded-lg text-xs px-2 outline-none font-bold"
+                           style={{ fontFamily: activeElement.font }}
+                         >
+                             {systemFonts.map(f => (
                                <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
                              ))}
                          </select>
+                         <button 
+                             onClick={() => setShowFontBrowser(true)}
+                             className="p-2 bg-[#3E6B43]/10 text-[#3E6B43] rounded-lg hover:bg-[#3E6B43] hover:text-white transition-all"
+                             title="Browse More Fonts"
+                           >
+                             <Search className="w-4 h-4" />
+                           </button>
                        </div>
                     </div>
                  )}
