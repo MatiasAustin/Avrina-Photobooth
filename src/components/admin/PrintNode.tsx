@@ -5,99 +5,22 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { useSettings } from '../../contexts/SettingsContext';
 
+import { usePrint } from '../../contexts/PrintContext';
+
 export function PrintNode() {
   const { settings } = useSettings();
-  const [isListening, setIsListening] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [stats, setStats] = useState({ printed: 0, pending: 0 });
+  const { 
+    isListening, setIsListening, logs, clearLogs, 
+    printers, setPrinters, activePrinterId, setActivePrinterId, stats, addLog 
+  } = usePrint();
+
   const [connectionMode, setConnectionMode] = useState<'direct' | 'printnode' | 'bridge'>('direct');
   const [apiKey, setApiKey] = useState('');
-  const [printers, setPrinters] = useState<any[]>([]);
   const [isScanning, setIsScanning] = useState(false);
-  const [activePrinterId, setActivePrinterId] = useState<string | null>(null);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    if (!isListening) return;
-
-    // Subscription for new print jobs
-    const channel = supabase
-      .channel('print_jobs')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'print_queue' },
-        (payload) => {
-          handleIncomingJob(payload.new);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isListening]);
-
-  const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
-    setLogs(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString(), message, type }, ...prev].slice(0, 50));
-  };
-
-  const handleIncomingJob = async (job: any) => {
-    if (job.status !== 'queued') return;
-    
-    addLog(`Detected new job: ${job.id.substr(0, 8)}`, 'info');
-    setStats(prev => ({ ...prev, pending: prev.pending + 1 }));
-
-    // Prepare and Print
-    try {
-      await processPrint(job);
-      
-      // Update status in Supabase
-      const { error } = await supabase
-        .from('print_queue')
-        .update({ status: 'completed' })
-        .eq('id', job.id);
-
-      if (error) throw error;
-
-      addLog(`Job ${job.id.substr(0, 8)} printed and finalized`, 'success');
-      setStats(prev => ({ printed: prev.printed + 1, pending: Math.max(0, prev.pending - 1) }));
-    } catch (e) {
-      addLog(`Failed to print ${job.id.substr(0, 8)}`, 'error');
-      console.error(e);
-    }
-  };
-
-  const processPrint = (job: any) => {
-    return new Promise((resolve) => {
-      if (!printFrameRef.current) return resolve(false);
-
-      const frame = printFrameRef.current;
-      const doc = frame.contentDocument || frame.contentWindow?.document;
-      if (!doc) return resolve(false);
-
-      doc.body.innerHTML = `
-        <style>
-          @page { size: auto; margin: 0; }
-          body { margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: black; }
-          img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        </style>
-        <img src="${job.image_url}" />
-      `;
-
-      // Wait for image load
-      const img = doc.querySelector('img');
-      if (img) {
-        img.onload = () => {
-          frame.contentWindow?.print();
-          // We assume print started. In some browsers we can't reliably detect "finished".
-          setTimeout(() => resolve(true), 1000);
-        };
-        img.onerror = () => resolve(false);
-      }
-    });
-  };
-
-  const clearLogs = () => setLogs([]);
+  // The subscription is now handled globally in PrintContext
+  // This component only controls the UI and local state for scanning
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -109,56 +32,32 @@ export function PrintNode() {
         {/* Control Panel */}
         <div className="lg:col-span-2 space-y-6">
            <div className="bg-white border border-black/5 rounded-[40px] p-10 space-y-12 shadow-sm">
-               <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                     <h2 className="text-3xl font-bold uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Remote Print Node</h2>
-                     <div className="flex items-center gap-4">
-                        <select 
-                          value={connectionMode} 
-                          onChange={e => setConnectionMode(e.target.value as any)}
-                          className="bg-[var(--color-pawtobooth-light)] border-none rounded-lg px-3 py-1 text-[8px] font-black uppercase"
-                        >
-                           <option value="direct">Direct Browser Print</option>
-                           <option value="printnode">PrintNode Cloud</option>
-                           <option value="bridge">Local Bridge (WebSocket)</option>
-                        </select>
-                        <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
-                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {connectionMode === 'printnode' && (
-                      <input 
-                        type="password" 
-                        placeholder="PrintNode API Key" 
-                        value={apiKey}
-                        onChange={e => setApiKey(e.target.value)}
-                        className="bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl px-4 py-3 text-[10px] font-mono outline-none focus:ring-2 ring-[#3E6B43]/20"
-                      />
-                    )}
-                    <button 
-                      onClick={() => setIsListening(!isListening)}
-                      className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] hover:bg-[#3E6B43] hover:-translate-y-0.5'}`}
-                    >
-                        {isListening ? (
-                          <><Pause className="w-4 h-4" /> Stop Listener</>
-                        ) : (
-                          <><Play className="w-4 h-4" /> Start Listener</>
-                        )}
-                    </button>
-                  </div>
-               </div>
+                <div className="flex items-center justify-between">
+                   <div className="space-y-2">
+                      <h2 className="text-3xl font-bold uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Remote Print Node</h2>
+                      <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
+                   </div>
+                   <button 
+                     onClick={() => setIsListening(!isListening)}
+                     className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] hover:bg-[#3E6B43] hover:-translate-y-0.5'}`}
+                   >
+                       {isListening ? (
+                         <><Pause className="w-4 h-4" /> Stop Listener</>
+                       ) : (
+                         <><Play className="w-4 h-4" /> Start Listener</>
+                       )}
+                   </button>
+                </div>
 
-               {connectionMode === 'direct' && (
-                 <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-3xl space-y-3">
-                    <div className="flex items-center gap-3 text-blue-600">
-                       <Zap className="w-5 h-5" />
-                       <h4 className="text-[10px] font-black uppercase tracking-widest">Direct Mode Active</h4>
-                    </div>
-                    <p className="text-[10px] text-blue-800/60 leading-relaxed font-medium">
-                       Browser mode cannot read Windows drivers directly. To use your <strong>Canon MX390</strong>, set it as the <strong>Default Printer</strong> in Windows and enable <code>--kiosk-printing</code> in Chrome.
-                    </p>
-                 </div>
-               )}
+                <div className="p-6 bg-[#3E6B43]/5 border border-[#3E6B43]/10 rounded-3xl space-y-3">
+                   <div className="flex items-center gap-3 text-[#3E6B43]">
+                      <Zap className="w-5 h-5 text-glow" />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest">Global Listener Active</h4>
+                   </div>
+                   <p className="text-[10px] text-[var(--color-pawtobooth-dark)]/60 leading-relaxed font-medium">
+                      The listener is now running in the background. It bridges your <strong>Cloud Print Queue</strong> with this machine. You can safely switch tabs; the connection will remain active and trigger prints for your selected driver automatically.
+                   </p>
+                </div>
 
               <div className="grid grid-cols-2 gap-8">
                  <div className="p-8 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-2 shadow-sm">
@@ -261,47 +160,33 @@ export function PrintNode() {
             <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-6">
                <div className="flex items-center gap-4 text-[#3E6B43]">
                   <Settings className="w-8 h-8" />
-                  <h3 className="text-xl font-bold uppercase italic leading-none text-[var(--color-pawtobooth-dark)]">Printer Properties</h3>
+                  <h3 className="text-xl font-bold uppercase italic leading-none text-[var(--color-pawtobooth-dark)]">Station Info</h3>
                </div>
                
                <div className="space-y-4">
                   <div className="space-y-1">
-                     <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Driver Profile</p>
-                     <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
-                        <option>DNP DS-Series (High Quality)</option>
-                        <option>HiTi P525L (Fast Print)</option>
-                        <option>Canon SELPHY CP1300/1500</option>
-                        <option>Citizen CZ-01</option>
-                        <option>Mitsubishi CP-D80DW</option>
-                     </select>
+                     <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Printer Model</p>
+                     <input type="text" placeholder="e.g. Canon MX390" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                      <div className="space-y-1">
-                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Paper Size</p>
-                        <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
-                           <option>4x6 Inch (10x15cm)</option>
-                           <option>2x6 Strip (5x15cm)</option>
-                           <option>5x7 Inch</option>
-                        </select>
+                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Initial Stock</p>
+                        <input type="number" placeholder="400" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
                      </div>
                      <div className="space-y-1">
-                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Orientation</p>
-                        <select className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase">
-                           <option>Portrait</option>
-                           <option>Landscape</option>
-                        </select>
+                        <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Safety Margin</p>
+                        <input type="number" placeholder="10" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
                      </div>
                   </div>
 
-                  <div className="pt-4 border-t border-black/5 space-y-3">
-                     <div className="flex items-center justify-between text-[10px] font-bold">
-                        <span className="opacity-40 uppercase">Auto-Cut</span>
-                        <div className="w-10 h-5 bg-[#3E6B43] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" /></div>
+                  <div className="p-4 bg-[var(--color-pawtobooth-light)] rounded-2xl space-y-2">
+                     <div className="flex justify-between items-center text-[8px] font-black uppercase opacity-40">
+                        <span>Calculated Remaining</span>
+                        <span>{400 - stats.printed} Sheets</span>
                      </div>
-                     <div className="flex items-center justify-between text-[10px] font-bold">
-                        <span className="opacity-40 uppercase">High Glossy</span>
-                        <div className="w-10 h-5 bg-[#3E6B43] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" /></div>
+                     <div className="h-1.5 bg-black/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#3E6B43]" style={{ width: `${Math.max(0, (400 - stats.printed) / 400 * 100)}%` }} />
                      </div>
                   </div>
                </div>

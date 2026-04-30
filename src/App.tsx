@@ -11,6 +11,7 @@ import { Launchpad } from './components/Launchpad';
 import { DemoBooth } from './components/DemoBooth';
 import { DevDashboard } from './components/dev/DevDashboard';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { PrintProvider } from './contexts/PrintContext';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -41,6 +42,7 @@ export default function App() {
   }
 
   return (
+    <PrintProvider>
     <SettingsProvider>
       <div className="min-h-screen bg-[var(--color-pawtobooth-beige)] text-[var(--color-pawtobooth-dark)] font-sans selection:bg-[var(--color-pawtobooth-green)] selection:text-[var(--color-pawtobooth-beige)]">
       <Routes>
@@ -70,5 +72,6 @@ export default function App() {
       </Routes>
     </div>
     </SettingsProvider>
+    </PrintProvider>
   );
 }

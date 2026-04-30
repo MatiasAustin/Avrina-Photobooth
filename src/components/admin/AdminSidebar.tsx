@@ -33,7 +33,7 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
         <h1 className="font-bold tracking-tighter text-xl uppercase text-[var(--color-pawtobooth-dark)]">{settings.appName.split(' ')[0]} <span className="text-[#3E6B43]">{settings.appName.split(' ')[1] || 'Admin'}</span></h1>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const isLocked = !isPremium && item.pro;
           
@@ -48,7 +48,7 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
                 }
               }}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative",
                 activeTab === item.id 
                   ? "bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] shadow-sm" 
                   : isLocked 
@@ -56,17 +56,20 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
                     : "text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43]/10 hover:text-[#3E6B43]"
               )}
             >
-              <div className="flex items-center gap-3">
+              <div className="w-5 flex items-center justify-center flex-shrink-0">
                 <item.icon className={cn("w-4 h-4", isLocked && "opacity-50")} />
-                <span className={isLocked ? "opacity-50" : ""}>{item.label}</span>
               </div>
-              {isLocked ? (
-                <Lock className="w-3 h-3 text-[var(--color-pawtobooth-dark)]/30" />
-              ) : item.pro && (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#3E6B43]/10 text-[#3E6B43] text-[8px] font-black uppercase tracking-tighter border border-[#3E6B43]/20 group-hover:bg-[#3E6B43] group-hover:text-white transition-all">
-                  <Crown className="w-2 h-2 fill-current" /> PRO
-                </div>
-              )}
+              <span className={cn("flex-1 text-left whitespace-nowrap", isLocked ? "opacity-50" : "")}>{item.label}</span>
+              
+              <div className="flex-shrink-0">
+                {isLocked ? (
+                  <Lock className="w-3 h-3 text-[var(--color-pawtobooth-dark)]/30" />
+                ) : item.pro && (
+                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#3E6B43]/10 text-[#3E6B43] text-[8px] font-black uppercase tracking-tighter border border-[#3E6B43]/20 group-hover:bg-[#3E6B43] group-hover:text-white transition-all">
+                    <Crown className="w-2 h-2 fill-current" /> PRO
+                  </div>
+                )}
+              </div>
             </button>
           );
         })}
@@ -75,17 +78,21 @@ export function AdminSidebar({ activeTab, onTabChange, isPremium = false }: Admi
       <div className="p-4 space-y-2 border-t border-black/5">
         <button 
           onClick={() => navigate('/launchpad')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-[#3E6B43] text-white hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-sm"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-[#3E6B43] text-white hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-sm"
         >
-          <Zap className="w-4 h-4 text-glow" />
-          Station Launchpad
+          <div className="w-5 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-4 h-4 text-glow" />
+          </div>
+          <span className="flex-1 text-left">Station Launchpad</span>
         </button>
         <button 
           onClick={() => navigate('/')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] hover:bg-black/5 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[var(--color-pawtobooth-dark)]/60 hover:text-[var(--color-pawtobooth-dark)] hover:bg-black/5 transition-all"
         >
-          <LogOut className="w-4 h-4" />
-          Exit to Public
+          <div className="w-5 flex items-center justify-center flex-shrink-0">
+            <LogOut className="w-4 h-4" />
+          </div>
+          <span className="flex-1 text-left">Exit to Public</span>
         </button>
       </div>
     </aside>
