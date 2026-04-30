@@ -8,11 +8,12 @@ interface TemplateEditorProps {
   onClose: () => void;
   onSave: () => void;
   events: any[];
+  initialTemplate?: any;
 }
 
 interface EditorElement {
   id: string;
-  type: 'text' | 'image' | 'sticker';
+  type: 'text' | 'image' | 'sticker' | 'timestamp';
   content: string; // text content or image URL
   x: number;
   y: number;
@@ -22,7 +23,7 @@ interface EditorElement {
   color?: string;
 }
 
-export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps) {
+export function TemplateEditor({ onClose, onSave, events, initialTemplate }: TemplateEditorProps) {
   // Project Config
   const [name, setName] = useState('New Frame Template');
   const [eventId, setEventId] = useState('');
@@ -63,6 +64,38 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
+
+  // Fetch initial template config if editing
+  useEffect(() => {
+    if (initialTemplate) {
+      setName(initialTemplate.name || 'Edited Template');
+      setEventId(initialTemplate.event_id || '');
+      setCategory(initialTemplate.category || 'General');
+      setSlotCount(initialTemplate.slot_count || 3);
+      
+      if (initialTemplate.image_url) {
+        const fetchConfig = async () => {
+          try {
+            const rawUrl = initialTemplate.image_url.split('?')[0];
+            const jsonUrl = rawUrl.replace('.png', '.json');
+            const res = await fetch(jsonUrl);
+            if (res.ok) {
+              const data = await res.json();
+              setBgColor(data.bgColor || '#ffccd5');
+              if (data.bgImage) setBgImage(data.bgImage);
+              setGridMask(data.gridMask || 'square');
+              setFrameColor(data.frameColor || 'transparent');
+              setFrameWidth(data.frameWidth || 0);
+              setElements(data.elements || []);
+            }
+          } catch (e) {
+            console.error("No json config found, could not restore full state", e);
+          }
+        };
+        fetchConfig();
+      }
+    }
+  }, [initialTemplate]);
 
   // Render Background and Holes to Canvas
   useEffect(() => {
@@ -157,7 +190,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
   const addTimestamp = () => {
     const date = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    setElements([...elements, { id: Date.now().toString(), type: 'text', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'timestamp', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000' }]);
   };
 
   const handleImageUpload = (type: 'bg' | 'image', e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,6 +227,8 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
 
       // 2. Draw Elements Layer
       for (const el of elements) {
+        if (el.type === 'timestamp') continue; // Do not bake live timestamp into the PNG
+
         ctx.save();
         ctx.translate(el.x, el.y);
         ctx.rotate(el.rotation * Math.PI / 180);
@@ -236,18 +271,43 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         .from('templates')
         .getPublicUrl(fileName);
 
+      // Upload JSON config state
+      const jsonFileName = fileName.replace('.png', '.json');
+      const configBlob = new Blob([JSON.stringify({
+        bgColor, bgImage, gridMask, frameColor, frameWidth, elements
+      })], { type: 'application/json' });
+      
+      await supabase.storage.from('templates').upload(jsonFileName, configBlob);
+
+      // Append timestamp config to URL if exists
+      let finalUrl = publicUrl;
+      const tsEl = elements.find(e => e.type === 'timestamp');
+      if (tsEl) {
+         const tsConfig = encodeURIComponent(JSON.stringify({ x: tsEl.x, y: tsEl.y, s: tsEl.scale, c: tsEl.color, f: tsEl.font, r: tsEl.rotation }));
+         finalUrl += `?ts=${tsConfig}`;
+      }
+
       // 4. Save to Database
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Authentication required");
 
-      const { error: dbError } = await supabase.from('templates').insert({
+      const templateData = {
         name,
         user_id: user.id,
         event_id: eventId || null,
-        image_url: publicUrl,
+        image_url: finalUrl,
         category: category,
         slot_count: slotCount
-      });
+      };
+
+      let dbError;
+      if (initialTemplate) {
+        const { error } = await supabase.from('templates').update(templateData).eq('id', initialTemplate.id);
+        dbError = error;
+      } else {
+        const { error } = await supabase.from('templates').insert(templateData);
+        dbError = error;
+      }
 
       if (dbError) throw dbError;
       
@@ -379,10 +439,13 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
               <div className="space-y-4 p-4 bg-[#3E6B43]/5 border border-[#3E6B43]/20 rounded-2xl animate-in slide-in-from-bottom-4">
                  <div className="flex justify-between items-center">
                     <label className="text-[10px] font-black text-[#3E6B43] uppercase tracking-widest">Active Element</label>
-                    <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
+                    <div className="flex gap-2">
+                      <button onClick={() => setElements([...elements, { ...activeElement, id: Date.now().toString(), x: activeElement.x + 20, y: activeElement.y + 20 }])} className="text-[#3E6B43] hover:scale-110 px-1 font-bold text-xs">DUP</button>
+                      <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
+                    </div>
                  </div>
                  
-                 {activeElement.type === 'text' && (
+                 {(activeElement.type === 'text' || activeElement.type === 'timestamp') && (
                     <div className="space-y-3">
                        <input 
                          value={activeElement.content}
@@ -469,7 +532,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
                   touchAction: 'none'
                 }}
               >
-                {el.type === 'text' && (
+                {(el.type === 'text' || el.type === 'timestamp') && (
                    <span style={{ fontFamily: el.font, fontSize: '64px', color: el.color, fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
                      {el.content}
                    </span>

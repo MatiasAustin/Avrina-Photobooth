@@ -55,7 +55,9 @@ export const generatePhotoStrip = async (
       templateImg = await new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = selectedTemplate.image_url;
+        // Remove query params to avoid cache/CORS issues if any, though it should be fine
+        const cleanUrl = selectedTemplate.image_url.split('?')[0];
+        img.src = cleanUrl;
         img.onload = () => resolve(img);
         img.onerror = () => resolve(null);
       });
@@ -112,6 +114,30 @@ export const generatePhotoStrip = async (
       ctx.font = 'bold 48px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(eventName?.toUpperCase() || `${PLATFORM_NAME.toUpperCase()} NETWORK`, canvasWidth / 2, canvasHeight - 100);
+    }
+
+    // Draw Live Timestamp if configured in URL
+    if (selectedTemplate?.image_url?.includes('?ts=')) {
+       try {
+         const tsParam = new URL(selectedTemplate.image_url).searchParams.get('ts');
+         if (tsParam) {
+           const tsConfig = JSON.parse(decodeURIComponent(tsParam));
+           
+           ctx.save();
+           ctx.translate(tsConfig.x, tsConfig.y);
+           ctx.rotate((tsConfig.r || 0) * Math.PI / 180);
+           ctx.scale(tsConfig.s, tsConfig.s);
+           
+           ctx.font = `bold 64px ${tsConfig.f || 'sans-serif'}`;
+           ctx.fillStyle = tsConfig.c || '#000000';
+           ctx.textAlign = 'center';
+           ctx.textBaseline = 'middle';
+           
+           const liveDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+           ctx.fillText(liveDate, 0, 0);
+           ctx.restore();
+         }
+       } catch (e) { console.error("Failed to parse timestamp config", e); }
     }
 
     const result = canvas.toDataURL('image/jpeg', 0.8);

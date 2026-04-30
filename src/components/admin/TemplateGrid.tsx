@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Image as ImageIcon, X, Save, Palette, Upload } from 'lucide-react';
+import { Trash2, Plus, Image as ImageIcon, X, Save, Palette, Upload, Edit2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { TemplateEditor } from './TemplateEditor';
 import { cn } from '../../lib/utils';
@@ -9,6 +9,7 @@ export function TemplateGrid() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDesignStudio, setShowDesignStudio] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [newTemplate, setNewTemplate] = useState({ name: '', image_url: '', event_id: '', category: 'General', slot_count: 3 });
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -105,7 +106,7 @@ export function TemplateGrid() {
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setShowDesignStudio(true)}
+              onClick={() => { setEditingTemplate(null); setShowDesignStudio(true); }}
               className="bg-white border border-black/5 text-[var(--color-pawtobooth-dark)]/60 px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-[#3E6B43] hover:text-white hover:border-[#3E6B43] transition-all shadow-sm"
             >
               <Palette className="w-4 h-4" /> Design Studio
@@ -140,9 +141,11 @@ export function TemplateGrid() {
        {showDesignStudio && (
          <TemplateEditor 
            events={events}
-           onClose={() => setShowDesignStudio(false)}
+           initialTemplate={editingTemplate}
+           onClose={() => { setShowDesignStudio(false); setEditingTemplate(null); }}
            onSave={() => {
               setShowDesignStudio(false);
+              setEditingTemplate(null);
               fetchData();
            }}
          />
@@ -171,12 +174,20 @@ export function TemplateGrid() {
                            </div>
                            <p className="font-bold uppercase tracking-tight text-white">{t.name}</p>
                         </div>
-                        <button 
-                          onClick={() => handleDelete(t.id)}
-                          className="w-full py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                        >
-                           <Trash2 className="w-3 h-3" /> Delete
-                        </button>
+                        <div className="flex gap-2">
+                           <button 
+                             onClick={() => { setEditingTemplate(t); setShowDesignStudio(true); }}
+                             className="flex-1 py-2 bg-white/20 hover:bg-white/40 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
+                           >
+                              <Edit2 className="w-3 h-3" /> Edit
+                           </button>
+                           <button 
+                             onClick={() => handleDelete(t.id)}
+                             className="flex-1 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                           >
+                              <Trash2 className="w-3 h-3" /> Delete
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>
