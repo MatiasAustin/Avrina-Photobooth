@@ -94,8 +94,8 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
 
         <div className="flex-1 space-y-10 text-center md:text-left z-10">
           <div className="space-y-4">
-            <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">Your Session <br/><span className="text-[#3E6B43]">is Ready</span></h2>
-            <p className="text-[var(--color-pawtobooth-dark)]/60 font-medium max-w-md">Your professional photo strip has been generated and is ready for pickup.</p>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">Your Session <br/><span className="text-[#3E6B43]">is Ready</span></h2>
+            <p className="text-[var(--color-pawtobooth-dark)]/60 font-medium max-w-md text-sm md:text-base">Your professional photo strip has been generated and is ready for pickup.</p>
           </div>
 
           <div className="flex flex-col gap-4 max-w-sm mx-auto md:mx-0 w-full">

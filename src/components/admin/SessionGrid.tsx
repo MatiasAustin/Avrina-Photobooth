@@ -148,7 +148,7 @@ export function SessionGrid({ sessions, events, onDelete }: SessionGridProps) {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-[32px] border border-black/5 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[32px] border border-black/5 overflow-x-auto shadow-sm">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-black/5 bg-[var(--color-pawtobooth-light)]/30">

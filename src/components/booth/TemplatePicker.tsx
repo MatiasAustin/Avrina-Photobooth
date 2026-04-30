@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Filter, FlipHorizontal2, Eye, EyeOff } from 'lucide-react';
+import { ChevronRight, Filter, FlipHorizontal2, Eye, EyeOff, X } from 'lucide-react';
 import { PhotoTemplate } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -97,13 +97,16 @@ export function TemplatePicker({
           <AnimatePresence>
             {showPreview && (
               <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 280, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="shrink-0 border-r border-black/5 overflow-hidden"
+                initial={{ x: -280, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -280, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed md:relative inset-y-0 left-0 w-[280px] bg-white md:bg-transparent z-50 border-r border-black/5 overflow-hidden shadow-2xl md:shadow-none"
               >
                 <div className="p-5 space-y-4 w-[280px] h-full overflow-y-auto">
+                  <div className="md:hidden flex justify-end">
+                    <button onClick={() => setShowPreview(false)} className="p-2 bg-black/5 rounded-full"><X className="w-4 h-4" /></button>
+                  </div>
                   {/* Live Camera */}
                   <div className="aspect-square bg-black rounded-3xl overflow-hidden relative border-4 border-white shadow-lg">
                     <video

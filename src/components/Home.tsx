@@ -30,8 +30,8 @@ export function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-48 pb-32 px-6 relative z-10 overflow-hidden">
-        <div className="max-w-6xl mx-auto text-center space-y-10">
+      <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-6 relative z-10 overflow-hidden">
+        <div className="max-w-6xl mx-auto text-center space-y-6 md:space-y-10">
            <motion.div 
              initial={{ opacity: 0, scale: 0.9 }}
              animate={{ opacity: 1, scale: 1 }}

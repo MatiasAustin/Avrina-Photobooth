@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, LogOut, Layout, BarChart, Printer, Calendar, Crown } from 'lucide-react';
+import { Settings, LogOut, Layout, BarChart, Printer, Calendar, Crown, Menu } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AdminSidebar } from './admin/AdminSidebar';
 import { AdminStats } from './admin/AdminStats';
@@ -138,34 +138,44 @@ export function Admin({ session }: AdminProps) {
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         isPremium={isPremium}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex-1 overflow-y-auto bg-[var(--color-pawtobooth-beige)] pb-20">
-        <header className="p-8 border-b border-black/5 flex items-center justify-between sticky top-0 bg-[var(--color-pawtobooth-beige)]/80 backdrop-blur-xl z-20">
-          <div>
-             <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60 mb-1">
-               Managed Services / {activeTab}
-             </h2>
-             <p className="text-xl font-black uppercase tracking-tight italic">
-               {(profile?.full_name || 'Admin')} • {settings.appName} v1.0
-             </p>
-          </div>
+      <main className="flex-1 overflow-y-auto bg-[var(--color-pawtobooth-beige)] pb-20 relative">
+        <header className="p-4 md:p-8 border-b border-black/5 flex items-center justify-between sticky top-0 bg-[var(--color-pawtobooth-beige)]/80 backdrop-blur-xl z-20">
           <div className="flex items-center gap-4">
+             <button 
+               onClick={() => setSidebarOpen(true)}
+               className="md:hidden p-2 bg-white rounded-xl border border-black/10 text-[var(--color-pawtobooth-dark)]"
+             >
+                <Menu className="w-5 h-5" />
+             </button>
+             <div>
+                <h2 className="text-[8px] md:text-[10px] font-mono uppercase tracking-[0.2em] md:tracking-[0.3em] text-[var(--color-pawtobooth-dark)]/60 mb-0.5 md:mb-1">
+                  Managed Services / {activeTab}
+                </h2>
+                <p className="text-sm md:text-xl font-black uppercase tracking-tight italic">
+                  {(profile?.full_name || 'Admin')} <span className="hidden md:inline">• {settings.appName} v1.0</span>
+                </p>
+             </div>
+          </div>
+          <div className="flex items-center gap-2 md:gap-4">
              {isPremium && (
-               <div className="px-4 py-2 bg-[#3E6B43]/10 border border-[#3E6B43]/30 rounded-full flex items-center gap-2 text-[10px] font-black text-[#3E6B43] uppercase tracking-widest">
-                 <Crown className="w-3 h-3 fill-current" /> Professional
+               <div className="hidden sm:flex px-3 md:px-4 py-1.5 md:py-2 bg-[#3E6B43]/10 border border-[#3E6B43]/30 rounded-full items-center gap-2 text-[8px] md:text-[10px] font-black text-[#3E6B43] uppercase tracking-widest">
+                 <Crown className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> <span className="hidden sm:inline">Professional</span>
                </div>
              )}
-             <div className="px-4 py-2 bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-full flex items-center gap-2 text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/80 uppercase tracking-widest">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                Network Online
+             <div className="px-3 md:px-4 py-1.5 md:py-2 bg-[var(--color-pawtobooth-light)] border border-black/10 rounded-full flex items-center gap-2 text-[8px] md:text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/80 uppercase tracking-widest">
+                <div className="w-1 md:w-1.5 h-1 md:h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                <span className="hidden xs:inline">Network Online</span>
              </div>
              <button 
                onClick={handleLogout}
-               className="p-3 rounded-xl bg-[var(--color-pawtobooth-light)] border border-black/10 hover:bg-red-500 hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/80"
+               className="p-2 md:p-3 rounded-xl bg-[var(--color-pawtobooth-light)] border border-black/10 hover:bg-red-500 hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/80"
                title="Sign Out"
              >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 md:w-5 md:h-5" />
              </button>
           </div>
         </header>

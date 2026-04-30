@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon, Search, PlusCircle, Bookmark, Copy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
@@ -167,8 +167,11 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     if (!containerRef.current) return;
     const updateScale = () => {
       if (containerRef.current) {
+        const width = containerRef.current.clientWidth;
         const height = containerRef.current.clientHeight;
-        setPreviewScale(Math.min((height - 100) / 1800, 0.5));
+        const scaleH = (height - 120) / 1800;
+        const scaleW = (width - 60) / 1200;
+        setPreviewScale(Math.min(scaleH, scaleW, 0.6));
       }
     };
     updateScale();
@@ -588,17 +591,17 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const activeElement = elements.find(e => e.id === activeElementId);
 
   return (
-    <div className="fixed inset-0 z-[120] bg-white flex flex-col lg:flex-row animate-in fade-in duration-500">
-      <div className="w-full lg:w-[450px] bg-[var(--color-pawtobooth-light)] border-r border-black/5 flex flex-col h-full shadow-2xl z-20 overflow-hidden">
-         <div className="p-6 border-b border-black/5 flex items-center justify-between bg-white">
-            <h2 className="text-xl font-black italic uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">Template <span className="text-[#3E6B43]">Studio</span></h2>
+    <div className="fixed inset-0 z-[120] bg-white flex flex-col lg:flex-row animate-in fade-in duration-500 overflow-hidden">
+      <div className="w-full lg:w-[450px] h-[45vh] lg:h-full bg-[var(--color-pawtobooth-light)] border-b lg:border-b-0 lg:border-r border-black/5 flex flex-col shadow-2xl z-20 overflow-hidden shrink-0">
+         <div className="p-4 lg:p-6 border-b border-black/5 flex items-center justify-between bg-white shrink-0">
+            <h2 className="text-lg lg:text-xl font-black italic uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">Template <span className="text-[#3E6B43]">Studio</span></h2>
             <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-[var(--color-pawtobooth-dark)]/60"><X className="w-5 h-5"/></button>
          </div>
 
-         <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
+         <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 lg:space-y-8 pb-20 lg:pb-32">
             <div className="space-y-4">
                <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block">Project Info</label>
-               <input value={name} onChange={e => setName(e.target.value)} placeholder="Template Name" className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none shadow-sm font-bold" />
+               <input value={name} onChange={e => setName(e.target.value)} placeholder="Template Name" className="w-full bg-white border border-black/5 p-3 lg:p-4 rounded-xl focus:border-[#3E6B43] outline-none shadow-sm font-bold text-sm lg:text-base" />
                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <p className="text-[8px] font-bold uppercase opacity-30 pl-2">Assign Booth</p>
@@ -921,32 +924,32 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
           setShowDropdown(false);
         }}
       >
-         <div className="absolute top-8 left-8 flex items-center gap-4 z-50">
-            <div className="flex items-center gap-2">
-               <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-pulse" />
-               <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest font-black">Live Editor</span>
+         <div className="absolute top-3 lg:top-8 left-4 lg:left-8 flex items-center gap-2 lg:gap-4 z-50">
+            <div className="flex items-center gap-1.5 lg:gap-2">
+               <div className="w-1.5 lg:w-2 h-1.5 lg:h-2 bg-[#3E6B43] rounded-full animate-pulse" />
+               <span className="text-[8px] lg:text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest font-black">Live Editor</span>
             </div>
             {lastSaved && (
-               <span className="text-[10px] font-mono text-[#3E6B43]/60 bg-[#3E6B43]/5 px-3 py-1 rounded-full flex items-center gap-2 border border-[#3E6B43]/10">
-                  <Check className="w-3 h-3" /> Draft Saved: {lastSaved}
+               <span className="text-[8px] lg:text-[10px] font-mono text-[#3E6B43]/60 bg-[#3E6B43]/5 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full flex items-center gap-1.5 lg:gap-2 border border-[#3E6B43]/10">
+                  <Check className="w-2.5 lg:w-3 h-2.5 lg:h-3" /> <span className="hidden xs:inline">Draft Saved:</span> {lastSaved}
                </span>
             )}
          </div>
 
-         <div className="absolute top-8 right-8 z-50 flex items-center gap-3">
+         <div className="absolute top-3 lg:top-8 right-4 lg:right-8 z-50 flex items-center gap-2 lg:gap-3">
             <button 
               onClick={() => saveTemplate(false)} 
               disabled={isSaving} 
-              className="px-6 py-4 bg-white border border-black/5 text-[var(--color-pawtobooth-dark)] font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-black/5 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+              className="px-3 lg:px-6 py-2.5 lg:py-4 bg-white border border-black/5 text-[var(--color-pawtobooth-dark)] font-black uppercase text-[8px] lg:text-[10px] tracking-widest rounded-lg lg:rounded-xl hover:bg-black/5 active:scale-95 transition-all shadow-lg disabled:opacity-50"
             >
                Save Draft
             </button>
             <button 
               onClick={() => saveTemplate(true)} 
               disabled={isSaving} 
-              className="px-8 py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-xl flex items-center gap-3 shadow-2xl disabled:opacity-50 hover:bg-[#3E6B43] active:scale-95 transition-all"
+              className="px-4 lg:px-8 py-2.5 lg:py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-[10px] lg:text-xs tracking-widest rounded-lg lg:rounded-xl flex items-center gap-2 lg:gap-3 shadow-xl disabled:opacity-50 hover:bg-[#3E6B43] active:scale-95 transition-all"
             >
-               {isSaving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Publish & Exit
+               {isSaving ? <RotateCw className="w-3.5 lg:w-4 h-3.5 lg:h-4 animate-spin" /> : <Save className="w-3.5 lg:w-4 h-3.5 lg:h-4" />} <span className="hidden xs:inline">Publish & Exit</span><span className="xs:hidden">Publish</span>
             </button>
          </div>
 

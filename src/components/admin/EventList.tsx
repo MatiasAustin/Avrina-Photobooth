@@ -143,11 +143,11 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-       <div className="flex items-center justify-between">
-          <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Global Booth Network</h3>
+       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Global Booth Network</h3>
           <button 
             onClick={createNew}
-            className="bg-[var(--color-pawtobooth-dark)] text-white px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:scale-105 transition-transform shadow-sm"
+            className="bg-[var(--color-pawtobooth-dark)] text-white px-6 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-sm w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" /> Deploy New Booth
           </button>
@@ -161,19 +161,19 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
             </div>
           )}
           {events.map((event) => (
-            <div key={event.id} className="p-6 bg-white border border-black/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-all group">
-               <div className="flex items-center gap-6 flex-1 w-full">
-                  <div className="w-16 h-16 bg-[var(--color-pawtobooth-light)] rounded-2xl flex items-center justify-center border border-black/5 text-[var(--color-pawtobooth-dark)]/40 group-hover:scale-110 group-hover:bg-[#3E6B43] group-hover:text-white group-hover:border-[#3E6B43] transition-all">
-                     <Globe className="w-8 h-8" />
+             <div key={event.id} className="p-4 md:p-6 bg-white border border-black/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 hover:shadow-md transition-all group">
+               <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 flex-1 w-full text-center sm:text-left">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-[var(--color-pawtobooth-light)] rounded-2xl flex items-center justify-center border border-black/5 text-[var(--color-pawtobooth-dark)]/40 group-hover:scale-110 group-hover:bg-[#3E6B43] group-hover:text-white group-hover:border-[#3E6B43] transition-all shrink-0">
+                     <Globe className="w-6 h-6 md:w-8 md:h-8" />
                   </div>
-                  <div className="space-y-1">
-                     <div className="flex items-center gap-3">
-                        <h4 className="text-xl font-bold uppercase tracking-tight">{event.name}</h4>
+                  <div className="space-y-1 w-full overflow-hidden">
+                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 md:gap-3">
+                        <h4 className="text-lg md:text-xl font-bold uppercase tracking-tight truncate max-w-[200px]">{event.name}</h4>
                         <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${event.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
                           {event.is_active ? 'Live' : 'Offline'}
                         </span>
                      </div>
-                     <div className="flex items-center gap-4 text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-tighter">
+                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-[9px] md:text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-tighter">
                         <span className="flex items-center gap-1 hover:text-[var(--color-pawtobooth-dark)] transition-colors cursor-pointer" onClick={() => window.open(`/booth/${event.slug}`, '_blank')}>
                            <Globe className="w-3 h-3"/> /{event.slug}
                         </span>
@@ -183,7 +183,7 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
                      </div>
                   </div>
                </div>
-               <div className="flex items-center gap-2 shrink-0">
+               <div className="flex items-center justify-center gap-2 shrink-0 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-black/5">
                   <button 
                     onClick={() => copyLink(event.slug, event.id)}
                     className={cn(
@@ -229,8 +229,8 @@ export function EventList({ userId, events, onUpdate }: EventListProps) {
 
        {/* Editor Modal */}
        {editingEvent && (
-         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
-            <div className="w-full max-w-lg bg-white border border-black/10 shadow-2xl rounded-[40px] p-8 space-y-8 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-white border border-black/10 shadow-2xl rounded-[32px] md:rounded-[40px] p-6 md:p-8 space-y-6 md:space-y-8 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
                <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">Configure Booth</h3>
                   <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-black/5 text-[var(--color-pawtobooth-dark)]/60 rounded-full">

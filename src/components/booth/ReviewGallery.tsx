@@ -98,16 +98,16 @@ export function ReviewGallery({
       <div className="flex-1 space-y-10 w-full">
         <div className="space-y-4">
           <div className="space-y-3">
-            <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--color-pawtobooth-dark)] leading-none">
+            <h2 className="text-4xl lg:text-6xl font-black uppercase tracking-tighter italic text-[var(--color-pawtobooth-dark)] leading-none">
               Select <span className="text-[#3E6B43]">Your Favs</span>
             </h2>
-            <div className="flex items-center gap-6">
-               <p className="text-[var(--color-pawtobooth-dark)]/40 font-mono text-[10px] uppercase tracking-[0.3em] flex items-center gap-3">
-                 <MousePointer2 className="w-4 h-4 text-[#3E6B43]" /> Tap to pick, drag on the right to align
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6">
+               <p className="text-[var(--color-pawtobooth-dark)]/40 font-mono text-[9px] lg:text-[10px] uppercase tracking-[0.2em] lg:tracking-[0.3em] flex items-center gap-2 lg:gap-3">
+                 <MousePointer2 className="w-3 h-3 lg:w-4 lg:h-4 text-[#3E6B43]" /> Tap to pick, drag on the right to align
                </p>
-               <div className="h-px flex-1 bg-black/5" />
-               <div className="bg-[#3E6B43]/5 px-4 py-2 rounded-full border border-[#3E6B43]/10">
-                 <p className="text-xs font-black uppercase tracking-widest text-[#3E6B43]">
+               <div className="hidden sm:block h-px flex-1 bg-black/5" />
+               <div className="bg-[#3E6B43]/5 px-4 py-2 rounded-full border border-[#3E6B43]/10 w-fit">
+                 <p className="text-[10px] lg:text-xs font-black uppercase tracking-widest text-[#3E6B43]">
                    {selectedIndices.length} / {slotCount} SELECTED
                  </p>
                </div>
