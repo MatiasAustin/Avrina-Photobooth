@@ -83,48 +83,35 @@ export function PrintQueue({ jobs, onUpdate }: PrintQueueProps) {
             </div>
          </div>
 
-         <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-8 h-fit sticky top-24">
-            <div className="flex items-center gap-4 text-[var(--color-pawtobooth-dark)]">
-               <div className="w-12 h-12 bg-[var(--color-pawtobooth-light)] rounded-2xl flex items-center justify-center border border-black/5">
-                 <Printer className="w-6 h-6 text-[#3E6B43]" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-bold uppercase italic tracking-tight leading-none">LuxPrint Node</h3>
-                  <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest mt-1">Satellite Status</p>
-               </div>
-            </div>
-            
-            <div className="space-y-6 pt-4">
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
-                     <span className="text-[var(--color-pawtobooth-dark)]/60">Node Status</span>
-                     <span className="text-[#3E6B43] font-bold">Encrypted / Online</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
-                     <span className="text-[var(--color-pawtobooth-dark)]/60">Paper Supply</span>
-                     <span className="font-bold text-[var(--color-pawtobooth-dark)]">42 Sheets</span>
-                  </div>
-                  <div className="w-full h-1 bg-black/5 rounded-full overflow-hidden">
-                     <div className="w-[42%] h-full bg-[#3E6B43] shadow-[0_0_10px_rgba(62,107,67,0.5)]" />
-                  </div>
-               </div>
+          <div className="p-8 bg-white border border-black/5 shadow-sm rounded-[40px] space-y-6 h-fit sticky top-24">
+             <div className="flex items-center gap-4 text-[var(--color-pawtobooth-dark)]">
+                <div className="w-12 h-12 bg-[#3E6B43]/10 rounded-2xl flex items-center justify-center border border-[#3E6B43]/20">
+                  <Printer className="w-6 h-6 text-[#3E6B43]" />
+                </div>
+                <div>
+                   <h3 className="text-xl font-bold uppercase italic tracking-tight leading-none">Queue Manager</h3>
+                   <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest mt-1">Live Monitoring</p>
+                </div>
+             </div>
+             
+             <div className="space-y-4 pt-4">
+                <div className="p-6 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-1">
+                   <p className="text-[var(--color-pawtobooth-dark)]/60 text-[8px] font-black uppercase tracking-widest leading-none">Pending Jobs</p>
+                   <p className="text-3xl font-black text-[var(--color-pawtobooth-dark)]">{jobs.filter(j => j.status === 'queued').length}</p>
+                </div>
+                <div className="p-6 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-1">
+                   <p className="text-[var(--color-pawtobooth-dark)]/60 text-[8px] font-black uppercase tracking-widest leading-none">In Process</p>
+                   <p className="text-3xl font-black text-[#3E6B43]">{jobs.filter(j => j.status === 'printing').length}</p>
+                </div>
+             </div>
 
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
-                     <span className="text-[var(--color-pawtobooth-dark)]/60">Dye-Sub Ribbon</span>
-                     <span className="font-bold text-[var(--color-pawtobooth-dark)]">88%</span>
-                  </div>
-                  <div className="w-full h-1 bg-black/5 rounded-full overflow-hidden">
-                     <div className="w-[88%] h-full bg-[#3E6B43]" />
-                  </div>
-               </div>
-            </div>
-
-            <button className="w-full py-4 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-[#3E6B43] hover:text-white transition-all text-[var(--color-pawtobooth-dark)]/80 shadow-sm">
-               Run diagnostics
-            </button>
-         </div>
-      </div>
+             <div className="p-4 bg-[#3E6B43]/5 border border-[#3E6B43]/10 rounded-2xl">
+                <p className="text-[9px] text-[#3E6B43] font-medium leading-relaxed italic">
+                   "Jobs are automatically processed when the Remote Print Node Listener is active."
+                </p>
+             </div>
+          </div>
+       </div>
     </div>
   );
 }

@@ -11,7 +11,8 @@ export function PrintNode() {
   const { settings } = useSettings();
   const { 
     isListening, setIsListening, logs, clearLogs, 
-    printers, setPrinters, activePrinterId, setActivePrinterId, stats, addLog 
+    printers, setPrinters, activePrinterId, setActivePrinterId, stats, addLog,
+    stationInfo, setStationInfo
   } = usePrint();
 
   const [connectionMode, setConnectionMode] = useState<'direct' | 'printnode' | 'bridge'>('direct');
@@ -166,27 +167,48 @@ export function PrintNode() {
                <div className="space-y-4">
                   <div className="space-y-1">
                      <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Printer Model</p>
-                     <input type="text" placeholder="e.g. Canon MX390" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
+                     <input 
+                       type="text" 
+                       placeholder="e.g. Canon MX390" 
+                       value={stationInfo.model}
+                       onChange={e => setStationInfo({ ...stationInfo, model: e.target.value })}
+                       className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 ring-[#3E6B43]/20" 
+                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                      <div className="space-y-1">
                         <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Initial Stock</p>
-                        <input type="number" placeholder="400" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
+                        <input 
+                          type="number" 
+                          placeholder="400" 
+                          value={stationInfo.stock}
+                          onChange={e => setStationInfo({ ...stationInfo, stock: parseInt(e.target.value) || 0 })}
+                          className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 ring-[#3E6B43]/20" 
+                        />
                      </div>
                      <div className="space-y-1">
                         <p className="text-[8px] font-bold uppercase opacity-40 ml-2">Safety Margin</p>
-                        <input type="number" placeholder="10" className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none" />
+                        <input 
+                          type="number" 
+                          placeholder="10" 
+                          value={stationInfo.margin}
+                          onChange={e => setStationInfo({ ...stationInfo, margin: parseInt(e.target.value) || 0 })}
+                          className="w-full bg-[var(--color-pawtobooth-light)] border-none p-3 rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 ring-[#3E6B43]/20" 
+                        />
                      </div>
                   </div>
 
                   <div className="p-4 bg-[var(--color-pawtobooth-light)] rounded-2xl space-y-2">
                      <div className="flex justify-between items-center text-[8px] font-black uppercase opacity-40">
                         <span>Calculated Remaining</span>
-                        <span>{400 - stats.printed} Sheets</span>
+                        <span>{stationInfo.stock - stats.printed} Sheets</span>
                      </div>
                      <div className="h-1.5 bg-black/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#3E6B43]" style={{ width: `${Math.max(0, (400 - stats.printed) / 400 * 100)}%` }} />
+                        <div 
+                          className="h-full bg-[#3E6B43]" 
+                          style={{ width: `${Math.max(0, Math.min(100, ((stationInfo.stock - stats.printed) / stationInfo.stock) * 100))}%` }} 
+                        />
                      </div>
                   </div>
                </div>
