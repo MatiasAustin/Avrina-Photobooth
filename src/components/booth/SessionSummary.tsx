@@ -98,83 +98,98 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
             <p className="text-[var(--color-pawtobooth-dark)]/60 font-medium max-w-md">Your professional photo strip has been generated and is ready for pickup.</p>
           </div>
 
-          <div className="flex flex-col gap-4 max-w-sm mx-auto md:mx-0">
-            {sessionId !== 'demo' && (
-              <button 
-                onClick={onPrint} 
-                className="group relative flex items-center justify-center gap-3 bg-[#3E6B43] text-white px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest hover:bg-[var(--color-pawtobooth-dark)] active:scale-95 transition-all shadow-xl shadow-[#3E6B43]/20"
-              >
-                <Printer className="w-5 h-5 group-hover:animate-bounce" /> Print Photo Strip
-              </button>
-            )}
-            
+          <div className="flex flex-col gap-4 max-w-sm mx-auto md:mx-0 w-full">
             <button 
-              onClick={() => setShowEmailInput(true)}
-              className="flex items-center justify-center gap-3 bg-white border-2 border-black/5 px-10 py-5 rounded-[24px] text-[var(--color-pawtobooth-dark)] font-black uppercase text-sm tracking-widest hover:bg-black/5 active:scale-95 transition-all shadow-lg"
+              onClick={handlePrintAction}
+              disabled={printStatus !== 'idle'}
+              className={cn(
+                "group relative flex items-center justify-center gap-3 px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest transition-all shadow-xl shadow-[#3E6B43]/20",
+                printStatus === 'done' ? "bg-green-500 text-white" : "bg-[#3E6B43] text-white hover:bg-[var(--color-pawtobooth-dark)] active:scale-95"
+              )}
             >
-              <Mail className="w-5 h-5 text-[#3E6B43]" /> Get Digital Copy
+              {printStatus === 'printing' ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : printStatus === 'done' ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : (
+                <Printer className="w-5 h-5 group-hover:animate-bounce" />
+              )}
+              {printStatus === 'printing' ? "Printing..." : printStatus === 'done' ? "Added to Queue!" : "Print Photo Strip"}
             </button>
-          </div>
-
-          {showEmailInput ? (
-            <div className="space-y-6 w-full animate-in fade-in slide-in-from-right-4 duration-500">
-               <div className="space-y-2">
-                 <h3 className="text-2xl font-black uppercase italic tracking-tight">Get Your <span className="text-[#3E6B43]">Photos</span></h3>
-                 <p className="text-xs opacity-40 uppercase tracking-widest font-bold">Enter your email to receive the digital copy</p>
-               </div>
-               
-               <div className="flex flex-col gap-3">
-                  <div className="relative">
-                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
-                    <input 
-                      type="email" 
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="yourname@example.com"
-                      className="w-full pl-16 pr-6 py-5 bg-[var(--color-pawtobooth-light)] border-2 border-transparent focus:border-[#3E6B43]/20 rounded-3xl text-lg font-black outline-none transition-all placeholder:text-black/10"
-                    />
-                  </div>
-                  <button 
-                    onClick={submitEmail}
-                    disabled={!email || isSubmitting}
-                    className="w-full py-5 bg-[#3E6B43] text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#3E6B43]/20 flex items-center justify-center gap-3 disabled:opacity-50"
-                  >
-                    {isSubmitting ? "Sending..." : "Send to My Email"}
-                  </button>
-               </div>
-            </div>
-          ) : (
-            <div className="space-y-8 w-full animate-in zoom-in-95 duration-500">
-               <div className="grid grid-cols-1 gap-3">
-                  <button 
-                    onClick={handleDownloadAction}
-                    className="w-full py-5 bg-white border-2 border-black/5 text-[var(--color-pawtobooth-dark)] rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-[var(--color-pawtobooth-light)] transition-all flex items-center justify-center gap-3"
-                  >
-                    <Download className="w-5 h-5" /> Save Locally
-                  </button>
-                  <button 
-                    onClick={handlePrintAction}
-                    disabled={printStatus !== 'idle'}
-                    className={cn(
-                      "w-full py-5 rounded-3xl font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl",
-                      printStatus === 'done' ? "bg-green-500 text-white shadow-green-500/20" : "bg-[var(--color-pawtobooth-dark)] text-white shadow-black/20 hover:scale-[1.02]"
-                    )}
-                  >
-                    {printStatus === 'printing' ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> Sending to Printer...</>
-                    ) : printStatus === 'done' ? (
-                      <><CheckCircle2 className="w-5 h-5" /> Added to Queue!</>
-                    ) : (
-                      <><Printer className="w-5 h-5" /> Print This Photo</>
-                    )}
-                  </button>
-               </div>
-               
-               <button onClick={onReset} className="w-full py-4 text-[10px] font-black uppercase tracking-[0.3em] text-black/20 hover:text-black transition-colors">
-                  Take Another Shot
+            
+            <div className="grid grid-cols-2 gap-3">
+               <button 
+                 onClick={() => setShowEmailInput(true)}
+                 className="flex items-center justify-center gap-3 bg-white border-2 border-black/5 py-5 rounded-[24px] text-[var(--color-pawtobooth-dark)] font-black uppercase text-[10px] tracking-widest hover:bg-black/5 active:scale-95 transition-all shadow-lg"
+               >
+                 <Mail className="w-4 h-4 text-[#3E6B43]" /> Digital Copy
+               </button>
+               <button 
+                 onClick={handleDownloadAction}
+                 className="flex items-center justify-center gap-3 bg-white border-2 border-black/5 py-5 rounded-[24px] text-[var(--color-pawtobooth-dark)] font-black uppercase text-[10px] tracking-widest hover:bg-black/5 active:scale-95 transition-all shadow-lg"
+               >
+                 <Download className="w-4 h-4" /> Save Locally
                </button>
             </div>
-          )}
+
+            {sessionId !== 'demo' && (
+              <div className="flex items-center gap-6 p-6 bg-[var(--color-pawtobooth-light)] rounded-[32px] border border-black/5 shadow-inner">
+                <div className="bg-white p-3 rounded-2xl shrink-0 border border-black/5 shadow-sm">
+                  <QRCodeSVG value={`${window.location.origin}/gallery/${sessionId}`} size={80} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-black uppercase tracking-tight text-[#3E6B43]">Instant Access</p>
+                  <p className="text-[9px] text-[var(--color-pawtobooth-dark)]/40 font-mono uppercase leading-tight font-bold">Scan to download your high-res photos instantly</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <AnimatePresence>
+            {showEmailInput && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md"
+              >
+                 <motion.div 
+                   initial={{ scale: 0.9, opacity: 0 }}
+                   animate={{ scale: 1, opacity: 1 }}
+                   exit={{ scale: 0.9, opacity: 0 }}
+                   className="w-full max-w-lg bg-white rounded-[40px] p-10 space-y-8 shadow-2xl"
+                   onClick={e => e.stopPropagation()}
+                 >
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-2xl font-black uppercase italic tracking-tight">Your <span className="text-[#3E6B43]">Photos</span></h3>
+                      <button onClick={() => setShowEmailInput(false)} className="p-2 hover:bg-black/5 rounded-xl"><XCircle className="w-6 h-6 text-black/20" /></button>
+                    </div>
+                    
+                    <div className="space-y-6">
+                       <p className="text-sm text-black/40 font-bold uppercase tracking-widest">Enter your email for the digital copy</p>
+                       <div className="relative">
+                          <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
+                          <input 
+                            autoFocus
+                            type="email" 
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            placeholder="yourname@example.com"
+                            className="w-full pl-16 pr-6 py-5 bg-[var(--color-pawtobooth-light)] border-2 border-transparent focus:border-[#3E6B43]/20 rounded-3xl text-lg font-black outline-none transition-all placeholder:text-black/10"
+                          />
+                       </div>
+                       <button 
+                         onClick={submitEmail}
+                         disabled={!email || isSubmitting}
+                         className="w-full py-5 bg-[#3E6B43] text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#3E6B43]/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                       >
+                         {isSubmitting ? "Sending..." : "Send to My Email"}
+                       </button>
+                    </div>
+                 </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="w-full md:w-1/2 aspect-[4/6] bg-white rounded-[40px] overflow-hidden group shadow-2xl relative border-[12px] border-white shrink-0">

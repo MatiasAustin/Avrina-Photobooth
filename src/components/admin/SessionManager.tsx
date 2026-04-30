@@ -17,8 +17,14 @@ import {
   Share2,
   Phone,
   Mail,
-  Send
+  Send,
+  QrCode,
+  Copy,
+  Check,
+  LayoutGrid,
+  Table
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { PLATFORM_NAME } from '../../lib/constants';
 import { Session, EventConfig, PhotoTemplate } from '../../types';
@@ -40,7 +46,9 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [emailModal, setEmailModal] = useState<{ show: boolean, session: Session | null }>({ show: false, session: null });
+  const [qrModal, setQrModal] = useState<{ show: boolean, session: Session | null }>({ show: false, session: null });
   const [isSavingLayout, setIsSavingLayout] = useState(false);
+  const [copyingId, setCopyingId] = useState<string | null>(null);
 
   const getSessionPhotos = (session: Session) => {
     if (!session.photos) return [];
@@ -297,6 +305,25 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-end gap-2">
                           <button 
+                            onClick={() => setQrModal({ show: true, session })}
+                            className="p-3 rounded-xl border border-black/5 bg-[var(--color-pawtobooth-light)] text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43] hover:text-white transition-all"
+                            title="Show QR Code"
+                          >
+                            <QrCode className="w-5 h-5" />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const link = `${window.location.origin}/gallery/${session.id}`;
+                              navigator.clipboard.writeText(link);
+                              setCopyingId(session.id);
+                              setTimeout(() => setCopyingId(null), 2000);
+                            }}
+                            className="p-3 rounded-xl border border-black/5 bg-[var(--color-pawtobooth-light)] text-[var(--color-pawtobooth-dark)]/60 hover:bg-black hover:text-white transition-all"
+                            title="Copy Link"
+                          >
+                            {copyingId === session.id ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                          </button>
+                          <button 
                             onClick={() => handleEmailShare(session)}
                             className={cn(
                               "p-3 rounded-xl border transition-all",
@@ -382,6 +409,13 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                      <Eye className="w-6 h-6" />
                    </button>
                    <div className="flex items-center gap-4">
+                       <button 
+                         onClick={() => setQrModal({ show: true, session })}
+                         className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20 text-white hover:bg-[#3E6B43]"
+                         title="Show QR Code"
+                       >
+                         <QrCode className="w-4 h-4" />
+                       </button>
                        <button 
                          onClick={() => handleEmailShare(session)}
                          className={cn(
@@ -544,6 +578,42 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
           </div>
         </div>
       )}
+      {/* QR Modal */}
+      {qrModal.show && qrModal.session && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setQrModal({ show: false, session: null })} />
+           <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl p-10 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300">
+              <div className="text-center space-y-2">
+                 <h3 className="text-xl font-black uppercase italic tracking-tight text-[#3E6B43]">Session QR Code</h3>
+                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-black/40">Scan to view digital gallery</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-[32px] border-2 border-[#3E6B43]/10 shadow-xl">
+                 <QRCodeSVG value={`${window.location.origin}/gallery/${qrModal.session.id}`} size={200} />
+              </div>
+              
+              <div className="w-full space-y-3">
+                 <button 
+                   onClick={() => {
+                     const link = `${window.location.origin}/gallery/${qrModal.session?.id}`;
+                     navigator.clipboard.writeText(link);
+                     alert("Link copied!");
+                   }}
+                   className="w-full py-4 bg-[var(--color-pawtobooth-light)] text-[var(--color-pawtobooth-dark)] rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                 >
+                    <Copy className="w-4 h-4" /> Copy Direct Link
+                 </button>
+                 <button 
+                   onClick={() => setQrModal({ show: false, session: null })}
+                   className="w-full py-4 bg-[var(--color-pawtobooth-dark)] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                 >
+                    Close
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* Email Modal */}
       {emailModal.show && emailModal.session && (
         <EmailModal 
