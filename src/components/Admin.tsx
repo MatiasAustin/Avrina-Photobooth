@@ -22,6 +22,7 @@ interface AdminProps {
 
 export function Admin({ session }: AdminProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sessions' | 'events' | 'templates' | 'prints' | 'print_node' | 'payments' | 'subscription' | 'profile' | 'premium_locked'>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);

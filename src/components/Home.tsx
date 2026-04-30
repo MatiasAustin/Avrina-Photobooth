@@ -170,8 +170,8 @@ export function Home() {
         <div className="max-w-4xl mx-auto p-12 bg-gradient-to-br from-[#3E6B43] to-[var(--color-pawtobooth-dark)] rounded-[50px] text-center space-y-8 shadow-2xl relative overflow-hidden group">
            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1600&q=40')] opacity-10 mix-blend-overlay group-hover:scale-110 transition-transform duration-[20s]" />
            <div className="relative z-10 space-y-2">
-             <h3 className="text-3xl font-black uppercase tracking-tight">Ready to see it in action?</h3>
-             <p className="text-blue-100 font-medium">Try the live booth experience on this device. No setup, no credit card.</p>
+             <h3 className="text-3xl font-black uppercase tracking-tight text-white">Ready to see it in action?</h3>
+             <p className="text-white/70 font-medium">Try the live booth experience on this device. No setup, no credit card.</p>
            </div>
            <div className="relative z-10">
              <Link to="/demo" className="inline-flex py-4 px-12 bg-white text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-110 active:scale-95 transition-all">Launch Live Demo</Link>
