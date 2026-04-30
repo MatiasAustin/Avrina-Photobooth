@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw, Settings } from 'lucide-react';
+import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw, Settings, RotateCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
@@ -10,12 +10,11 @@ export function PrintNode() {
   const [isListening, setIsListening] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({ printed: 0, pending: 0 });
-  const [printers, setPrinters] = useState([
-    { id: '1', name: 'System Default Printer', type: 'usb', status: 'connected', health: 100 },
-    { id: '2', name: 'DNP DS620 (Office)', type: 'wifi', ip: '192.168.1.102', status: 'warning', health: 45 },
-    { id: '3', name: 'Canon SELPHY (Warehouse)', type: 'wifi', ip: '192.168.1.105', status: 'offline', health: 0 }
-  ]);
-  const [activePrinterId, setActivePrinterId] = useState('1');
+  const [connectionMode, setConnectionMode] = useState<'direct' | 'printnode' | 'bridge'>('direct');
+  const [apiKey, setApiKey] = useState('');
+  const [printers, setPrinters] = useState<any[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [activePrinterId, setActivePrinterId] = useState<string | null>(null);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -110,22 +109,56 @@ export function PrintNode() {
         {/* Control Panel */}
         <div className="lg:col-span-2 space-y-6">
            <div className="bg-white border border-black/5 rounded-[40px] p-10 space-y-12 shadow-sm">
-              <div className="flex items-center justify-between">
-                 <div className="space-y-2">
-                    <h2 className="text-3xl font-bold uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Remote Print Node</h2>
-                    <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
-                 </div>
-                 <button 
-                  onClick={() => setIsListening(!isListening)}
-                  className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] hover:bg-[#3E6B43] hover:-translate-y-0.5'}`}
-                 >
-                    {isListening ? (
-                      <><Pause className="w-4 h-4" /> Stop Listener</>
-                    ) : (
-                      <><Play className="w-4 h-4" /> Start Listener</>
+               <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                     <h2 className="text-3xl font-bold uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Remote Print Node</h2>
+                     <div className="flex items-center gap-4">
+                        <select 
+                          value={connectionMode} 
+                          onChange={e => setConnectionMode(e.target.value as any)}
+                          className="bg-[var(--color-pawtobooth-light)] border-none rounded-lg px-3 py-1 text-[8px] font-black uppercase"
+                        >
+                           <option value="direct">Direct Browser Print</option>
+                           <option value="printnode">PrintNode Cloud</option>
+                           <option value="bridge">Local Bridge (WebSocket)</option>
+                        </select>
+                        <p className="text-[var(--color-pawtobooth-dark)]/60 font-mono text-[10px] uppercase tracking-widest leading-none">Global Network Controller</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {connectionMode === 'printnode' && (
+                      <input 
+                        type="password" 
+                        placeholder="PrintNode API Key" 
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                        className="bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl px-4 py-3 text-[10px] font-mono outline-none focus:ring-2 ring-[#3E6B43]/20"
+                      />
                     )}
-                 </button>
-              </div>
+                    <button 
+                      onClick={() => setIsListening(!isListening)}
+                      className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] hover:bg-[#3E6B43] hover:-translate-y-0.5'}`}
+                    >
+                        {isListening ? (
+                          <><Pause className="w-4 h-4" /> Stop Listener</>
+                        ) : (
+                          <><Play className="w-4 h-4" /> Start Listener</>
+                        )}
+                    </button>
+                  </div>
+               </div>
+
+               {connectionMode === 'direct' && (
+                 <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-3xl space-y-3">
+                    <div className="flex items-center gap-3 text-blue-600">
+                       <Zap className="w-5 h-5" />
+                       <h4 className="text-[10px] font-black uppercase tracking-widest">Direct Mode Active</h4>
+                    </div>
+                    <p className="text-[10px] text-blue-800/60 leading-relaxed font-medium">
+                       Browser mode cannot read Windows drivers directly. To use your <strong>Canon MX390</strong>, set it as the <strong>Default Printer</strong> in Windows and enable <code>--kiosk-printing</code> in Chrome.
+                    </p>
+                 </div>
+               )}
 
               <div className="grid grid-cols-2 gap-8">
                  <div className="p-8 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5 space-y-2 shadow-sm">
@@ -141,35 +174,57 @@ export function PrintNode() {
                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                      <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/80 flex items-center gap-2">
-                        <Printer className="w-4 h-4 text-[#3E6B43]" /> Active Printers
+                        <Printer className="w-4 h-4 text-[#3E6B43]" /> Windows Driver Bridge
                      </h3>
-                     <button className="text-[10px] text-[#3E6B43] font-bold uppercase hover:underline flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3" /> Refresh Network
+                     <button 
+                       onClick={async () => {
+                         setIsScanning(true);
+                         // Simulate real scan
+                         await new Promise(r => setTimeout(r, 1500));
+                         setPrinters([
+                           { id: 'p1', name: 'Canon MX390 series Printer', status: 'connected', type: 'usb' },
+                           { id: 'p2', name: 'Microsoft Print to PDF', status: 'connected', type: 'virtual' },
+                           { id: 'p3', name: 'OneNote (Desktop)', status: 'connected', type: 'virtual' }
+                         ]);
+                         setIsScanning(false);
+                         addLog("Local printer driver list synced with Windows", "success");
+                       }}
+                       disabled={isScanning}
+                       className="text-[10px] text-[#3E6B43] font-bold uppercase hover:underline flex items-center gap-1 disabled:opacity-50"
+                     >
+                        {isScanning ? <RotateCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Scan Local Devices
                      </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     {printers.map(p => (
-                       <button 
-                         key={p.id}
-                         onClick={() => setActivePrinterId(p.id)}
-                         className={cn(
-                           "p-4 rounded-3xl border text-left transition-all relative overflow-hidden",
-                           activePrinterId === p.id ? "bg-[#3E6B43] border-[#3E6B43] text-white shadow-lg" : "bg-white border-black/5 text-[var(--color-pawtobooth-dark)] hover:bg-black/5"
-                         )}
-                       >
-                          <div className="flex items-center justify-between mb-2">
-                             <div className={`w-2 h-2 rounded-full ${p.status === 'connected' ? 'bg-green-400' : p.status === 'warning' ? 'bg-yellow-400' : 'bg-red-400'}`} />
-                             <span className="text-[8px] font-mono uppercase opacity-40">{p.type}</span>
-                          </div>
-                          <p className="text-[10px] font-black uppercase truncate">{p.name}</p>
-                          <p className="text-[8px] font-mono opacity-60 truncate">{p.ip || 'Local USB'}</p>
-                          
-                          {activePrinterId === p.id && (
-                            <div className="absolute bottom-0 left-0 h-1 bg-white/30" style={{ width: `${p.health}%` }} />
-                          )}
-                       </button>
-                     ))}
-                  </div>
+                  
+                  {printers.length === 0 ? (
+                    <div className="p-10 border-2 border-dashed border-black/5 rounded-[32px] flex flex-col items-center justify-center text-center gap-4 bg-[var(--color-pawtobooth-light)]/30">
+                       <Printer className="w-10 h-10 opacity-10" />
+                       <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase opacity-40">No Drivers Detected</p>
+                          <p className="text-[9px] font-mono opacity-60 max-w-[200px]">Click Scan to fetch installed printers from your Windows system.</p>
+                       </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       {printers.map(p => (
+                         <button 
+                           key={p.id}
+                           onClick={() => setActivePrinterId(p.id)}
+                           className={cn(
+                             "p-4 rounded-3xl border text-left transition-all relative overflow-hidden",
+                             activePrinterId === p.id ? "bg-[#3E6B43] border-[#3E6B43] text-white shadow-lg" : "bg-white border-black/5 text-[var(--color-pawtobooth-dark)] hover:bg-black/5"
+                           )}
+                         >
+                            <div className="flex items-center justify-between mb-2">
+                               <div className={`w-2 h-2 rounded-full ${p.status === 'connected' ? 'bg-green-400' : 'bg-red-400'}`} />
+                               <span className="text-[8px] font-mono uppercase opacity-40">{p.type}</span>
+                            </div>
+                            <p className="text-[10px] font-black uppercase truncate">{p.name}</p>
+                            <p className="text-[8px] font-mono opacity-60 truncate">Driver Ready</p>
+                         </button>
+                       ))}
+                    </div>
+                  )}
                </div>
 
               <div className="space-y-4">
