@@ -36,7 +36,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const w = 600;
+      const w = 1200;
       const h = 1800;
       canvas.width = w;
       canvas.height = h;
@@ -58,13 +58,17 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       }
 
       // 2. Draw Sample Photo Slots (Realistic Preview)
-      const margin = 40;
-      const slots = slotCount;
-      const photoH = (h - (margin * (slots + 2))) / (slots + 0.8);
-      const photoW = w - (margin * 2);
+      const photoW = 504;
+      const photoH = 504;
+      const marginX = 64;
+      const marginY = 64;
+      const cols = 2;
 
-      for (let i = 0; i < slots; i++) {
-        const y = margin + i * (photoH + margin);
+      for (let i = 0; i < slotCount; i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        const x = marginX + col * (photoW + marginX);
+        const y = marginY + row * (photoH + marginY);
         
         // Shadow for photos
         ctx.shadowColor = 'rgba(0,0,0,0.2)';
@@ -72,15 +76,15 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         ctx.shadowOffsetY = 4;
         
         ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(margin, y, photoW, photoH);
+        ctx.fillRect(x, y, photoW, photoH);
         
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
         // Photo Border
         ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(margin, y, photoW, photoH);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, photoW, photoH);
       }
 
       // 3. Draw Stickers
@@ -92,7 +96,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       }
 
       // 4. Footer Area
-      const footerY = h - photoH - margin;
+      const footerY = 1800 - 300;
       
       // Logo
       if (logo) {
@@ -100,8 +104,8 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
          logoImg.src = logo;
          await new Promise((resolve) => {
             logoImg.onload = () => {
-               const logoSize = 120;
-               ctx.drawImage(logoImg, w/2 - logoSize/2, footerY + 40, logoSize, logoSize);
+               const logoSize = 240;
+               ctx.drawImage(logoImg, w/2 - logoSize/2, footerY, logoSize, logoSize);
                resolve(null);
             };
             logoImg.onerror = resolve;
@@ -112,12 +116,12 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       ctx.fillStyle = textColor;
       ctx.textAlign = 'center';
       
-      ctx.font = `bold 42px ${fontFamily}`;
-      ctx.fillText(heading, w/2, h - 140);
+      ctx.font = `bold 84px ${fontFamily}`;
+      ctx.fillText(heading, w/2, h - 160);
       
-      ctx.font = `24px ${fontFamily}`;
+      ctx.font = `48px ${fontFamily}`;
       ctx.globalAlpha = 0.6;
-      ctx.fillText(subheading, w/2, h - 90);
+      ctx.fillText(subheading, w/2, h - 100);
       ctx.globalAlpha = 1.0;
     };
 
@@ -129,7 +133,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const scale = 600 / rect.width;
+    const scale = 1200 / rect.width;
     const x = (e.clientX - rect.left) * scale;
     const y = (e.clientY - rect.top) * scale;
 
@@ -151,7 +155,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scale = 600 / rect.width;
+    const scale = 1200 / rect.width;
     const x = (e.clientX - rect.left) * scale;
     const y = (e.clientY - rect.top) * scale;
 
@@ -169,9 +173,9 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
     setStickers([...stickers, { 
       id: Date.now().toString(), 
       content, 
-      x: 300, 
+      x: 600, 
       y: 1500, 
-      size: 80 
+      size: 160 
     }]);
   };
 
@@ -198,28 +202,33 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       // 1. Generate High-Res PNG (Transparent Photo Areas)
       const exportCanvas = document.createElement('canvas');
       const exCtx = exportCanvas.getContext('2d')!;
-      exportCanvas.width = 600;
+      exportCanvas.width = 1200;
       exportCanvas.height = 1800;
 
       // Draw everything EXCEPT the photo slots (they must be transparent)
       exCtx.fillStyle = bgColor;
-      exCtx.fillRect(0, 0, 600, 1800);
+      exCtx.fillRect(0, 0, 1200, 1800);
       
       if (bgImage) {
         const img = new Image();
         img.src = bgImage;
-        await new Promise(r => img.onload = () => { exCtx.drawImage(img, 0, 0, 600, 1800); r(null); });
+        await new Promise(r => img.onload = () => { exCtx.drawImage(img, 0, 0, 1200, 1800); r(null); });
       }
 
       // Clear Photo Slots to transparent
-      const margin = 40;
-      const slots = slotCount;
-      const photoH = (1800 - (margin * (slots + 2))) / (slots + 0.8);
-      const photoW = 600 - (margin * 2);
+      const photoW = 504;
+      const photoH = 504;
+      const marginX = 64;
+      const marginY = 64;
+      const cols = 2;
+
       exCtx.globalCompositeOperation = 'destination-out';
-      for (let i = 0; i < slots; i++) {
-        const y = margin + i * (photoH + margin);
-        exCtx.fillRect(margin, y, photoW, photoH);
+      for (let i = 0; i < slotCount; i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        const x = marginX + col * (photoW + marginX);
+        const y = marginY + row * (photoH + marginY);
+        exCtx.fillRect(x, y, photoW, photoH);
       }
       exCtx.globalCompositeOperation = 'source-over';
 
@@ -235,16 +244,16 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       if (logo) {
         const logoImg = new Image();
         logoImg.src = logo;
-        await new Promise(r => logoImg.onload = () => { exCtx.drawImage(logoImg, 600/2 - 60, 1800 - photoH - 40 + 40, 120, 120); r(null); });
+        await new Promise(r => logoImg.onload = () => { exCtx.drawImage(logoImg, 1200/2 - 120, 1800 - 300, 240, 240); r(null); });
       }
 
       exCtx.fillStyle = textColor;
       exCtx.textAlign = 'center';
-      exCtx.font = `bold 42px ${fontFamily}`;
-      exCtx.fillText(heading, 600/2, 1800 - 140);
-      exCtx.font = `24px ${fontFamily}`;
+      exCtx.font = `bold 84px ${fontFamily}`;
+      exCtx.fillText(heading, 1200/2, 1800 - 160);
+      exCtx.font = `48px ${fontFamily}`;
       exCtx.globalAlpha = 0.6;
-      exCtx.fillText(subheading, 600/2, 1800 - 90);
+      exCtx.fillText(subheading, 1200/2, 1800 - 100);
 
       // 2. Upload to Supabase Storage
       const blob = await new Promise<Blob>((resolve) => exportCanvas.toBlob(b => resolve(b!), 'image/png'));
@@ -450,7 +459,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
          <div className="mt-8 flex items-center gap-8">
             <div className="text-center">
                <p className="text-[8px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-[0.4em] mb-2">Target Dimensions</p>
-               <p className="text-sm font-bold text-[var(--color-pawtobooth-dark)]">600 x 1800 <span className="text-[var(--color-pawtobooth-dark)]/40">(Standard 2x6)</span></p>
+               <p className="text-sm font-bold text-[var(--color-pawtobooth-dark)]">1200 x 1800 <span className="text-[var(--color-pawtobooth-dark)]/40">(Standard 4x6)</span></p>
             </div>
             <div className="w-px h-8 bg-black/10" />
             <div className="text-center">

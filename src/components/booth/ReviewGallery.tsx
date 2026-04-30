@@ -50,9 +50,9 @@ export function ReviewGallery({
     
     // Default 2-column layout starting positions
     return {
-      x: 0.05 + col * 0.5, 
-      y: 0.05 + row * 0.3,
-      scale: 1.1
+      x: 0.05333 + col * 0.47333, 
+      y: 0.03555 + row * 0.31555,
+      scale: 1.0
     };
   };
 
@@ -208,7 +208,7 @@ export function ReviewGallery({
                     left: (transforms[i].x || 0) * 100 + '%', 
                     top: (transforms[i].y || 0) * 100 + '%', 
                     scale: transforms[i].scale,
-                    width: '45%', 
+                    width: '42%', 
                     aspectRatio: '1/1',
                     touchAction: 'none',
                     position: 'absolute',

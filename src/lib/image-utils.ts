@@ -66,8 +66,8 @@ export const generatePhotoStrip = async (
     loadedImages.forEach((img, i) => {
       const transform = transforms ? transforms[i] : { x: 0, y: 0, scale: 1 };
       
-      // Match UI width of 45% of card
-      const photoWidth = canvasWidth * 0.45; 
+      // Match UI width of 42% of card
+      const photoWidth = canvasWidth * 0.42; 
       const photoHeight = photoWidth; // 1:1 aspect
 
       const x = (transform.x || 0) * canvasWidth;
