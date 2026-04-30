@@ -14,6 +14,8 @@ export function TemplateGrid() {
   const [newTemplate, setNewTemplate] = useState({ name: '', image_url: '', event_id: '', category: 'General', slot_count: 3 });
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isUploading, setIsUploading] = useState(false);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [customCategories, setCustomCategories] = useState<string[]>(['General', 'Wedding', 'Doodle', 'Pink', 'Birthday', 'Corporate']);
 
   const fetchData = async () => {
     setLoading(true);
@@ -97,6 +99,50 @@ export function TemplateGrid() {
     fetchData();
   };
 
+  const handleRenameCategory = async (oldName: string) => {
+    const newName = prompt(`Rename category "${oldName}" to:`, oldName);
+    if (!newName || newName === oldName) return;
+
+    const { error } = await supabase
+      .from('templates')
+      .update({ category: newName })
+      .eq('category', oldName)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+    if (error) alert(error.message);
+    else {
+      setCustomCategories(prev => prev.map(c => c === oldName ? newName : c));
+      fetchData();
+    }
+  };
+
+  const handleDeleteCategory = async (catName: string) => {
+    if (!confirm(`Delete category "${catName}"? All templates in this category will be moved to "General".`)) return;
+
+    const { error } = await supabase
+      .from('templates')
+      .update({ category: 'General' })
+      .eq('category', catName)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+    if (error) alert(error.message);
+    else {
+      setCustomCategories(prev => prev.filter(c => c !== catName));
+      fetchData();
+    }
+  };
+
+  // Sync custom categories with what's in templates
+  useEffect(() => {
+    if (templates.length > 0) {
+      const existing = Array.from(new Set(templates.map(t => t.category || 'General')));
+      setCustomCategories(prev => {
+        const combined = Array.from(new Set([...prev, ...existing]));
+        return combined.filter(c => c !== 'All'); // Remove 'All' if it slipped in
+      });
+    }
+  }, [templates]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -112,6 +158,12 @@ export function TemplateGrid() {
               <Palette className="w-4 h-4" /> Design Studio
             </button>
             <button 
+              onClick={() => setShowCategoryManager(true)}
+              className="bg-white border border-black/5 text-[var(--color-pawtobooth-dark)]/60 px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-black/5 transition-all shadow-sm"
+            >
+              Manage Categories
+            </button>
+            <button 
               onClick={() => setShowAddModal(true)}
               className="bg-[#3E6B43] text-white px-6 py-2 rounded-full font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-sm hover:bg-[var(--color-pawtobooth-dark)] transition-colors"
             >
@@ -122,7 +174,7 @@ export function TemplateGrid() {
 
        {/* Category Tabs */}
        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {['All', 'General', 'Wedding', 'Doodle', 'Pink', 'Birthday', 'Corporate'].map(cat => (
+          {['All', ...customCategories].map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
@@ -130,7 +182,7 @@ export function TemplateGrid() {
                 "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
                 activeCategory === cat 
                   ? "bg-[var(--color-pawtobooth-dark)] text-white border-[var(--color-pawtobooth-dark)] shadow-md" 
-                  : "bg-white text-[var(--color-pawtobooth-dark)]/40 border-black/5 hover:border-black/20"
+                   : "bg-white text-[var(--color-pawtobooth-dark)]/40 border-black/5 hover:border-black/20"
               )}
             >
               {cat}
@@ -227,12 +279,9 @@ export function TemplateGrid() {
                            className="w-full bg-[var(--color-pawtobooth-light)] border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none text-sm text-[var(--color-pawtobooth-dark)]"
                            required
                          >
-                            <option value="General">General</option>
-                            <option value="Wedding">Wedding</option>
-                            <option value="Doodle">Doodle</option>
-                            <option value="Pink">Pink</option>
-                            <option value="Birthday">Birthday</option>
-                            <option value="Corporate">Corporate</option>
+                            {customCategories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
                          </select>
                       </div>
                    </div>
@@ -298,6 +347,52 @@ export function TemplateGrid() {
             </div>
          </div>
        )}
+
+        {showCategoryManager && (
+          <div className="fixed inset-0 z-[130] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md">
+             <div className="w-full max-w-md bg-white border border-black/10 rounded-[40px] p-10 space-y-8 shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between">
+                   <h3 className="text-xl font-bold uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">Manage Categories</h3>
+                   <button onClick={() => setShowCategoryManager(false)} className="p-2 hover:bg-black/5 rounded-full text-[var(--color-pawtobooth-dark)]/60">
+                      <X className="w-5 h-5" />
+                   </button>
+                </div>
+
+                <div className="space-y-3">
+                   {customCategories.map(cat => (
+                     <div key={cat} className="flex items-center justify-between p-4 bg-[var(--color-pawtobooth-light)] rounded-2xl group border border-transparent hover:border-[#3E6B43]/20 transition-all">
+                        <span className="font-bold text-sm text-[var(--color-pawtobooth-dark)]">{cat}</span>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button 
+                             onClick={() => handleRenameCategory(cat)}
+                             className="p-2 bg-white text-[var(--color-pawtobooth-dark)] rounded-lg shadow-sm hover:text-[#3E6B43]"
+                           >
+                             <Edit2 className="w-4 h-4" />
+                           </button>
+                           {cat !== 'General' && (
+                             <button 
+                               onClick={() => handleDeleteCategory(cat)}
+                               className="p-2 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50"
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </button>
+                           )}
+                        </div>
+                     </div>
+                   ))}
+                   <button 
+                     onClick={() => {
+                        const name = prompt("New Category Name:");
+                        if (name) setCustomCategories(prev => [...new Set([...prev, name])]);
+                     }}
+                     className="w-full py-4 border-2 border-dashed border-black/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-black/20 hover:border-[#3E6B43]/40 hover:text-[#3E6B43] transition-all"
+                   >
+                      + Add New Category
+                   </button>
+                </div>
+             </div>
+          </div>
+        )}
     </div>
   );
 }

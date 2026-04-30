@@ -44,16 +44,23 @@ export function ReviewGallery({
 
   // Helper to get initial grid positions (Normalized 0-1)
   const getInitialGridPos = (idx: number) => {
-    const cols = 2;
-    const row = Math.floor(idx / cols);
-    const col = idx % cols;
+    const col = idx % 2;
+    const row = Math.floor(idx / 2);
     
-    // Default 2-column layout starting positions
-    return {
-      x: 0.05333 + col * 0.47333, 
-      y: 0.01666 + row * 0.29666,
-      scale: 1.0
-    };
+    // Balanced X: 48px/1200=0.04, 648px/1200=0.54
+    const x = col === 0 ? 0.04 : 0.54;
+    
+    // Balanced Y
+    let y = 0;
+    if (slotCount === 6) {
+       // 48/1800, 600/1800, 1152/1800
+       y = [0.0266, 0.3333, 0.64][row];
+    } else {
+       // 120/1800, 744/1800
+       y = [0.0666, 0.4133][row];
+    }
+
+    return { x, y, scale: 1.0 };
   };
 
   const handlePhotoClick = (idx: number) => {

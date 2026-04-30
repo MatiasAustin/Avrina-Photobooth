@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { MaskShape, drawMaskPath } from '../../lib/canvas-shapes';
@@ -14,13 +14,27 @@ interface TemplateEditorProps {
 interface EditorElement {
   id: string;
   type: 'text' | 'image' | 'sticker' | 'timestamp';
-  content: string; // text content or image URL
+  content: string;
   x: number;
   y: number;
   scale: number;
   rotation: number;
   font?: string;
   color?: string;
+  opacity?: number;
+  blendMode?: string;
+}
+
+type TransformType = 'move' | 'scale' | 'rotate';
+interface DragInfo {
+  id: string;
+  type: TransformType;
+  startX: number;
+  startY: number;
+  elStartX: number;
+  elStartY: number;
+  elStartScale: number;
+  elStartRot: number;
 }
 
 export function TemplateEditor({ onClose, onSave, events, initialTemplate }: TemplateEditorProps) {
@@ -28,10 +42,10 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const [name, setName] = useState('New Frame Template');
   const [eventId, setEventId] = useState('');
   const [category, setCategory] = useState('General');
-  const [slotCount, setSlotCount] = useState(3);
+  const [slotCount, setSlotCount] = useState(6);
   
   // Background & Grid Settings
-  const [bgColor, setBgColor] = useState('#ffccd5');
+  const [bgColor, setBgColor] = useState('#ffffff');
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [gridMask, setGridMask] = useState<MaskShape>('square');
   const [frameColor, setFrameColor] = useState<string>('transparent');
@@ -41,6 +55,12 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const [elements, setElements] = useState<EditorElement[]>([]);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
   
+  // Asset Library State
+  const [bgAssets, setBgAssets] = useState<string[]>([]);
+  const [elementAssets, setElementAssets] = useState<string[]>([]);
+  const [showAssetLibrary, setShowAssetLibrary] = useState<{ show: boolean, mode: 'bg' | 'element' }>({ show: false, mode: 'bg' });
+  const [allTemplates, setAllTemplates] = useState<any[]>([]);
+
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.4);
@@ -48,15 +68,46 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragInfo, setDragInfo] = useState<{ id: string, startX: number, startY: number, elStartX: number, elStartY: number } | null>(null);
+  const [dragInfo, setDragInfo] = useState<DragInfo | null>(null);
 
-  // Initial Auto-scaling for Preview
+  // Fetch Assets from existing templates
+  const fetchAssets = async () => {
+    const { data: templates } = await supabase.from('templates').select('*');
+    if (!templates) return;
+    setAllTemplates(templates);
+    
+    const bgs = new Set<string>();
+    const els = new Set<string>();
+
+    for (const t of templates) {
+      try {
+        const rawUrl = t.image_url.split('?')[0];
+        const jsonUrl = rawUrl.replace('.png', '.json');
+        const res = await fetch(jsonUrl);
+        if (res.ok) {
+          const config = await res.json();
+          if (config.bgImage) bgs.add(config.bgImage);
+          if (config.elements) {
+            config.elements.forEach((el: any) => {
+              if (el.type === 'image') els.add(el.content);
+            });
+          }
+        }
+      } catch (e) {}
+    }
+    setBgAssets(Array.from(bgs));
+    setElementAssets(Array.from(els));
+  };
+
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const updateScale = () => {
       if (containerRef.current) {
         const height = containerRef.current.clientHeight;
-        // 1800 is the native height. We leave 100px padding.
         setPreviewScale(Math.min((height - 100) / 1800, 0.5));
       }
     };
@@ -65,13 +116,12 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // Fetch initial template config if editing
   useEffect(() => {
     if (initialTemplate) {
       setName(initialTemplate.name || 'Edited Template');
       setEventId(initialTemplate.event_id || '');
       setCategory(initialTemplate.category || 'General');
-      setSlotCount(initialTemplate.slot_count || 3);
+      setSlotCount(initialTemplate.slot_count || 6);
       
       if (initialTemplate.image_url) {
         const fetchConfig = async () => {
@@ -81,23 +131,20 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
             const res = await fetch(jsonUrl);
             if (res.ok) {
               const data = await res.json();
-              setBgColor(data.bgColor || '#ffccd5');
+              setBgColor(data.bgColor || '#ffffff');
               if (data.bgImage) setBgImage(data.bgImage);
               setGridMask(data.gridMask || 'square');
               setFrameColor(data.frameColor || 'transparent');
               setFrameWidth(data.frameWidth || 0);
               setElements(data.elements || []);
             }
-          } catch (e) {
-            console.error("No json config found, could not restore full state", e);
-          }
+          } catch (e) {}
         };
         fetchConfig();
       }
     }
   }, [initialTemplate]);
 
-  // Render Background and Holes to Canvas
   useEffect(() => {
     const drawBgAndSlots = async () => {
       const canvas = canvasRef.current;
@@ -109,7 +156,6 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       const h = 1800;
       ctx.clearRect(0, 0, w, h);
 
-      // Background
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, w, h);
 
@@ -119,36 +165,41 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         await new Promise(r => img.onload = () => { ctx.drawImage(img, 0, 0, w, h); r(null); });
       }
 
-      // Punch Slots
       const photoW = 504;
       const photoH = 504;
-      const marginX = 64;
-      const marginY = 30;
       const cols = 2;
 
       ctx.globalCompositeOperation = 'destination-out';
       for (let i = 0; i < slotCount; i++) {
-        const row = Math.floor(i / cols);
         const col = i % cols;
-        const x = marginX + col * (photoW + marginX);
-        const y = marginY + row * (photoH + marginY);
+        const row = Math.floor(i / cols);
+        const x = col === 0 ? 48 : 648;
+        let y = 0;
+        if (slotCount === 6) {
+           y = [48, 600, 1152][row];
+        } else {
+           y = [120, 744][row];
+        }
         
         ctx.beginPath();
         drawMaskPath(ctx, gridMask, x, y, photoW, photoH);
         ctx.fill();
       }
 
-      // Draw Frames over holes
       ctx.globalCompositeOperation = 'source-over';
       if (frameColor !== 'transparent' && frameWidth > 0) {
         ctx.strokeStyle = frameColor;
         ctx.lineWidth = frameWidth;
         for (let i = 0; i < slotCount; i++) {
-          const row = Math.floor(i / cols);
           const col = i % cols;
-          const x = marginX + col * (photoW + marginX);
-          const y = marginY + row * (photoH + marginY);
-          
+          const row = Math.floor(i / cols);
+          const x = col === 0 ? 48 : 648;
+          let y = 0;
+          if (slotCount === 6) {
+             y = [48, 600, 1152][row];
+          } else {
+             y = [120, 744][row];
+          }
           ctx.beginPath();
           drawMaskPath(ctx, gridMask, x, y, photoW, photoH);
           ctx.stroke();
@@ -158,24 +209,34 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     drawBgAndSlots();
   }, [bgColor, bgImage, gridMask, slotCount, frameColor, frameWidth]);
 
-  // Drag Handling
-  const handlePointerDown = (e: React.PointerEvent, id: string) => {
+  const handlePointerDown = (e: React.PointerEvent, id: string, type: TransformType = 'move') => {
     e.stopPropagation();
     setActiveElementId(id);
     const el = elements.find(e => e.id === id);
     if (el) {
-      setDragInfo({ id, startX: e.clientX, startY: e.clientY, elStartX: el.x, elStartY: el.y });
+      setDragInfo({ 
+        id, type, startX: e.clientX, startY: e.clientY, 
+        elStartX: el.x, elStartY: el.y, elStartScale: el.scale, elStartRot: el.rotation 
+      });
     }
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!dragInfo) return;
-    const dx = (e.clientX - dragInfo.startX) / previewScale;
-    const dy = (e.clientY - dragInfo.startY) / previewScale;
-    
-    setElements(elements.map(el => 
-      el.id === dragInfo.id ? { ...el, x: dragInfo.elStartX + dx, y: dragInfo.elStartY + dy } : el
-    ));
+    if (dragInfo.type === 'move') {
+      const dx = (e.clientX - dragInfo.startX) / previewScale;
+      const dy = (e.clientY - dragInfo.startY) / previewScale;
+      updateActiveElement({ x: dragInfo.elStartX + dx, y: dragInfo.elStartY + dy });
+    } else if (dragInfo.type === 'scale') {
+      const dx = (e.clientX - dragInfo.startX) / previewScale;
+      const scaleChange = 1 + (dx / 200); 
+      updateActiveElement({ scale: Math.max(0.1, dragInfo.elStartScale * scaleChange) });
+    } else if (dragInfo.type === 'rotate') {
+      const dx = (e.clientX - dragInfo.startX);
+      const dy = (e.clientY - dragInfo.startY);
+      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      updateActiveElement({ rotation: dragInfo.elStartRot + angle });
+    }
   };
 
   const updateActiveElement = (updates: Partial<EditorElement>) => {
@@ -183,14 +244,13 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     setElements(elements.map(el => el.id === activeElementId ? { ...el, ...updates } : el));
   };
 
-  // Element Adders
   const addText = () => {
-    setElements([...elements, { id: Date.now().toString(), type: 'text', content: 'Double Click to Edit', x: 600, y: 1500, scale: 1, rotation: 0, font: 'sans-serif', color: '#000000' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'text', content: 'Double Click to Edit', x: 600, y: 1500, scale: 1, rotation: 0, font: 'sans-serif', color: '#000000', opacity: 1, blendMode: 'source-over' }]);
   };
 
   const addTimestamp = () => {
     const date = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    setElements([...elements, { id: Date.now().toString(), type: 'timestamp', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'timestamp', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000', opacity: 1, blendMode: 'source-over' }]);
   };
 
   const handleImageUpload = (type: 'bg' | 'image', e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,23 +258,24 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (prev) => {
-      if (type === 'bg') setBgImage(prev.target?.result as string);
-      else setElements([...elements, { id: Date.now().toString(), type: 'image', content: prev.target?.result as string, x: 600, y: 900, scale: 1, rotation: 0 }]);
+      const src = prev.target?.result as string;
+      if (type === 'bg') {
+        setBgColor('#ffffff');
+        setBgImage(src);
+        if (!bgAssets.includes(src)) setBgAssets(prev => [...prev, src]);
+      } else {
+        setElements([...elements, { id: Date.now().toString(), type: 'image', content: src, x: 600, y: 900, scale: 1, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
+        if (!elementAssets.includes(src)) setElementAssets(prev => [...prev, src]);
+      }
     };
     reader.readAsDataURL(file);
   };
 
   const addSticker = (emoji: string) => {
-    setElements([...elements, { id: Date.now().toString(), type: 'sticker', content: emoji, x: 600, y: 900, scale: 2, rotation: 0 }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'sticker', content: emoji, x: 600, y: 900, scale: 2, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
   };
 
-  // Export
   const saveTemplate = async () => {
-    if (!eventId) {
-      alert("Please select a Booth to assign this template to.");
-      return;
-    }
-    
     setIsSaving(true);
     try {
       const exportCanvas = document.createElement('canvas');
@@ -222,21 +283,20 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       exportCanvas.height = 1800;
       const ctx = exportCanvas.getContext('2d')!;
 
-      // 1. Draw Canvas Layer (Bg + Holes)
       ctx.drawImage(canvasRef.current!, 0, 0);
 
-      // 2. Draw Elements Layer
       for (const el of elements) {
-        if (el.type === 'timestamp') continue; // Do not bake live timestamp into the PNG
-
+        if (el.type === 'timestamp') continue;
         ctx.save();
         ctx.translate(el.x, el.y);
         ctx.rotate(el.rotation * Math.PI / 180);
         ctx.scale(el.scale, el.scale);
+        if (el.opacity !== undefined) ctx.globalAlpha = el.opacity;
+        if (el.blendMode) ctx.globalCompositeOperation = el.blendMode as GlobalCompositeOperation;
 
         if (el.type === 'text' || el.type === 'sticker') {
           ctx.font = `bold 64px ${el.font || 'sans-serif'}`;
-          if (el.color) ctx.fillStyle = el.color;
+          ctx.fillStyle = el.color || '#000000';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(el.content, 0, 0);
@@ -244,78 +304,42 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
           const img = new Image();
           img.src = el.content;
           await new Promise(r => img.onload = r);
-          
-          let drawW = img.width;
-          let drawH = img.height;
+          let drawW = img.width, drawH = img.height;
           if (drawW > 500 || drawH > 500) {
              const ratio = Math.min(500 / drawW, 500 / drawH);
-             drawW *= ratio;
-             drawH *= ratio;
+             drawW *= ratio, drawH *= ratio;
           }
           ctx.drawImage(img, -drawW/2, -drawH/2, drawW, drawH);
         }
         ctx.restore();
       }
 
-      // 3. Upload to Supabase Storage
       const blob = await new Promise<Blob>((resolve) => exportCanvas.toBlob(b => resolve(b!), 'image/png'));
       const fileName = `${Date.now()}-${name.replace(/ /g, '_')}.png`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('templates')
-        .upload(fileName, blob);
-
+      const { data: uploadData, error: uploadError } = await supabase.storage.from('templates').upload(fileName, blob);
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('templates')
-        .getPublicUrl(fileName);
-
-      // Upload JSON config state
+      const { data: { publicUrl } } = supabase.storage.from('templates').getPublicUrl(fileName);
       const jsonFileName = fileName.replace('.png', '.json');
-      const configBlob = new Blob([JSON.stringify({
-        bgColor, bgImage, gridMask, frameColor, frameWidth, elements
-      })], { type: 'application/json' });
-      
+      const configBlob = new Blob([JSON.stringify({ bgColor, bgImage, gridMask, frameColor, frameWidth, elements })], { type: 'application/json' });
       await supabase.storage.from('templates').upload(jsonFileName, configBlob);
 
-      // Append timestamp config to URL if exists
       let finalUrl = publicUrl;
       const tsElements = elements.filter(e => e.type === 'timestamp');
       if (tsElements.length > 0) {
-         const tsConfigs = tsElements.map(el => ({ 
-           x: el.x, y: el.y, s: el.scale, c: el.color, f: el.font, r: el.rotation 
-         }));
+         const tsConfigs = tsElements.map(el => ({ x: el.x, y: el.y, s: el.scale, c: el.color, f: el.font, r: el.rotation }));
          finalUrl += `?ts=${encodeURIComponent(JSON.stringify(tsConfigs))}`;
       }
 
-      // 4. Save to Database
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Authentication required");
+      const templateData = { name, user_id: user?.id, event_id: eventId || null, image_url: finalUrl, category, slot_count: slotCount };
 
-      const templateData = {
-        name,
-        user_id: user.id,
-        event_id: eventId || null,
-        image_url: finalUrl,
-        category: category,
-        slot_count: slotCount
-      };
-
-      let dbError;
-      if (initialTemplate) {
-        const { error } = await supabase.from('templates').update(templateData).eq('id', initialTemplate.id);
-        dbError = error;
-      } else {
-        const { error } = await supabase.from('templates').insert(templateData);
-        dbError = error;
-      }
-
-      if (dbError) throw dbError;
+      if (initialTemplate) await supabase.from('templates').update(templateData).eq('id', initialTemplate.id);
+      else await supabase.from('templates').insert(templateData);
       
       onSave();
     } catch (e: any) {
-      alert(`Error saving template: ${e.message}`);
+      alert(`Error saving: ${e.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -325,7 +349,6 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
 
   return (
     <div className="fixed inset-0 z-[120] bg-white flex flex-col lg:flex-row animate-in fade-in duration-500">
-      {/* Editor Sidebar */}
       <div className="w-full lg:w-[450px] bg-[var(--color-pawtobooth-light)] border-r border-black/5 flex flex-col h-full shadow-2xl z-20 overflow-hidden">
          <div className="p-6 border-b border-black/5 flex items-center justify-between bg-white">
             <h2 className="text-xl font-black italic uppercase tracking-tighter text-[var(--color-pawtobooth-dark)]">Template <span className="text-[#3E6B43]">Studio</span></h2>
@@ -333,150 +356,123 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
          </div>
 
          <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
-            
-            {/* Properties */}
             <div className="space-y-4">
                <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block">Project Info</label>
-               <input 
-                 value={name}
-                 onChange={e => setName(e.target.value)}
-                 placeholder="Template Name"
-                 className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none transition-colors text-[var(--color-pawtobooth-dark)] shadow-sm font-bold"
-               />
+               <input value={name} onChange={e => setName(e.target.value)} placeholder="Template Name" className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none shadow-sm font-bold" />
                <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                   <select value={eventId} onChange={e => setEventId(e.target.value)} className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none text-xs shadow-sm">
-                     <option value="">Select Booth...</option>
-                     {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                   </select>
-                 </div>
-                 <div className="space-y-2">
-                   <select value={slotCount} onChange={e => setSlotCount(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl focus:border-[#3E6B43] outline-none text-xs shadow-sm font-bold">
-                      <option value={3}>3 Slots</option>
-                      <option value={4}>4 Slots</option>
-                      <option value={6}>6 Slots</option>
-                   </select>
-                 </div>
+                  <div className="space-y-2">
+                    <p className="text-[8px] font-bold uppercase opacity-30 pl-2">Assign Booth</p>
+                    <select value={eventId} onChange={e => setEventId(e.target.value)} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold shadow-sm">
+                      <option value="">Global (All Booths)</option>
+                      {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[8px] font-bold uppercase opacity-30 pl-2">Photo Slots</p>
+                    <select value={slotCount} onChange={e => setSlotCount(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold shadow-sm">
+                       <option value={4}>4 Slots (2x2)</option>
+                       <option value={6}>6 Slots (2x3)</option>
+                    </select>
+                  </div>
                </div>
             </div>
 
             <hr className="border-black/5" />
 
-            {/* Grid Mask & Background */}
             <div className="space-y-4">
                <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><Layers className="w-3 h-3"/> Layout & Background</label>
-               
                <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                   <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Grid Shape</span>
-                   <select value={gridMask} onChange={e => setGridMask(e.target.value as MaskShape)} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs shadow-sm font-bold outline-none">
-                      <option value="square">Square</option>
-                      <option value="circle">Circle</option>
-                      <option value="heart">Love / Heart</option>
-                      <option value="arch">Arch Window</option>
-                      <option value="flower">Flower</option>
-                   </select>
-                 </div>
-                 <div className="space-y-2">
-                   <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Frame Line</span>
-                   <select value={frameWidth} onChange={e => setFrameWidth(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs shadow-sm font-bold outline-none">
-                      <option value={0}>No Frame</option>
-                      <option value={4}>Thin Frame</option>
-                      <option value={12}>Thick Frame</option>
-                      <option value={24}>Bold Frame</option>
-                   </select>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                     <p className="text-[8px] text-[var(--color-pawtobooth-dark)]/40 uppercase font-bold">BG Color</p>
-                     <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg border border-black/5" />
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Grid Shape</span>
+                    <select value={gridMask} onChange={e => setGridMask(e.target.value as MaskShape)} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold">
+                       <option value="square">Square</option>
+                       <option value="circle">Circle</option>
+                       <option value="heart">Heart</option>
+                       <option value="arch">Arch</option>
+                    </select>
                   </div>
-                  {frameWidth > 0 && (
-                  <div className="space-y-1">
-                     <p className="text-[8px] text-[var(--color-pawtobooth-dark)]/40 uppercase font-bold">Frame Color</p>
-                     <input type="color" value={frameColor === 'transparent' ? '#ffffff' : frameColor} onChange={e => setFrameColor(e.target.value)} className="w-full h-10 bg-transparent cursor-pointer rounded-lg border border-black/5" />
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Frame</span>
+                    <select value={frameWidth} onChange={e => setFrameWidth(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold">
+                       <option value={0}>None</option>
+                       <option value={4}>Thin</option>
+                       <option value={12}>Bold</option>
+                    </select>
                   </div>
-                  )}
                </div>
-
-               <div className="flex gap-2">
-                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all">
-                    <Upload className="w-3 h-3" /> {bgImage ? 'Change BG Image' : 'Upload Pattern/BG'}
+               <div className="space-y-3">
+                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all">
+                    <Upload className="w-3 h-3" /> Upload New Background
                     <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={e => handleImageUpload('bg', e)} />
                  </label>
-                 {bgImage && <button onClick={() => setBgImage(null)} className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4"/></button>}
+                 <button 
+                   onClick={() => setShowAssetLibrary({ show: true, mode: 'bg' })} 
+                   className="w-full py-3 bg-white border border-black/5 rounded-xl text-[10px] font-black uppercase hover:bg-black/5 shadow-sm transition-all text-[var(--color-pawtobooth-dark)]/60"
+                 >
+                   Browse Background Library ({bgAssets.length})
+                 </button>
                </div>
             </div>
 
             <hr className="border-black/5" />
 
-            {/* Elements Adder */}
             <div className="space-y-4">
                <label className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/60 uppercase tracking-widest block flex items-center gap-2"><Plus className="w-3 h-3"/> Add Elements</label>
+               <div className="p-4 bg-blue-50 border border-blue-100 rounded-[24px] space-y-1">
+                  <p className="text-[8px] font-black uppercase text-blue-600">Asset Guide</p>
+                  <p className="text-[9px] text-blue-800/70 leading-tight">
+                    • **Background**: 1200x1800 px recommended.<br/>
+                    • **Element**: Resolution varies, ensure it's not too small to avoid blur.<br/>
+                    • **Transparency**: Use PNG-24 for element transparency.
+                  </p>
+               </div>
                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={addText} className="py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5"><Type className="w-3 h-3 inline mr-2"/> Text</button>
-                  <button onClick={addTimestamp} className="py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5">Time Stamp</button>
-                  <label className="py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5 text-center cursor-pointer">
-                    <ImageIcon className="w-3 h-3 inline mr-2"/> Watermark/Logo
+                  <button onClick={addText} className="py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase hover:bg-black/5 shadow-sm">Add Text</button>
+                  <button onClick={addTimestamp} className="py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase hover:bg-black/5 shadow-sm">Add Time</button>
+               </div>
+               <div className="space-y-3">
+                  <label className="w-full py-3 bg-white border border-black/5 rounded-xl text-[10px] font-bold uppercase hover:bg-black/5 text-center cursor-pointer shadow-sm block">
+                    + Upload New Element/Logo
                     <input type="file" className="hidden" accept="image/png" onChange={e => handleImageUpload('image', e)} />
                   </label>
-               </div>
-               
-               <div className="flex gap-2 flex-wrap bg-white p-3 rounded-xl border border-black/5">
-                 <span className="text-[10px] font-bold opacity-40 uppercase w-full mb-1">Quick Stickers</span>
-                  {['❤️', '✨', '🌸', '🥳', '🎁', '⭐', '💍', '🥂'].map(s => (
-                    <button key={s} onClick={() => addSticker(s)} className="w-8 h-8 rounded hover:bg-black/5 text-xl">{s}</button>
-                  ))}
-                 <label className="w-full mt-2 py-2 bg-black/5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black/10 text-center cursor-pointer">
-                   <Upload className="w-3 h-3 inline mr-2"/> Custom Sticker
-                   <input type="file" className="hidden" accept="image/png" onChange={e => handleImageUpload('sticker' as any, e)} />
-                 </label>
+                  <button 
+                    onClick={() => setShowAssetLibrary({ show: true, mode: 'element' })} 
+                    className="w-full py-3 bg-white border border-black/5 rounded-xl text-[10px] font-black uppercase hover:bg-black/5 shadow-sm transition-all text-[var(--color-pawtobooth-dark)]/60"
+                  >
+                    Browse Element Library ({elementAssets.length})
+                  </button>
                </div>
             </div>
 
-            {/* Active Element Tools */}
             {activeElement && (
-              <div className="space-y-4 p-4 bg-[#3E6B43]/5 border border-[#3E6B43]/20 rounded-2xl animate-in slide-in-from-bottom-4">
+              <div className="p-4 bg-[#3E6B43]/5 border border-[#3E6B43]/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black text-[#3E6B43] uppercase tracking-widest">Active Element</label>
-                    <div className="flex gap-2">
-                      <button onClick={() => setElements([...elements, { ...activeElement, id: Date.now().toString(), x: activeElement.x + 20, y: activeElement.y + 20 }])} className="text-[#3E6B43] hover:scale-110 px-1 font-bold text-xs">DUP</button>
-                      <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
-                    </div>
+                    <label className="text-[10px] font-black text-[#3E6B43] uppercase">Active Element</label>
+                    <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
                  </div>
-                 
                  {(activeElement.type === 'text' || activeElement.type === 'timestamp') && (
-                    <div className="space-y-3">
-                       <input 
-                         value={activeElement.content}
-                         onChange={e => updateActiveElement({ content: e.target.value })}
-                         className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm outline-none"
-                       />
-                       <div className="flex gap-2">
-                         <input type="color" value={activeElement.color} onChange={e => updateActiveElement({ color: e.target.value })} className="w-10 h-10 bg-white rounded-lg border border-[#3E6B43]/20 cursor-pointer" />
-                         <select value={activeElement.font} onChange={e => updateActiveElement({ font: e.target.value })} className="flex-1 bg-white border border-[#3E6B43]/20 rounded-lg text-xs px-2 outline-none">
-                            <option value="sans-serif">Modern Sans</option>
-                            <option value="serif">Classic Serif</option>
-                            <option value="monospace">Mono Station</option>
-                            <option value="'Comic Sans MS', cursive">Doodle</option>
-                         </select>
-                       </div>
-                    </div>
+                    <input value={activeElement.content} onChange={e => updateActiveElement({ content: e.target.value })} className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm" />
                  )}
-
-                 <div className="flex items-center justify-between gap-2 pt-2">
-                    <button onClick={() => updateActiveElement({ scale: activeElement.scale * 1.1 })} className="p-2 bg-white rounded-lg shadow-sm hover:bg-[#3E6B43] hover:text-white transition-colors flex-1 flex justify-center"><Plus className="w-4 h-4"/></button>
-                    <button onClick={() => updateActiveElement({ scale: activeElement.scale * 0.9 })} className="p-2 bg-white rounded-lg shadow-sm hover:bg-[#3E6B43] hover:text-white transition-colors flex-1 flex justify-center"><Minus className="w-4 h-4"/></button>
-                    <button onClick={() => updateActiveElement({ rotation: activeElement.rotation + 15 })} className="p-2 bg-white rounded-lg shadow-sm hover:bg-[#3E6B43] hover:text-white transition-colors flex-1 flex justify-center"><RotateCw className="w-4 h-4"/></button>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-bold uppercase opacity-40">Opacity</p>
+                       <input type="range" min="0" max="1" step="0.01" value={activeElement.opacity ?? 1} onChange={e => updateActiveElement({ opacity: parseFloat(e.target.value) })} className="w-full accent-[#3E6B43]" />
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[8px] font-bold uppercase opacity-40">Blend</p>
+                       <select value={activeElement.blendMode || 'source-over'} onChange={e => updateActiveElement({ blendMode: e.target.value })} className="w-full bg-white border border-black/5 rounded-lg text-[10px] p-1 font-bold">
+                          <option value="source-over">Normal</option>
+                          <option value="multiply">Multiply</option>
+                          <option value="screen">Screen</option>
+                          <option value="overlay">Overlay</option>
+                       </select>
+                    </div>
                  </div>
               </div>
             )}
          </div>
       </div>
 
-      {/* Main Preview Area */}
       <div 
         ref={containerRef}
         className="flex-1 bg-[var(--color-pawtobooth-beige)] flex flex-col items-center justify-center relative overflow-hidden"
@@ -485,83 +481,83 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         onPointerLeave={() => setDragInfo(null)}
         onPointerDown={() => setActiveElementId(null)}
       >
-         <div className="absolute top-8 left-8 flex items-center gap-3 z-50">
-            <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest">Wysiwyg Drag & Drop Editor</span>
-         </div>
-
          <div className="absolute top-8 right-8 z-50">
-            <button 
-              onClick={saveTemplate}
-              disabled={isSaving}
-              className="px-6 py-3 bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] font-black uppercase text-xs tracking-[0.2em] rounded-xl flex items-center justify-center gap-2 hover:bg-[#3E6B43] active:scale-95 transition-all shadow-xl disabled:opacity-50"
-            >
-               {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save className="w-4 h-4" />}
-               Deploy Design
+            <button onClick={saveTemplate} disabled={isSaving} className="px-8 py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-xl flex items-center gap-3 shadow-2xl disabled:opacity-50">
+               {isSaving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Deploy Design
             </button>
          </div>
 
-         {/* The 1200x1800 Canvas Container */}
          <div 
-           className="absolute top-1/2 left-1/2 bg-white shadow-2xl transition-transform ease-out duration-100"
-           style={{ 
-             width: 1200, 
-             height: 1800, 
-             transform: `translate(-50%, -50%) scale(${previewScale})`,
-             cursor: dragInfo ? 'grabbing' : 'default'
-           }}
+           className="absolute top-1/2 left-1/2 bg-white shadow-2xl transition-transform"
+           style={{ width: 1200, height: 1800, transform: `translate(-50%, -50%) scale(${previewScale})` }}
          >
-            {/* Base Layer: Background + Masks + Frames rendered via Canvas */}
             <canvas ref={canvasRef} width={1200} height={1800} className="absolute inset-0 pointer-events-none" />
-
-            {/* Visual Helper: Grid Background showing through the transparent holes */}
-            <div className="absolute inset-0 -z-10 bg-[url('https://transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
-
-            {/* Elements Layer: DOM overlays */}
             {elements.map(el => (
-              <div 
-                key={el.id}
-                onPointerDown={(e) => handlePointerDown(e, el.id)}
-                style={{
-                  position: 'absolute',
-                  left: el.x,
-                  top: el.y,
-                  transform: `translate(-50%, -50%) rotate(${el.rotation}deg) scale(${el.scale})`,
-                  cursor: activeElementId === el.id ? 'move' : 'pointer',
-                  border: activeElementId === el.id ? '4px dashed rgba(62,107,67,0.5)' : 'none',
-                  padding: activeElementId === el.id ? '10px' : '0',
-                  userSelect: 'none',
-                  touchAction: 'none'
-                }}
-              >
-                {(el.type === 'text' || el.type === 'timestamp') && (
-                   <span style={{ fontFamily: el.font, fontSize: '64px', color: el.color, fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
-                     {el.content}
-                   </span>
-                )}
-                {el.type === 'image' && (
-                   <img src={el.content} style={{ maxWidth: '500px', maxHeight: '500px', pointerEvents: 'none' }} />
-                )}
-                {el.type === 'sticker' && (
-                   <span style={{ fontSize: '64px', pointerEvents: 'none', lineHeight: 1 }}>{el.content}</span>
-                )}
-                
-                {/* On-Element Transform Controls */}
-                {activeElementId === el.id && (
-                  <div 
-                    className="absolute -bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-white p-2 shadow-2xl"
-                    style={{ pointerEvents: 'auto', transform: `scale(${1/Math.max(0.1, el.scale)})` }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ scale: el.scale * 1.1 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><Plus className="h-6 w-6"/></button>
-                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ scale: el.scale * 0.9 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><Minus className="h-6 w-6"/></button>
-                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ rotation: el.rotation + 15 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><RotateCw className="h-6 w-6"/></button>
-                  </div>
-                )}
-              </div>
+               <div key={el.id} onPointerDown={(e) => handlePointerDown(e, el.id)}
+                 style={{
+                   position: 'absolute', left: el.x, top: el.y, transform: `translate(-50%, -50%) rotate(${el.rotation}deg) scale(${el.scale})`,
+                   cursor: 'move', border: activeElementId === el.id ? '2px solid #3E6B43' : 'none', padding: '10px',
+                   opacity: el.opacity ?? 1, mixBlendMode: el.blendMode as any
+                 }}
+               >
+                  {el.type === 'image' ? <img src={el.content} style={{ maxWidth: '500px', maxHeight: '500px' }} /> : 
+                   <span style={{ fontFamily: el.font, fontSize: '64px', color: el.color, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{el.content}</span>}
+                  
+                  {activeElementId === el.id && (
+                    <>
+                      <div onPointerDown={(e) => handlePointerDown(e, el.id, 'scale')} className="absolute -top-2 -right-2 w-6 h-6 bg-white border-2 border-[#3E6B43] rounded-full cursor-nesw-resize shadow-lg" />
+                      <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                        <div onPointerDown={(e) => handlePointerDown(e, el.id, 'rotate')} className="w-10 h-10 bg-white border-2 border-[#3E6B43] rounded-full flex items-center justify-center cursor-grab shadow-lg">
+                           <RotateCw className="w-5 h-5 text-[#3E6B43]" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+               </div>
             ))}
          </div>
       </div>
+
+      {showAssetLibrary.show && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-12 bg-black/60 backdrop-blur-md">
+           <div className="w-full max-w-4xl bg-white rounded-[50px] p-12 space-y-8 shadow-2xl relative">
+              <button onClick={() => setShowAssetLibrary({ ...showAssetLibrary, show: false })} className="absolute top-8 right-8 p-3 hover:bg-black/5 rounded-full"><X /></button>
+              <div className="space-y-1">
+                 <h3 className="text-2xl font-black uppercase tracking-tight">{showAssetLibrary.mode === 'bg' ? 'Background' : 'Element'} Library</h3>
+                 <p className="text-xs font-mono uppercase opacity-30 tracking-widest">Select from previously uploaded {showAssetLibrary.mode === 'bg' ? 'backgrounds' : 'elements'}</p>
+              </div>
+              <div className="grid grid-cols-4 gap-6 max-h-[60vh] overflow-y-auto pr-4">
+                 {(showAssetLibrary.mode === 'bg' ? bgAssets : elementAssets).map(url => {
+                    const isUsed = allTemplates.some(t => t.image_url?.includes(url));
+                    return (
+                      <div key={url} className="group relative aspect-square bg-neutral-100 rounded-3xl overflow-hidden border-2 border-transparent hover:border-[#3E6B43]">
+                         <img src={url} className="w-full h-full object-contain p-2" />
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <button onClick={() => { 
+                               if (showAssetLibrary.mode === 'element') {
+                                 setElements([...elements, { id: Date.now().toString(), type: 'image', content: url, x: 600, y: 900, scale: 1, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
+                               } else {
+                                 setBgColor('#ffffff'), setBgImage(url);
+                               }
+                               setShowAssetLibrary({ ...showAssetLibrary, show: false });
+                            }} className="p-3 bg-white text-[#3E6B43] rounded-xl hover:scale-110 transition-transform"><Check /></button>
+                            <button onClick={async () => {
+                               if (isUsed) return alert("Cannot delete: Asset is still used in templates.");
+                               if (!confirm("Delete asset from library?")) return;
+                               if (showAssetLibrary.mode === 'bg') setBgAssets(prev => prev.filter(a => a !== url));
+                               else setElementAssets(prev => prev.filter(a => a !== url));
+                            }} className={cn("p-3 bg-white text-red-500 rounded-xl hover:scale-110", isUsed && "opacity-20")}>
+                               <Trash2 className="w-4 h-4" />
+                            </button>
+                         </div>
+                      </div>
+                    );
+                 })}
+                 {(showAssetLibrary.mode === 'bg' ? bgAssets : elementAssets).length === 0 && <p className="col-span-4 text-center py-20 text-black/20 font-bold uppercase italic">No assets found</p>}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
