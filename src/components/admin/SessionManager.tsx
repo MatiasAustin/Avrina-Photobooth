@@ -11,23 +11,37 @@ import {
   Eye,
   MoreVertical,
   Calendar,
-  CreditCard
+  CreditCard,
+  Edit3
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Session, EventConfig } from '../../types';
+import { Session, EventConfig, PhotoTemplate } from '../../types';
 import { cn } from '../../lib/utils';
+import { generatePhotoStrip, PhotoTransform } from '../../lib/image-utils';
+import { ReviewGallery } from '../booth/ReviewGallery';
 
 interface SessionManagerProps {
   sessions: Session[];
   events: EventConfig[];
+  templates: PhotoTemplate[];
   onUpdate: () => void;
 }
 
-export function SessionManager({ sessions, events, onUpdate }: SessionManagerProps) {
+export function SessionManager({ sessions, events, templates, onUpdate }: SessionManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEventId, setSelectedEventId] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [isSavingLayout, setIsSavingLayout] = useState(false);
+
+  const getSessionPhotos = (session: Session) => {
+    if (!session.photos) return [];
+    if (typeof session.photos === 'string') {
+      try { return JSON.parse(session.photos); } catch { return []; }
+    }
+    return session.photos;
+  };
 
   const filteredSessions = sessions.filter(session => {
     const matchesSearch = session.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -87,6 +101,47 @@ export function SessionManager({ sessions, events, onUpdate }: SessionManagerPro
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleFinalizeEdit = async (arrangedPhotos: string[], transforms: PhotoTransform[]) => {
+    if (!editingSession) return;
+    setIsSavingLayout(true);
+    try {
+      const template = templates.find(t => t.id === editingSession.template_id) || null;
+      const event = events.find(e => e.id === editingSession.event_id);
+      
+      const finalStripBase64 = await generatePhotoStrip(arrangedPhotos, transforms, template, event?.name);
+      if (!finalStripBase64) throw new Error("Generated strip is empty");
+      
+      const blob = await fetch(finalStripBase64).then(r => r.blob());
+      const fileName = `session-${Date.now()}-edited.jpg`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('result')
+        .upload(fileName, blob);
+
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('result')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('sessions')
+        .update({ final_photo_url: publicUrl })
+        .eq('id', editingSession.id);
+
+      if (updateError) throw updateError;
+      
+      alert("Layout updated successfully!");
+      setEditingSession(null);
+      onUpdate();
+    } catch (e: any) {
+      console.error(e);
+      alert(`Failed to save layout: ${e.message}`);
+    } finally {
+      setIsSavingLayout(false);
+    }
   };
 
   return (
@@ -227,6 +282,14 @@ export function SessionManager({ sessions, events, onUpdate }: SessionManagerPro
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-end gap-2">
                           <button 
+                            onClick={() => setEditingSession(session)}
+                            disabled={getSessionPhotos(session).length === 0}
+                            className="p-3 rounded-xl bg-[var(--color-pawtobooth-light)] border border-black/5 text-[var(--color-pawtobooth-dark)]/60 hover:bg-blue-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Edit Layout"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button 
                             onClick={() => session.final_photo_url && handleDownload(session.final_photo_url, session.id)}
                             disabled={!session.final_photo_url}
                             className="p-3 rounded-xl bg-[var(--color-pawtobooth-light)] border border-black/5 text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43] hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
@@ -292,6 +355,14 @@ export function SessionManager({ sessions, events, onUpdate }: SessionManagerPro
                      <Eye className="w-6 h-6" />
                    </button>
                    <div className="flex items-center gap-4">
+                      <button 
+                        onClick={() => setEditingSession(session)}
+                        disabled={getSessionPhotos(session).length === 0}
+                        className="w-10 h-10 bg-white/20 hover:bg-white rounded-full flex items-center justify-center text-white hover:text-blue-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Edit Layout"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={() => session.final_photo_url && handleDownload(session.final_photo_url, session.id)}
                         className="w-10 h-10 bg-white/20 hover:bg-white rounded-full flex items-center justify-center text-white hover:text-[var(--color-pawtobooth-dark)] transition-all"
@@ -396,6 +467,42 @@ export function SessionManager({ sessions, events, onUpdate }: SessionManagerPro
                  </button>
               </div>
            </div>
+        </div>
+      )}
+
+      {/* Edit Session Modal Override */}
+      {editingSession && (
+        <div className="fixed inset-0 z-[200] bg-[var(--color-pawtobooth-beige)] overflow-y-auto">
+          <div className="sticky top-0 z-50 p-6 flex justify-between items-center bg-[var(--color-pawtobooth-beige)]/80 backdrop-blur-md border-b border-black/5">
+            <div>
+              <h3 className="text-2xl font-black uppercase tracking-tight italic">Edit Session Layout</h3>
+              <p className="text-[10px] font-mono text-black/40 uppercase tracking-widest">{editingSession.id}</p>
+            </div>
+            <button 
+              onClick={() => setEditingSession(null)}
+              className="px-6 py-3 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+            >
+              Cancel Edit
+            </button>
+          </div>
+          
+          <div className="relative pointer-events-auto">
+            {isSavingLayout && (
+              <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 border-4 border-[#3E6B43]/30 border-t-[#3E6B43] rounded-full animate-spin" />
+                <p className="text-xs font-black uppercase tracking-widest text-[#3E6B43]">Saving Layout...</p>
+              </div>
+            )}
+            <ReviewGallery 
+              photos={getSessionPhotos(editingSession)}
+              slotCount={templates.find(t => t.id === editingSession.template_id)?.slot_count || 3}
+              templateImageUrl={templates.find(t => t.id === editingSession.template_id)?.image_url}
+              onRetake={() => {}}
+              onSelectiveRetake={() => {}}
+              onFinalize={handleFinalizeEdit}
+              isAdminMode={true}
+            />
+          </div>
         </div>
       )}
     </div>

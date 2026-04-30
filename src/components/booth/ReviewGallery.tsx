@@ -2,12 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RefreshCcw, Check, MousePointer2, Image as ImageIcon, RotateCcw, Move, ZoomIn } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { cn } from '../../lib/utils';
-
-interface PhotoTransform {
-  x: number;
-  y: number;
-  scale: number;
-}
+import { PhotoTransform } from '../../lib/image-utils';
 
 interface ReviewGalleryProps {
   photos: string[];
@@ -17,6 +12,7 @@ interface ReviewGalleryProps {
   onSelectiveRetake: (index: number) => void;
   onFinalize: (arrangedPhotos: string[], transforms: PhotoTransform[]) => void;
   isTimeout?: boolean;
+  isAdminMode?: boolean;
 }
 
 export function ReviewGallery({ 
@@ -26,7 +22,8 @@ export function ReviewGallery({
   onRetake, 
   onSelectiveRetake,
   onFinalize,
-  isTimeout = false 
+  isTimeout = false,
+  isAdminMode = false
 }: ReviewGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -140,7 +137,7 @@ export function ReviewGallery({
                   </AnimatePresence>
                 </button>
 
-                {!isTimeout && (
+                {!isTimeout && !isAdminMode && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); onSelectiveRetake(i); }}
                     className="absolute bottom-4 right-4 p-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-black/5 text-[#3E6B43] opacity-0 group-hover:opacity-100 transition-all hover:scale-110 flex items-center gap-2 z-20"
@@ -155,22 +152,24 @@ export function ReviewGallery({
         </div>
 
         <div className="flex items-center gap-6 pt-12">
-          <button 
-            onClick={onRetake}
-            disabled={isTimeout}
-            className={cn(
-              "flex items-center gap-4 border px-12 py-6 rounded-full transition-all uppercase text-xs font-black tracking-[0.2em] shadow-sm",
-              isTimeout ? "opacity-50 grayscale cursor-not-allowed" : "border-black/10 text-black/40 hover:text-white hover:bg-red-500 hover:border-red-500 bg-white"
-            )}
-          >
-            <RefreshCcw className="w-5 h-5" /> Reset Selection
-          </button>
+          {!isAdminMode && (
+            <button 
+              onClick={onRetake}
+              disabled={isTimeout}
+              className={cn(
+                "flex items-center gap-4 border px-12 py-6 rounded-full transition-all uppercase text-xs font-black tracking-[0.2em] shadow-sm",
+                isTimeout ? "opacity-50 grayscale cursor-not-allowed" : "border-black/10 text-black/40 hover:text-white hover:bg-red-500 hover:border-red-500 bg-white"
+              )}
+            >
+              <RefreshCcw className="w-5 h-5" /> Reset Selection
+            </button>
+          )}
           <button 
             onClick={() => onFinalize(arrangedPhotos, transforms)}
             disabled={!isComplete}
             className="flex-1 flex items-center justify-center gap-4 bg-[#3E6B43] text-white px-12 py-6 rounded-full font-black uppercase text-sm tracking-[0.2em] hover:scale-[1.02] hover:bg-black transition-all shadow-xl shadow-[#3E6B43]/20 disabled:opacity-20 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {isComplete ? 'Confirm Layout' : `Select ${slotCount - selectedIndices.length} More`} 
+            {isComplete ? (isAdminMode ? 'Save Layout' : 'Confirm Layout') : `Select ${slotCount - selectedIndices.length} More`} 
             <Check className="w-7 h-7 bg-white/20 rounded-full p-1" />
           </button>
         </div>
@@ -194,10 +193,8 @@ export function ReviewGallery({
               {selectedIndices.map((photoIdx, i) => (
                 <motion.div
                   key={`slot-${photoIdx}`}
-                  drag
-                  dragMomentum={false}
-                  onDragStart={() => setActiveEditIdx(i)}
-                  onDrag={(e, info) => {
+                  onPanStart={() => setActiveEditIdx(i)}
+                  onPan={(e, info) => {
                     if (!containerRef.current) return;
                     const rect = containerRef.current.getBoundingClientRect();
                     

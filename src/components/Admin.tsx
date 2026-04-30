@@ -24,6 +24,7 @@ export function Admin({ session }: AdminProps) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [printJobs, setPrintJobs] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -82,6 +83,14 @@ export function Admin({ session }: AdminProps) {
              if (printError) throw printError;
              setPrintJobs(printData || []);
         }
+
+        // 4. Fetch Templates for the user
+        const { data: templatesData, error: templatesError } = await supabase
+          .from('templates')
+          .select('*')
+          .eq('user_id', session?.user?.id);
+        
+        if (!templatesError) setTemplates(templatesData || []);
       }
     } catch (e) {
       console.error("Dashboard fetch error", e);
@@ -207,6 +216,7 @@ export function Admin({ session }: AdminProps) {
                 <SessionManager 
                   sessions={sessions} 
                   events={events}
+                  templates={templates}
                   onUpdate={fetchData}
                 />
               )}
