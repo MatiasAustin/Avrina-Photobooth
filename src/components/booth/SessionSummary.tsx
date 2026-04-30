@@ -17,7 +17,7 @@ interface SessionSummaryProps {
 
 export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onReset }: SessionSummaryProps) {
   const [email, setEmail] = useState('');
-  const [showEmailInput, setShowEmailInput] = useState(true);
+  const [showEmailInput, setShowEmailInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [printStatus, setPrintStatus] = useState<'idle' | 'printing' | 'done'>('idle');
