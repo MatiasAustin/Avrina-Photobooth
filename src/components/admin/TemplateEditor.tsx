@@ -64,6 +64,8 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.4);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState<string | null>(initialTemplate?.id || null);
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -286,7 +288,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     setElements([...elements, { id: Date.now().toString(), type: 'sticker', content: emoji, x: 600, y: 900, scale: 2, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
   };
 
-  const saveTemplate = async () => {
+  const saveTemplate = async (shouldClose: boolean = true) => {
     setIsSaving(true);
     try {
       const exportCanvas = document.createElement('canvas');
@@ -343,12 +345,25 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      const templateData = { name, user_id: user?.id, event_id: eventId || null, image_url: finalUrl, category, slot_count: slotCount };
+      const templateData = { 
+        name, 
+        user_id: user?.id, 
+        event_id: eventId || null, 
+        image_url: finalUrl, 
+        category, 
+        slot_count: slotCount,
+        is_published: shouldClose // Assume if they publish, it's published
+      };
 
-      if (initialTemplate) await supabase.from('templates').update(templateData).eq('id', initialTemplate.id);
-      else await supabase.from('templates').insert(templateData);
+      if (templateId) {
+        await supabase.from('templates').update(templateData).eq('id', templateId);
+      } else {
+        const { data: newTemplate } = await supabase.from('templates').insert(templateData).select().single();
+        if (newTemplate) setTemplateId(newTemplate.id);
+      }
       
-      onSave();
+      setLastSaved(new Date().toLocaleTimeString());
+      if (shouldClose) onSave();
     } catch (e: any) {
       alert(`Error saving: ${e.message}`);
     } finally {
@@ -493,9 +508,32 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         onPointerLeave={() => setDragInfo(null)}
         onPointerDown={() => setActiveElementId(null)}
       >
-         <div className="absolute top-8 right-8 z-50">
-            <button onClick={saveTemplate} disabled={isSaving} className="px-8 py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-xl flex items-center gap-3 shadow-2xl disabled:opacity-50">
-               {isSaving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Deploy Design
+         <div className="absolute top-8 left-8 flex items-center gap-4 z-50">
+            <div className="flex items-center gap-2">
+               <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-pulse" />
+               <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest font-black">Live Editor</span>
+            </div>
+            {lastSaved && (
+               <span className="text-[10px] font-mono text-[#3E6B43]/60 bg-[#3E6B43]/5 px-3 py-1 rounded-full flex items-center gap-2 border border-[#3E6B43]/10">
+                  <Check className="w-3 h-3" /> Draft Saved: {lastSaved}
+               </span>
+            )}
+         </div>
+
+         <div className="absolute top-8 right-8 z-50 flex items-center gap-3">
+            <button 
+              onClick={() => saveTemplate(false)} 
+              disabled={isSaving} 
+              className="px-6 py-4 bg-white border border-black/5 text-[var(--color-pawtobooth-dark)] font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-black/5 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+            >
+               Save Draft
+            </button>
+            <button 
+              onClick={() => saveTemplate(true)} 
+              disabled={isSaving} 
+              className="px-8 py-4 bg-[var(--color-pawtobooth-dark)] text-white font-black uppercase text-xs tracking-widest rounded-xl flex items-center gap-3 shadow-2xl disabled:opacity-50 hover:bg-[#3E6B43] active:scale-95 transition-all"
+            >
+               {isSaving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Publish & Exit
             </button>
          </div>
 
