@@ -1,9 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon, Search, PlusCircle, Bookmark } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon, Search, PlusCircle, Bookmark, Copy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { MaskShape, drawMaskPath } from '../../lib/canvas-shapes';
 import { ALL_GOOGLE_FONTS } from '../../lib/fonts';
+
+const BLEND_MODES = [
+  { label: 'Normal', value: 'normal', canvas: 'source-over' },
+  { label: 'Multiply', value: 'multiply', canvas: 'multiply' },
+  { label: 'Screen', value: 'screen', canvas: 'screen' },
+  { label: 'Overlay', value: 'overlay', canvas: 'overlay' },
+  { label: 'Darken', value: 'darken', canvas: 'darken' },
+  { label: 'Lighten', value: 'lighten', canvas: 'lighten' },
+  { label: 'Color Dodge', value: 'color-dodge', canvas: 'color-dodge' },
+  { label: 'Color Burn', value: 'color-burn', canvas: 'color-burn' },
+  { label: 'Hard Light', value: 'hard-light', canvas: 'hard-light' },
+  { label: 'Soft Light', value: 'soft-light', canvas: 'soft-light' },
+  { label: 'Difference', value: 'difference', canvas: 'difference' },
+  { label: 'Exclusion', value: 'exclusion', canvas: 'exclusion' },
+];
 
 const DEFAULT_FONTS = [
   'Inter', 'Playfair Display', 'Dancing Script', 'Montserrat', 'Pacifico', 
@@ -75,6 +90,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
 
   // Font Browser State
   const [showFontBrowser, setShowFontBrowser] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [fontSearch, setFontSearch] = useState('');
   const [systemFonts, setSystemFonts] = useState<string[]>(() => {
     const saved = localStorage.getItem('pawtobooth_saved_fonts');
@@ -326,13 +342,27 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     setElements(elements.map(el => el.id === activeElementId ? { ...el, ...updates } : el));
   };
 
+  const duplicateElement = () => {
+    if (!activeElementId) return;
+    const el = elements.find(e => e.id === activeElementId);
+    if (!el) return;
+    const newEl = { 
+      ...el, 
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 5), 
+      x: el.x + 40, 
+      y: el.y + 40 
+    };
+    setElements([...elements, newEl]);
+    setActiveElementId(newEl.id);
+  };
+
   const addText = () => {
-    setElements([...elements, { id: Date.now().toString(), type: 'text', content: 'Double Click to Edit', x: 600, y: 1500, scale: 1, rotation: 0, font: 'sans-serif', color: '#000000', opacity: 1, blendMode: 'source-over' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'text', content: 'Double Click to Edit', x: 600, y: 1500, scale: 1, rotation: 0, font: 'sans-serif', color: '#000000', opacity: 1, blendMode: 'normal' }]);
   };
 
   const addTimestamp = () => {
     const date = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    setElements([...elements, { id: Date.now().toString(), type: 'timestamp', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000', opacity: 1, blendMode: 'source-over' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'timestamp', content: date, x: 600, y: 1650, scale: 0.5, rotation: 0, font: 'monospace', color: '#000000', opacity: 1, blendMode: 'normal' }]);
   };
 
   const handleImageUpload = (type: 'bg' | 'image', e: React.ChangeEvent<HTMLInputElement>) => {
@@ -346,7 +376,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         setBgImage(src);
         if (!bgAssets.includes(src)) setBgAssets(prev => [...prev, src]);
       } else {
-        setElements([...elements, { id: Date.now().toString(), type: 'image', content: src, x: 600, y: 900, scale: 1, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
+        setElements([...elements, { id: Date.now().toString(), type: 'image', content: src, x: 600, y: 900, scale: 1, rotation: 0, opacity: 1, blendMode: 'normal' }]);
         if (!elementAssets.includes(src)) setElementAssets(prev => [...prev, src]);
       }
     };
@@ -354,7 +384,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   };
 
   const addSticker = (emoji: string) => {
-    setElements([...elements, { id: Date.now().toString(), type: 'sticker', content: emoji, x: 600, y: 900, scale: 2, rotation: 0, opacity: 1, blendMode: 'source-over' }]);
+    setElements([...elements, { id: Date.now().toString(), type: 'sticker', content: emoji, x: 600, y: 900, scale: 2, rotation: 0, opacity: 1, blendMode: 'normal' }]);
   };
 
   const saveTemplate = async (shouldClose: boolean = true) => {
@@ -386,7 +416,9 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         ctx.rotate(el.rotation * Math.PI / 180);
         ctx.scale(el.scale, el.scale);
         if (el.opacity !== undefined) ctx.globalAlpha = el.opacity;
-        if (el.blendMode) ctx.globalCompositeOperation = el.blendMode as GlobalCompositeOperation;
+        const bm = BLEND_MODES.find(m => m.value === el.blendMode);
+        if (bm) ctx.globalCompositeOperation = bm.canvas as GlobalCompositeOperation;
+        else if (el.blendMode) ctx.globalCompositeOperation = el.blendMode as GlobalCompositeOperation;
 
         if (el.type === 'text' || el.type === 'sticker') {
           ctx.font = `bold 64px ${el.font || 'sans-serif'}`;
@@ -562,30 +594,125 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
               <div className="p-4 bg-[#3E6B43]/5 border border-[#3E6B43]/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
                  <div className="flex justify-between items-center">
                     <label className="text-[10px] font-black text-[#3E6B43] uppercase">Active Element</label>
-                    <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
+                    <div className="flex gap-3">
+                       <div className="group/tooltip relative">
+                          <button 
+                            onClick={duplicateElement} 
+                            className="text-[#3E6B43] hover:scale-110 transition-transform p-1 bg-white rounded-lg shadow-sm border border-[#3E6B43]/10"
+                          >
+                             <Copy className="w-4 h-4"/>
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[8px] font-bold rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                             DUPLICATE ELEMENT
+                          </div>
+                       </div>
+                       <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110 p-1 bg-white rounded-lg shadow-sm border border-red-100"><Trash2 className="w-4 h-4"/></button>
+                    </div>
                  </div>
                  {(activeElement.type === 'text' || activeElement.type === 'timestamp') && (
                     <div className="space-y-3">
                        <input value={activeElement.content} onChange={e => updateActiveElement({ content: e.target.value })} className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm" />
                        <div className="flex gap-2">
                          <input type="color" value={activeElement.color} onChange={e => updateActiveElement({ color: e.target.value })} className="w-10 h-10 bg-white rounded-lg border border-[#3E6B43]/20 cursor-pointer" />
-                         <select 
-                           value={activeElement.font} 
-                           onChange={e => { updateActiveElement({ font: e.target.value }); injectFont(e.target.value); loadFont(e.target.value); }} 
-                           className="flex-1 bg-white border border-[#3E6B43]/20 rounded-lg text-xs px-2 outline-none font-bold"
-                           style={{ fontFamily: activeElement.font }}
-                         >
-                             {systemFonts.map(f => (
-                               <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
-                             ))}
-                         </select>
+                         <div className="flex-1 relative">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
+                              className="w-full h-10 bg-white border border-[#3E6B43]/20 rounded-lg px-4 flex items-center justify-between hover:border-[#3E6B43] transition-all shadow-sm group/btn"
+                            >
+                               <span className="text-xs font-black truncate" style={{ fontFamily: activeElement.font }}>
+                                 {activeElement.font || 'Select Font'}
+                               </span>
+                               <FontIcon className="w-3 h-3 opacity-20 group-hover/btn:rotate-12 transition-transform" />
+                            </button>
+
+                            {showDropdown && (
+                              <div 
+                                className="absolute bottom-full mb-2 left-0 w-72 bg-white rounded-[32px] shadow-2xl border border-black/5 z-[200] flex flex-col max-h-[450px] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                 <div className="p-5 border-b border-black/5 space-y-3 bg-[var(--color-pawtobooth-light)]/50">
+                                    <div className="flex items-center justify-between">
+                                       <p className="text-[10px] font-black uppercase tracking-widest text-[#3E6B43]">Typeface Finder</p>
+                                       <button onClick={() => setShowDropdown(false)} className="text-black/20 hover:text-black"><X className="w-4 h-4"/></button>
+                                    </div>
+                                    <div className="relative">
+                                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black/20" />
+                                       <input 
+                                         autoFocus
+                                         type="text" 
+                                         placeholder="Search 100+ professional fonts..."
+                                         value={fontSearch}
+                                         onChange={e => setFontSearch(e.target.value)}
+                                         className="w-full pl-10 pr-4 py-3 bg-white border-none rounded-2xl text-[10px] font-bold focus:ring-2 ring-[#3E6B43]/20 outline-none shadow-inner"
+                                       />
+                                    </div>
+                                 </div>
+
+                                 <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
+                                    <div className="space-y-2">
+                                       <div className="px-3 flex items-center justify-between">
+                                          <p className="text-[8px] font-black uppercase text-black/30 tracking-widest flex items-center gap-2 italic"><Bookmark className="w-2.5 h-2.5 text-[#3E6B43]"/> Favorites & Recent</p>
+                                       </div>
+                                       <div className="grid grid-cols-1 gap-1.5">
+                                          {systemFonts.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(font => (
+                                            <button 
+                                              key={font}
+                                              onPointerEnter={() => injectFont(font)}
+                                              onClick={() => {
+                                                updateActiveElement({ font });
+                                                injectFont(font).then(() => loadFont(font));
+                                                setShowDropdown(false);
+                                              }}
+                                              className={cn(
+                                                "w-full px-4 py-4 rounded-2xl text-left hover:bg-[#3E6B43]/5 transition-all group/item flex flex-col gap-1 border-2 border-transparent",
+                                                activeElement.font === font ? "bg-[#3E6B43]/10 border-[#3E6B43]/20" : "hover:border-[#3E6B43]/5"
+                                              )}
+                                            >
+                                               <p className="text-base leading-none text-[var(--color-pawtobooth-dark)]" style={{ fontFamily: `"${font}", sans-serif` }}>The quick brown fox</p>
+                                               <p className="text-[7px] font-black uppercase text-black/20 tracking-widest">{font}</p>
+                                            </button>
+                                          ))}
+                                       </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                       <div className="px-3 flex items-center justify-between">
+                                          <p className="text-[8px] font-black uppercase text-black/30 tracking-widest flex items-center gap-2 italic"><PlusCircle className="w-2.5 h-2.5 text-[#3E6B43]"/> Library Explore</p>
+                                       </div>
+                                       <div className="grid grid-cols-1 gap-1.5">
+                                          {ALL_GOOGLE_FONTS
+                                            .filter(f => !systemFonts.includes(f) && f.toLowerCase().includes(fontSearch.toLowerCase()))
+                                            .slice(0, 40)
+                                            .map(font => (
+                                            <button 
+                                              key={font}
+                                              onPointerEnter={() => injectFont(font)}
+                                              onClick={() => {
+                                                addFontToSystem(font);
+                                                updateActiveElement({ font });
+                                                injectFont(font).then(() => loadFont(font));
+                                                setShowDropdown(false);
+                                              }}
+                                              className="w-full px-4 py-4 rounded-2xl text-left hover:bg-[#3E6B43]/5 transition-all group/item flex flex-col gap-1 border-2 border-transparent hover:border-[#3E6B43]/5"
+                                            >
+                                               <p className="text-base leading-none text-[var(--color-pawtobooth-dark)]/60 group-hover/item:text-[var(--color-pawtobooth-dark)]" style={{ fontFamily: `"${font}", sans-serif` }}>The quick brown fox</p>
+                                               <p className="text-[7px] font-black uppercase text-black/10 tracking-widest group-hover/item:text-[#3E6B43]/40">{font}</p>
+                                               <link rel="stylesheet" href={`https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&text=Thequickbrownfox&display=swap`} />
+                                            </button>
+                                          ))}
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                            )}
+                         </div>
+
                          <button 
-                             onClick={() => setShowFontBrowser(true)}
-                             className="p-2 bg-[#3E6B43]/10 text-[#3E6B43] rounded-lg hover:bg-[#3E6B43] hover:text-white transition-all"
-                             title="Browse More Fonts"
+                             onClick={() => { setFontSearch(''); setShowFontBrowser(true); }}
+                             className="p-2 bg-[#3E6B43]/10 text-[#3E6B43] rounded-lg hover:bg-[#3E6B43] hover:text-white transition-all shadow-sm"
                            >
                              <Search className="w-4 h-4" />
-                           </button>
+                         </button>
                        </div>
                     </div>
                  )}
@@ -595,22 +722,17 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                        <input type="range" min="0" max="1" step="0.01" value={activeElement.opacity ?? 1} onChange={e => updateActiveElement({ opacity: parseFloat(e.target.value) })} className="w-full accent-[#3E6B43]" />
                     </div>
                     <div className="space-y-1">
-                       <p className="text-[8px] font-bold uppercase opacity-40">Blend</p>
-                       <select value={activeElement.blendMode || 'source-over'} onChange={e => updateActiveElement({ blendMode: e.target.value })} className="w-full bg-white border border-black/5 rounded-lg text-[10px] p-1 font-bold">
-                          <option value="source-over">Normal</option>
-                          <option value="multiply">Multiply</option>
-                          <option value="screen">Screen</option>
-                          <option value="overlay">Overlay</option>
-                          <option value="darken">Darken</option>
-                          <option value="lighten">Lighten</option>
-                          <option value="color-dodge">Color Dodge</option>
-                          <option value="color-burn">Color Burn</option>
-                          <option value="hard-light">Hard Light</option>
-                          <option value="soft-light">Soft Light</option>
-                          <option value="difference">Difference</option>
-                          <option value="exclusion">Exclusion</option>
-                       </select>
-                    </div>
+                        <p className="text-[8px] font-bold uppercase opacity-40">Blend Mode</p>
+                        <select 
+                          value={activeElement.blendMode || 'normal'} 
+                          onChange={e => updateActiveElement({ blendMode: e.target.value })} 
+                          className="w-full bg-white border border-[#3E6B43]/20 rounded-lg text-[10px] p-2 font-bold outline-none"
+                        >
+                           {BLEND_MODES.map(m => (
+                             <option key={m.value} value={m.value}>{m.label}</option>
+                           ))}
+                        </select>
+                     </div>
                  </div>
               </div>
             )}
@@ -623,7 +745,10 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         onPointerMove={handlePointerMove}
         onPointerUp={() => setDragInfo(null)}
         onPointerLeave={() => setDragInfo(null)}
-        onPointerDown={() => setActiveElementId(null)}
+        onPointerDown={() => {
+          setActiveElementId(null);
+          setShowDropdown(false);
+        }}
       >
          <div className="absolute top-8 left-8 flex items-center gap-4 z-50">
             <div className="flex items-center gap-2">
