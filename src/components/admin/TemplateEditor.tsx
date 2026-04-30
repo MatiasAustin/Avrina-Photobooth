@@ -361,6 +361,18 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       exportCanvas.height = 1800;
       const ctx = exportCanvas.getContext('2d')!;
 
+      // Safety Margin: Shrink content slightly (96%) to prevent cutoff by printer expansion
+      const scaleFactor = 0.96;
+      const offsetX = (1200 * (1 - scaleFactor)) / 2;
+      const offsetY = (1800 * (1 - scaleFactor)) / 2;
+
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, 1200, 1800);
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scaleFactor, scaleFactor);
+      
       ctx.drawImage(canvasRef.current!, 0, 0);
 
       for (const el of elements) {
@@ -391,6 +403,8 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         }
         ctx.restore();
       }
+
+      ctx.restore(); // Final restore from safe zone scale
 
       const blob = await new Promise<Blob>((resolve) => exportCanvas.toBlob(b => resolve(b!), 'image/png'));
       const fileName = `${Date.now()}-${name.replace(/ /g, '_')}.png`;

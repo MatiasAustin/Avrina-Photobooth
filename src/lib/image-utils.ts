@@ -27,9 +27,19 @@ export const generatePhotoStrip = async (
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
+    // Safety Margin: Shrink content slightly (96%) to prevent cutoff by printer expansion
+    const scaleFactor = 0.96;
+    const offsetX = (canvasWidth * (1 - scaleFactor)) / 2;
+    const offsetY = (canvasHeight * (1 - scaleFactor)) / 2;
+
     // Solid color background first
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Apply global transformation for the safe zone
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scaleFactor, scaleFactor);
 
     // Load images with type-specific handling
     const loadedImages: HTMLImageElement[] = await Promise.all(
@@ -145,7 +155,9 @@ export const generatePhotoStrip = async (
        } catch (e) { console.error("Failed to parse timestamp config", e); }
     }
 
-    const result = canvas.toDataURL('image/jpeg', 0.8);
+    ctx.restore(); // Restore from safe zone scale
+
+    const result = canvas.toDataURL('image/jpeg', 0.85);
     // Fail-safe: if string is too short, the canvas export failed
     if (result.length < 1000) {
       throw new Error("Canvas export produced invalid data");
