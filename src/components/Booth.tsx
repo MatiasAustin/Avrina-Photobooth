@@ -32,6 +32,9 @@ export function Booth() {
   const [qrisData, setQrisData] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
+  const [userFilter, setUserFilter] = useState<string>('');
+  const [userMirror, setUserMirror] = useState<boolean>(true);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ show: true, message, type });
@@ -151,6 +154,7 @@ export function Booth() {
         activeStream.current = await navigator.mediaDevices.getUserMedia({ 
           video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' } 
         });
+        setCameraStream(activeStream.current);
       }
       
       const isCaptureState = ['countdown', 'capture', 'review_shot'].includes(state);
@@ -292,15 +296,15 @@ export function Booth() {
         context.fillStyle = '#000000';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Draw Video (Respecting Mirror & Filter)
+        // 2. Draw Video (Respecting User Mirror & Filter selection)
         context.save();
-        if (event?.is_mirrored !== false) {
+        if (userMirror) {
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
         }
         
-        if (event?.camera_filter) {
-          context.filter = event.camera_filter;
+        if (userFilter) {
+          context.filter = userFilter;
         }
 
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -442,8 +446,8 @@ export function Booth() {
           autoPlay 
           playsInline 
           muted 
-          style={{ filter: event?.camera_filter || '' }}
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${state === 'idle' ? 'opacity-30' : 'opacity-100'} ${event?.is_mirrored !== false ? 'scale-x-[-1]' : ''}`}
+          style={{ filter: userFilter || undefined }}
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${state === 'idle' ? 'opacity-30' : 'opacity-100'} ${userMirror ? 'scale-x-[-1]' : ''}`}
         />
       </div>
 
@@ -476,6 +480,11 @@ export function Booth() {
             selectedTemplateId={selectedTemplate?.id}
             onSelect={setSelectedTemplate}
             onProceed={proceedToCapture}
+            cameraStream={cameraStream}
+            cameraFilter={userFilter}
+            isMirrored={userMirror}
+            onFilterChange={setUserFilter}
+            onMirrorToggle={() => setUserMirror(p => !p)}
           />
         )}
 
@@ -488,10 +497,12 @@ export function Booth() {
             totalShots={Math.max(event?.shot_count || 3, selectedTemplate?.slot_count || 0)}
             lastCapturedPhoto={capturedPhotos[capturedPhotos.length - 1]}
             state={state}
-            onRetake={() => {}} // Not used anymore as we have auto-advance
+            onRetake={() => {}}
             onNext={handleShotNext}
             isTimeout={isTimeout}
             globalTimeLeft={globalTimeLeft}
+            cameraFilter={userFilter}
+            isMirrored={userMirror}
           />
         )}
 

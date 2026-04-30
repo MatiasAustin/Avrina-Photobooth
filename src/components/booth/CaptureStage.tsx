@@ -15,6 +15,8 @@ interface CaptureStageProps {
   onNext: () => void;
   isTimeout?: boolean;
   globalTimeLeft?: number | null;
+  cameraFilter?: string;
+  isMirrored?: boolean;
 }
 
 export function CaptureStage({ 
@@ -28,7 +30,9 @@ export function CaptureStage({
   onRetake,
   onNext,
   isTimeout = false,
-  globalTimeLeft = null
+  globalTimeLeft = null,
+  cameraFilter = '',
+  isMirrored = true
 }: CaptureStageProps) {
   const formatTime = (seconds: number | null) => {
     if (seconds === null) return '--:--';
@@ -73,7 +77,8 @@ export function CaptureStage({
               autoPlay 
               playsInline 
               muted 
-              className="w-full h-full object-cover scale-x-[-1]" 
+              style={{ filter: cameraFilter || undefined }}
+              className={`w-full h-full object-cover ${isMirrored ? 'scale-x-[-1]' : ''}`}
             />
           )}
         </div>

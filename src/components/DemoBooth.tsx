@@ -255,6 +255,11 @@ export function DemoBooth() {
             selectedTemplateId={selectedTemplate?.id}
             onSelect={setSelectedTemplate}
             onProceed={proceedToCapture}
+            cameraStream={activeStream.current}
+            cameraFilter=""
+            isMirrored={true}
+            onFilterChange={() => {}}
+            onMirrorToggle={() => {}}
           />
         )}
 
