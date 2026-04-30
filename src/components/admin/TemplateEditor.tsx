@@ -61,7 +61,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       const photoW = 504;
       const photoH = 504;
       const marginX = 64;
-      const marginY = 64;
+      const marginY = 30;
       const cols = 2;
 
       for (let i = 0; i < slotCount; i++) {
@@ -219,7 +219,7 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
       const photoW = 504;
       const photoH = 504;
       const marginX = 64;
-      const marginY = 64;
+      const marginY = 30;
       const cols = 2;
 
       exCtx.globalCompositeOperation = 'destination-out';

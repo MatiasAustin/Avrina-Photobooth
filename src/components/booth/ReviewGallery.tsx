@@ -51,7 +51,7 @@ export function ReviewGallery({
     // Default 2-column layout starting positions
     return {
       x: 0.05333 + col * 0.47333, 
-      y: 0.03555 + row * 0.31555,
+      y: 0.01666 + row * 0.29666,
       scale: 1.0
     };
   };
