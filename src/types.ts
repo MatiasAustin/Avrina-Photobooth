@@ -34,6 +34,7 @@ export interface Session {
   payment_status: 'pending' | 'paid' | 'free' | 'cancelled';
   payment_id?: string;
   final_photo_url?: string;
+  customer_phone?: string;
   created_at: string;
 }
 

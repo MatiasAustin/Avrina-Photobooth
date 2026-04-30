@@ -12,7 +12,10 @@ import {
   MoreVertical,
   Calendar,
   CreditCard,
-  Edit3
+  Edit3,
+  MessageCircle,
+  Share2,
+  Phone
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Session, EventConfig, PhotoTemplate } from '../../types';
@@ -101,6 +104,26 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleWhatsAppShare = (session: Session) => {
+    const phone = session.customer_phone;
+    if (!phone) {
+      const manualPhone = prompt("Enter customer WhatsApp number (e.g. 628123456789):");
+      if (manualPhone) {
+        // Update DB then share
+        supabase.from('sessions').update({ customer_phone: manualPhone }).eq('id', session.id).then(() => {
+          onUpdate();
+          const url = `${window.location.origin}/gallery/${session.id}`;
+          const text = encodeURIComponent(`Hi! Here are your photos from the photobooth: ${url}\n\nThank you for joining us!`);
+          window.open(`https://wa.me/${manualPhone.replace(/\D/g, '')}?text=${text}`, '_blank');
+        });
+      }
+      return;
+    }
+    const url = `${window.location.origin}/gallery/${session.id}`;
+    const text = encodeURIComponent(`Hi! Here are your photos from the photobooth: ${url}\n\nThank you for joining us!`);
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${text}`, '_blank');
   };
 
   const handleFinalizeEdit = async (arrangedPhotos: string[], transforms: PhotoTransform[]) => {
@@ -244,7 +267,11 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                           <div>
                             <p className="text-xs font-black uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">{session.id}</p>
                             <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase">
-                              {session.payment_id || 'NO PAYMENT ID'}
+                              {session.customer_phone ? (
+                                <span className="text-[#25D366] font-bold">WA: {session.customer_phone}</span>
+                              ) : (
+                                session.payment_id || 'NO PAYMENT ID'
+                              )}
                             </p>
                           </div>
                         </div>
@@ -281,6 +308,18 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleWhatsAppShare(session)}
+                            className={cn(
+                              "p-3 rounded-xl border transition-all",
+                              session.customer_phone 
+                                ? "bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366] hover:text-white" 
+                                : "bg-[var(--color-pawtobooth-light)] border-black/5 text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43] hover:text-white"
+                            )}
+                            title="Share to WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
                           <button 
                             onClick={() => setEditingSession(session)}
                             disabled={getSessionPhotos(session).length === 0}
@@ -355,6 +394,18 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                      <Eye className="w-6 h-6" />
                    </button>
                    <div className="flex items-center gap-4">
+                       <button 
+                         onClick={() => handleWhatsAppShare(session)}
+                         className={cn(
+                           "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                           session.customer_phone 
+                             ? "bg-[#25D366] text-white" 
+                             : "bg-white/20 text-white hover:bg-[#3E6B43]"
+                         )}
+                         title="Share to WhatsApp"
+                       >
+                         <MessageCircle className="w-4 h-4" />
+                       </button>
                       <button 
                         onClick={() => setEditingSession(session)}
                         disabled={getSessionPhotos(session).length === 0}

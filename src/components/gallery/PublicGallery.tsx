@@ -89,10 +89,45 @@ export function PublicGallery() {
       </header>
 
       <main className="max-w-xl mx-auto p-6 space-y-12 pb-32">
-         <div className="space-y-2 text-center pt-8">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Your Moments <br/><span className="text-[#3E6B43]/60">Frozen In Time</span></h2>
-            <p className="text-[var(--color-pawtobooth-dark)]/60 text-xs uppercase tracking-widest font-mono">Captured {new Date(session.created_at).toLocaleDateString()}</p>
-         </div>
+          <div className="space-y-2 text-center pt-8">
+             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-[var(--color-pawtobooth-dark)]">Your Moments <br/><span className="text-[#3E6B43]/60">Frozen In Time</span></h2>
+             <p className="text-[var(--color-pawtobooth-dark)]/60 text-xs uppercase tracking-widest font-mono">Captured {new Date(session.created_at).toLocaleDateString()}</p>
+          </div>
+
+          {/* Final Photo Strip (Premium Presentation) */}
+          {session.final_photo_url && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-8"
+            >
+               <div className="relative aspect-[4/6] max-w-sm mx-auto bg-white rounded-[3rem] p-4 shadow-2xl border-2 border-black/5 group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none rounded-[3rem]" />
+                  <img src={session.final_photo_url} className="w-full h-full object-contain bg-white rounded-[2rem]" />
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
+                     <button 
+                       onClick={() => handleDownload(session.final_photo_url, 999)}
+                       className="px-8 py-4 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:-translate-y-1 hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-2xl active:scale-95"
+                     >
+                        <Download className="w-5 h-5" /> Download Full Strip
+                     </button>
+                  </div>
+               </div>
+               
+               <div className="flex flex-col items-center gap-2 pt-4">
+                  <div className="flex items-center gap-2 px-4 py-1.5 bg-[#3E6B43]/5 border border-[#3E6B43]/20 rounded-full">
+                     <div className="w-1.5 h-1.5 bg-[#3E6B43] rounded-full animate-pulse" />
+                     <span className="text-[9px] font-black text-[#3E6B43] uppercase tracking-[0.2em]">High Resolution Template</span>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+
+          <div className="flex items-center gap-4 py-8">
+             <div className="h-[1px] flex-1 bg-black/5" />
+             <span className="text-[10px] font-black text-black/20 uppercase tracking-[0.4em]">Individual Photos</span>
+             <div className="h-[1px] flex-1 bg-black/5" />
+          </div>
 
          {/* Photo Feed */}
          <div className="space-y-12">
