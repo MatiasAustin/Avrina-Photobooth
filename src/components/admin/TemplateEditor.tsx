@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon, Search, PlusCircle, Bookmark, Copy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
@@ -71,6 +71,9 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const [gridMask, setGridMask] = useState<MaskShape>('square');
   const [frameColor, setFrameColor] = useState<string>('transparent');
   const [frameWidth, setFrameWidth] = useState<number>(0);
+  const [bgScale, setBgScale] = useState(1);
+  const [bgX, setBgX] = useState(0);
+  const [bgY, setBgY] = useState(0);
 
   // Elements
   const [elements, setElements] = useState<EditorElement[]>([]);
@@ -190,6 +193,9 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
               const data = await res.json();
               setBgColor(data.bgColor || '#ffffff');
               if (data.bgImage) setBgImage(data.bgImage);
+              setBgScale(data.bgScale || 1);
+              setBgX(data.bgX || 0);
+              setBgY(data.bgY || 0);
               setGridMask(data.gridMask || 'square');
               setFrameColor(data.frameColor || 'transparent');
               setFrameWidth(data.frameWidth || 0);
@@ -250,7 +256,14 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       if (bgImage) {
         const img = new Image();
         img.src = bgImage;
-        await new Promise(r => img.onload = () => { ctx.drawImage(img, 0, 0, w, h); r(null); });
+        await new Promise(r => img.onload = () => { 
+          const drawW = w * bgScale;
+          const drawH = h * bgScale;
+          const drawX = (w - drawW) / 2 + bgX;
+          const drawY = (h - drawH) / 2 + bgY;
+          ctx.drawImage(img, drawX, drawY, drawW, drawH); 
+          r(null); 
+        });
       }
 
       const photoW = 504;
@@ -306,7 +319,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       }
     };
     drawBgAndSlots();
-  }, [bgColor, bgImage, gridMask, slotCount, frameColor, frameWidth]);
+  }, [bgColor, bgImage, gridMask, slotCount, frameColor, frameWidth, bgScale, bgX, bgY]);
 
   const handlePointerDown = (e: React.PointerEvent, id: string, type: TransformType = 'move') => {
     e.stopPropagation();
@@ -403,7 +416,14 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       if (bgImage) {
         const img = new Image();
         img.src = bgImage;
-        await new Promise(r => img.onload = () => { ctx.drawImage(img, 0, 0, 1200, 1800); r(null); });
+        await new Promise(r => img.onload = () => { 
+          const drawW = 1200 * bgScale;
+          const drawH = 1800 * bgScale;
+          const drawX = (1200 - drawW) / 2 + bgX;
+          const drawY = (1800 - drawH) / 2 + bgY;
+          ctx.drawImage(img, drawX, drawY, drawW, drawH); 
+          r(null); 
+        });
       }
 
       // 2. Punch Holes (Slots)
@@ -502,7 +522,17 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
 
       const { data: { publicUrl } } = supabase.storage.from('templates').getPublicUrl(fileName);
       const jsonFileName = fileName.replace('.png', '.json');
-      const configBlob = new Blob([JSON.stringify({ bgColor, bgImage, gridMask, frameColor, frameWidth, elements })], { type: 'application/json' });
+      const configBlob = new Blob([JSON.stringify({ 
+        bgColor, 
+        bgImage, 
+        bgScale,
+        bgX,
+        bgY,
+        gridMask, 
+        frameColor, 
+        frameWidth, 
+        elements 
+      })], { type: 'application/json' });
       await supabase.storage.from('templates').upload(jsonFileName, configBlob, { upsert: true });
 
       let finalUrl = publicUrl;
@@ -607,21 +637,85 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Frame</span>
-                    <select value={frameWidth} onChange={e => setFrameWidth(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold">
-                       <option value={0}>None</option>
-                       <option value={4}>Thin</option>
-                       <option value={12}>Bold</option>
-                    </select>
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Border Color</span>
+                    <div className="flex items-center gap-3 bg-white border border-black/5 p-3 rounded-xl h-[58px]">
+                       <input 
+                         type="color" 
+                         value={frameColor === 'transparent' ? '#000000' : frameColor} 
+                         onChange={e => setFrameColor(e.target.value)}
+                         className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                       />
+                       <select 
+                         value={frameColor === 'transparent' ? 'none' : 'solid'} 
+                         onChange={e => e.target.value === 'none' ? setFrameColor('transparent') : setFrameColor('#000000')}
+                         className="flex-1 bg-transparent text-[10px] font-bold outline-none"
+                       >
+                          <option value="none">No Border</option>
+                          <option value="solid">Solid Color</option>
+                       </select>
+                    </div>
                   </div>
                </div>
+               
+               <div className="space-y-2">
+                 <div className="flex justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Border Thickness</span>
+                    <span className="text-[10px] font-bold opacity-40 pr-2">{frameWidth}px</span>
+                 </div>
+                 <input 
+                   type="range" min="0" max="60" value={frameWidth} 
+                   onChange={e => setFrameWidth(parseInt(e.target.value))}
+                   className="w-full accent-[#3E6B43]"
+                 />
+               </div>
                <div className="space-y-3">
-                 <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all">
-                    <Upload className="w-3 h-3" /> Upload New Background
-                    <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={e => handleImageUpload('bg', e)} />
-                 </label>
-                 <button 
-                   onClick={() => setShowAssetLibrary({ show: true, mode: 'bg' })} 
+                 <div className="flex gap-2">
+                   <label className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-black/5 shadow-sm rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-[#3E6B43] hover:text-white transition-all">
+                      <Upload className="w-3 h-3" /> Upload Background
+                      <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={e => handleImageUpload('bg', e)} />
+                   </label>
+                   {bgImage && (
+                     <button
+                       onClick={() => { setBgImage(null); setBgScale(1); setBgX(0); setBgY(0); }}
+                       className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100"
+                       title="Remove Background"
+                     >
+                       <Trash2 className="w-4 h-4" />
+                     </button>
+                   )}
+                 </div>
+
+                 {bgImage && (
+                   <div className="p-4 bg-white border border-black/5 rounded-2xl space-y-4 shadow-sm">
+                     <div className="space-y-2">
+                       <div className="flex justify-between">
+                         <span className="text-[8px] font-black uppercase opacity-40">Background Scale</span>
+                         <span className="text-[8px] font-black opacity-40">{Math.round(bgScale * 100)}%</span>
+                       </div>
+                       <input type="range" min="0.1" max="5" step="0.01" value={bgScale}
+                         onChange={e => setBgScale(parseFloat(e.target.value))} className="w-full accent-[#3E6B43]" />
+                     </div>
+                     <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                         <span className="text-[8px] font-black uppercase opacity-40">Position X</span>
+                         <input type="number" value={bgX} onChange={e => setBgX(parseInt(e.target.value))}
+                           className="w-full bg-[var(--color-pawtobooth-light)] p-2 rounded-lg text-[10px] font-bold outline-none" />
+                       </div>
+                       <div className="space-y-1">
+                         <span className="text-[8px] font-black uppercase opacity-40">Position Y</span>
+                         <input type="number" value={bgY} onChange={e => setBgY(parseInt(e.target.value))}
+                           className="w-full bg-[var(--color-pawtobooth-light)] p-2 rounded-lg text-[10px] font-bold outline-none" />
+                       </div>
+                     </div>
+                     <button onClick={() => { setBgX(0); setBgY(0); setBgScale(1); }}
+                       className="w-full py-2 bg-black/5 rounded-lg text-[8px] font-black uppercase hover:bg-black/10 transition-all">
+                       Reset Transform
+                     </button>
+                   </div>
+                 )}
+
+                 <button
+                   onClick={() => setShowAssetLibrary({ show: true, mode: 'bg' })}
                    className="w-full py-3 bg-white border border-black/5 rounded-xl text-[10px] font-black uppercase hover:bg-black/5 shadow-sm transition-all text-[var(--color-pawtobooth-dark)]/60"
                  >
                    Browse Background Library ({bgAssets.length})
