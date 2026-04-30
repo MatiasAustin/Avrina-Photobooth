@@ -281,10 +281,12 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
 
       // Append timestamp config to URL if exists
       let finalUrl = publicUrl;
-      const tsEl = elements.find(e => e.type === 'timestamp');
-      if (tsEl) {
-         const tsConfig = encodeURIComponent(JSON.stringify({ x: tsEl.x, y: tsEl.y, s: tsEl.scale, c: tsEl.color, f: tsEl.font, r: tsEl.rotation }));
-         finalUrl += `?ts=${tsConfig}`;
+      const tsElements = elements.filter(e => e.type === 'timestamp');
+      if (tsElements.length > 0) {
+         const tsConfigs = tsElements.map(el => ({ 
+           x: el.x, y: el.y, s: el.scale, c: el.color, f: el.font, r: el.rotation 
+         }));
+         finalUrl += `?ts=${encodeURIComponent(JSON.stringify(tsConfigs))}`;
       }
 
       // 4. Save to Database

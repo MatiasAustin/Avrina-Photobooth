@@ -121,21 +121,24 @@ export const generatePhotoStrip = async (
        try {
          const tsParam = new URL(selectedTemplate.image_url).searchParams.get('ts');
          if (tsParam) {
-           const tsConfig = JSON.parse(decodeURIComponent(tsParam));
+           const decoded = JSON.parse(decodeURIComponent(tsParam));
+           const configs = Array.isArray(decoded) ? decoded : [decoded];
            
-           ctx.save();
-           ctx.translate(tsConfig.x, tsConfig.y);
-           ctx.rotate((tsConfig.r || 0) * Math.PI / 180);
-           ctx.scale(tsConfig.s, tsConfig.s);
-           
-           ctx.font = `bold 64px ${tsConfig.f || 'sans-serif'}`;
-           ctx.fillStyle = tsConfig.c || '#000000';
-           ctx.textAlign = 'center';
-           ctx.textBaseline = 'middle';
-           
-           const liveDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-           ctx.fillText(liveDate, 0, 0);
-           ctx.restore();
+           configs.forEach(tsConfig => {
+             ctx.save();
+             ctx.translate(tsConfig.x, tsConfig.y);
+             ctx.rotate((tsConfig.r || 0) * Math.PI / 180);
+             ctx.scale(tsConfig.s, tsConfig.s);
+             
+             ctx.font = `bold 64px ${tsConfig.f || 'sans-serif'}`;
+             ctx.fillStyle = tsConfig.c || '#000000';
+             ctx.textAlign = 'center';
+             ctx.textBaseline = 'middle';
+             
+             const liveDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+             ctx.fillText(liveDate, 0, 0);
+             ctx.restore();
+           });
          }
        } catch (e) { console.error("Failed to parse timestamp config", e); }
     }
