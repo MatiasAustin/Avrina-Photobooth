@@ -461,9 +461,11 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       }
 
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User session expired. Please re-login.");
+
       const templateData = { 
         name, 
-        user_id: user?.id, 
+        user_id: user.id, 
         event_id: eventId === "" ? null : eventId, 
         image_url: finalUrl, 
         category, 
@@ -492,12 +494,10 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       setLastSaved(new Date().toLocaleTimeString());
       if (shouldClose) {
         onSave();
-      } else {
-        // Optional: notification for draft saved
       }
     } catch (e: any) {
-      console.error("Full Save Error:", e);
-      alert(`Error saving: ${e.message || "Unknown database error"}`);
+      console.error("Full Save Error (RLS Check):", e);
+      alert(`Error saving: ${e.message || "Unknown database error"}. Hint: Check your Supabase RLS policies.`);
     } finally {
       setIsSaving(false);
     }
