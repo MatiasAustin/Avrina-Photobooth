@@ -464,24 +464,40 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       const templateData = { 
         name, 
         user_id: user?.id, 
-        event_id: eventId || null, 
+        event_id: eventId === "" ? null : eventId, 
         image_url: finalUrl, 
         category, 
         slot_count: slotCount,
-        is_published: shouldClose // Assume if they publish, it's published
+        is_published: shouldClose
       };
 
       if (templateId) {
-        await supabase.from('templates').update(templateData).eq('id', templateId);
+        const { error: updateError } = await supabase
+          .from('templates')
+          .update(templateData)
+          .eq('id', templateId);
+        
+        if (updateError) throw updateError;
       } else {
-        const { data: newTemplate } = await supabase.from('templates').insert(templateData).select().single();
+        const { data: newTemplate, error: insertError } = await supabase
+          .from('templates')
+          .insert(templateData)
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
         if (newTemplate) setTemplateId(newTemplate.id);
       }
       
       setLastSaved(new Date().toLocaleTimeString());
-      if (shouldClose) onSave();
+      if (shouldClose) {
+        onSave();
+      } else {
+        // Optional: notification for draft saved
+      }
     } catch (e: any) {
-      alert(`Error saving: ${e.message}`);
+      console.error("Full Save Error:", e);
+      alert(`Error saving: ${e.message || "Unknown database error"}`);
     } finally {
       setIsSaving(false);
     }
