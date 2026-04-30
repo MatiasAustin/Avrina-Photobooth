@@ -92,6 +92,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
   const [showFontBrowser, setShowFontBrowser] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [fontSearch, setFontSearch] = useState('');
+  const [fontLimit, setFontLimit] = useState(40); // For infinite scroll
   const [systemFonts, setSystemFonts] = useState<string[]>(() => {
     const saved = localStorage.getItem('pawtobooth_saved_fonts');
     return saved ? JSON.parse(saved) : DEFAULT_FONTS;
@@ -184,7 +185,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
           try {
             const rawUrl = initialTemplate.image_url.split('?')[0];
             const jsonUrl = rawUrl.replace('.png', '.json');
-            const res = await fetch(jsonUrl);
+            const res = await fetch(`${jsonUrl}?t=${Date.now()}`);
             if (res.ok) {
               const data = await res.json();
               setBgColor(data.bgColor || '#ffffff');
@@ -204,7 +205,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     try {
       await document.fonts.load(`bold 64px "${font}"`);
       // Force redraw
-      setElements([...elements]);
+      setElements(prev => [...prev]);
     } catch (e) {}
   };
 
@@ -444,13 +445,13 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
 
       const blob = await new Promise<Blob>((resolve) => exportCanvas.toBlob(b => resolve(b!), 'image/png'));
       const fileName = `${Date.now()}-${name.replace(/ /g, '_')}.png`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('templates').upload(fileName, blob);
+      const { error: uploadError } = await supabase.storage.from('templates').upload(fileName, blob, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('templates').getPublicUrl(fileName);
       const jsonFileName = fileName.replace('.png', '.json');
       const configBlob = new Blob([JSON.stringify({ bgColor, bgImage, gridMask, frameColor, frameWidth, elements })], { type: 'application/json' });
-      await supabase.storage.from('templates').upload(jsonFileName, configBlob);
+      await supabase.storage.from('templates').upload(jsonFileName, configBlob, { upsert: true });
 
       let finalUrl = publicUrl;
       const tsElements = elements.filter(e => e.type === 'timestamp');
@@ -619,7 +620,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                               onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
                               className="w-full h-10 bg-white border border-[#3E6B43]/20 rounded-lg px-4 flex items-center justify-between hover:border-[#3E6B43] transition-all shadow-sm group/btn"
                             >
-                               <span className="text-xs font-black truncate" style={{ fontFamily: activeElement.font }}>
+                               <span className="text-xs font-black truncate" style={{ fontFamily: `"${activeElement.font}", sans-serif` }}>
                                  {activeElement.font || 'Select Font'}
                                </span>
                                <FontIcon className="w-3 h-3 opacity-20 group-hover/btn:rotate-12 transition-transform" />
@@ -648,7 +649,15 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                                     </div>
                                  </div>
 
-                                 <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
+                                 <div 
+                                   className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar"
+                                   onScroll={(e) => {
+                                      const target = e.currentTarget;
+                                      if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+                                        setFontLimit(prev => prev + 40);
+                                      }
+                                   }}
+                                 >
                                     <div className="space-y-2">
                                        <div className="px-3 flex items-center justify-between">
                                           <p className="text-[8px] font-black uppercase text-black/30 tracking-widest flex items-center gap-2 italic"><Bookmark className="w-2.5 h-2.5 text-[#3E6B43]"/> Favorites & Recent</p>
@@ -682,7 +691,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                                        <div className="grid grid-cols-1 gap-1.5">
                                           {ALL_GOOGLE_FONTS
                                             .filter(f => !systemFonts.includes(f) && f.toLowerCase().includes(fontSearch.toLowerCase()))
-                                            .slice(0, 40)
+                                            .slice(0, fontLimit)
                                             .map(font => (
                                             <button 
                                               key={font}
@@ -793,7 +802,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                  }}
                >
                   {el.type === 'image' ? <img src={el.content} style={{ maxWidth: '500px', maxHeight: '500px' }} /> : 
-                   <span style={{ fontFamily: el.font, fontSize: '64px', color: el.color, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{el.content}</span>}
+                   <span style={{ fontFamily: `"${el.font}", sans-serif`, fontSize: '64px', color: el.color, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{el.content}</span>}
                   
                   {activeElementId === el.id && (
                     <>
