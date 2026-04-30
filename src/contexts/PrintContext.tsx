@@ -117,13 +117,27 @@ export function PrintProvider({ children }: { children: React.ReactNode }) {
 
       doc.body.innerHTML = `
         <style>
-          @page { size: auto; margin: 0; }
-          body { margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: white; }
-          img { width: 100%; height: auto; display: block; }
-          .meta { font-size: 10px; position: absolute; bottom: 5px; right: 5px; }
+          @page { 
+            size: auto; 
+            margin: 0 !important; 
+          }
+          html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+            background: white;
+          }
+          img { 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover;
+            display: block;
+          }
+          .meta { display: none; }
         </style>
         <img src="${job.image_url}" />
-        <div class="meta">Printer: ${stationInfo.model}</div>
       `;
 
       const img = doc.querySelector('img');
