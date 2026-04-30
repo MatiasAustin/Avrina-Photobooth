@@ -367,6 +367,10 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
                   {['❤️', '✨', '🌸', '🥳', '🎁', '⭐', '💍', '🥂'].map(s => (
                     <button key={s} onClick={() => addSticker(s)} className="w-8 h-8 rounded hover:bg-black/5 text-xl">{s}</button>
                   ))}
+                 <label className="w-full mt-2 py-2 bg-black/5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black/10 text-center cursor-pointer">
+                   <Upload className="w-3 h-3 inline mr-2"/> Custom Sticker
+                   <input type="file" className="hidden" accept="image/png" onChange={e => handleImageUpload('sticker' as any, e)} />
+                 </label>
                </div>
             </div>
 
@@ -405,17 +409,6 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
               </div>
             )}
          </div>
-
-         <div className="p-6 border-t border-black/5 bg-white absolute bottom-0 left-0 right-0 z-30">
-            <button 
-              onClick={saveTemplate}
-              disabled={isSaving}
-              className="w-full py-4 bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] font-black uppercase text-xs tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 hover:bg-[#3E6B43] active:scale-95 transition-all shadow-md disabled:opacity-50"
-            >
-               {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save className="w-4 h-4" />}
-               Deploy Design
-            </button>
-         </div>
       </div>
 
       {/* Main Preview Area */}
@@ -425,20 +418,31 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
         onPointerMove={handlePointerMove}
         onPointerUp={() => setDragInfo(null)}
         onPointerLeave={() => setDragInfo(null)}
-        onClick={() => setActiveElementId(null)}
+        onPointerDown={() => setActiveElementId(null)}
       >
          <div className="absolute top-8 left-8 flex items-center gap-3 z-50">
             <div className="w-2 h-2 bg-[#3E6B43] rounded-full animate-pulse" />
             <span className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase tracking-widest">Wysiwyg Drag & Drop Editor</span>
          </div>
 
+         <div className="absolute top-8 right-8 z-50">
+            <button 
+              onClick={saveTemplate}
+              disabled={isSaving}
+              className="px-6 py-3 bg-[var(--color-pawtobooth-dark)] text-[var(--color-pawtobooth-beige)] font-black uppercase text-xs tracking-[0.2em] rounded-xl flex items-center justify-center gap-2 hover:bg-[#3E6B43] active:scale-95 transition-all shadow-xl disabled:opacity-50"
+            >
+               {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save className="w-4 h-4" />}
+               Deploy Design
+            </button>
+         </div>
+
          {/* The 1200x1800 Canvas Container */}
          <div 
-           className="relative bg-white shadow-2xl transition-transform ease-out duration-100 origin-center"
+           className="absolute top-1/2 left-1/2 bg-white shadow-2xl transition-transform ease-out duration-100"
            style={{ 
              width: 1200, 
              height: 1800, 
-             transform: `scale(${previewScale})`,
+             transform: `translate(-50%, -50%) scale(${previewScale})`,
              cursor: dragInfo ? 'grabbing' : 'default'
            }}
          >
@@ -475,6 +479,19 @@ export function TemplateEditor({ onClose, onSave, events }: TemplateEditorProps)
                 )}
                 {el.type === 'sticker' && (
                    <span style={{ fontSize: '64px', pointerEvents: 'none', lineHeight: 1 }}>{el.content}</span>
+                )}
+                
+                {/* On-Element Transform Controls */}
+                {activeElementId === el.id && (
+                  <div 
+                    className="absolute -bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-white p-2 shadow-2xl"
+                    style={{ pointerEvents: 'auto', transform: `scale(${1/Math.max(0.1, el.scale)})` }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ scale: el.scale * 1.1 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><Plus className="h-6 w-6"/></button>
+                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ scale: el.scale * 0.9 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><Minus className="h-6 w-6"/></button>
+                    <button onClick={(e) => { e.stopPropagation(); updateActiveElement({ rotation: el.rotation + 15 }) }} className="rounded-lg bg-black/5 p-3 hover:bg-[#3E6B43] hover:text-white"><RotateCw className="h-6 w-6"/></button>
+                  </div>
                 )}
               </div>
             ))}
