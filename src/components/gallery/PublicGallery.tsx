@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Download, Share2, Camera, Heart, Check } from 'lucide-react';
 import { PLATFORM_NAME } from '../../lib/constants';
 import { motion, AnimatePresence } from 'motion/react';
+import { downloadPhoto } from '../../lib/image-utils';
 
 export function PublicGallery() {
   const { sessionId } = useParams();
@@ -27,13 +28,8 @@ export function PublicGallery() {
     fetchSession();
   }, [sessionId]);
 
-  const handleDownload = (photoUrl: string, index: number) => {
-    const link = document.createElement('a');
-    link.href = photoUrl;
-    link.download = `${PLATFORM_NAME.toLowerCase()}-shot-${index + 1}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadAction = (photoUrl: string, index: number) => {
+    downloadPhoto(photoUrl, `${PLATFORM_NAME.toLowerCase()}-shot-${index === 999 ? 'strip' : index + 1}.jpg`);
   };
 
   const handleShare = () => {
@@ -106,7 +102,7 @@ export function PublicGallery() {
                   <img src={session.final_photo_url} className="w-full h-full object-contain bg-white rounded-[2rem]" />
                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
                      <button 
-                       onClick={() => handleDownload(session.final_photo_url, 999)}
+                       onClick={() => handleDownloadAction(session.final_photo_url, 999)}
                        className="px-8 py-4 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:-translate-y-1 hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-2xl active:scale-95"
                      >
                         <Download className="w-5 h-5" /> Download Full Strip
@@ -154,7 +150,7 @@ export function PublicGallery() {
                         <p className="text-xs font-bold uppercase">Original Resolution</p>
                      </div>
                      <button 
-                       onClick={() => handleDownload(photo, index)}
+                       onClick={() => handleDownloadAction(photo, index)}
                        className="px-6 py-3 bg-[#3E6B43] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:-translate-y-0.5 hover:bg-[var(--color-pawtobooth-dark)] transition-all shadow-md"
                      >
                         <Download className="w-4 h-4" /> Download

@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { PLATFORM_NAME } from '../../lib/constants';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
+import { downloadPhoto } from '../../lib/image-utils';
 
 interface SessionSummaryProps {
   sessionId: string;
@@ -20,17 +21,16 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = photoUrl;
-    link.download = `photobooth-session-${Date.now()}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadAction = () => {
+    downloadPhoto(photoUrl, `pawtobooth-${sessionId}.jpg`);
   };
 
   const submitPhone = async () => {
     if (!phone || phone.length < 9) return;
+    if (!sessionId || sessionId === 'demo') {
+      alert("Cannot save number in demo mode.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { error } = await supabase
@@ -44,9 +44,9 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
         setShowPhoneInput(false);
         setIsSuccess(false);
       }, 2000);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Failed to save number. Please try again.");
+      alert(`Failed to save number: ${e.message || 'Database error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +57,7 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
       key="summary"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="z-10 w-full max-w-4xl px-8 space-y-12 mx-auto"
+      className="z-10 w-full max-w-4xl px-8 space-y-12 mx-auto pt-24 pb-20"
     >
       <div className="bg-white/90 backdrop-blur-xl border border-black/5 rounded-[50px] p-12 flex flex-col md:flex-row gap-12 items-center shadow-2xl text-[var(--color-pawtobooth-dark)] relative overflow-hidden">
         {/* Success Overlay */}

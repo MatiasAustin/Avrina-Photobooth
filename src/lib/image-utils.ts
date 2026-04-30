@@ -168,3 +168,37 @@ export const generatePhotoStrip = async (
     return photos[0] || '';
   }
 };
+
+export const downloadPhoto = async (url: string, filename: string) => {
+  try {
+    // For data URLs, just trigger download
+    if (url.startsWith('data:')) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    const response = await fetch(url, { mode: 'cors' });
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+  } catch (error) {
+    console.error('Download failed:', error);
+    // Final fallback
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.download = filename;
+    link.click();
+  }
+};
