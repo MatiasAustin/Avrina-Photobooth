@@ -81,24 +81,28 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
     return saved ? JSON.parse(saved) : DEFAULT_FONTS;
   });
 
-  const injectFont = (font: string) => {
-    if (!font) return;
-    const linkId = `font-${font.replace(/ /g, '-')}`;
-    if (document.getElementById(linkId)) return;
+  const injectFont = (font: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!font) return resolve();
+      const linkId = `font-${font.replace(/ /g, '-')}`;
+      if (document.getElementById(linkId)) return resolve();
 
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:wght@400;700;900&display=swap`;
-    document.head.appendChild(link);
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:wght@400;700;900&display=swap`;
+      link.onload = () => resolve();
+      link.onerror = () => resolve();
+      document.head.appendChild(link);
+    });
   };
 
-  const addFontToSystem = (font: string) => {
+  const addFontToSystem = async (font: string) => {
     if (systemFonts.includes(font)) return;
+    await injectFont(font);
     const newFonts = [...systemFonts, font];
     setSystemFonts(newFonts);
     localStorage.setItem('pawtobooth_saved_fonts', JSON.stringify(newFonts));
-    injectFont(font);
   };
 
   // Refs
@@ -680,6 +684,89 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
             ))}
          </div>
       </div>
+
+      {showFontBrowser && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-black/80 backdrop-blur-xl">
+          <div className="w-full max-w-2xl bg-white rounded-[40px] p-8 space-y-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]">
+             <button 
+               onClick={() => setShowFontBrowser(false)} 
+               className="absolute top-6 right-6 p-2 hover:bg-black/5 rounded-full transition-colors"
+             >
+               <X className="w-6 h-6" />
+             </button>
+
+             <div className="space-y-1 pr-12">
+                <h3 className="text-2xl font-black uppercase tracking-tight italic text-[var(--color-pawtobooth-dark)]">Google Fonts <span className="text-[#3E6B43]">Explorer</span></h3>
+                <p className="text-[10px] font-mono uppercase opacity-40 tracking-widest">Search and activate 100+ professional typefaces live</p>
+             </div>
+
+             <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+                <input 
+                  autoFocus
+                  type="text" 
+                  placeholder="Search fonts (e.g. Lobster, Roboto...)" 
+                  value={fontSearch}
+                  onChange={e => setFontSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-[var(--color-pawtobooth-light)] border-none rounded-2xl text-sm font-bold focus:ring-2 ring-[#3E6B43]/20 transition-all outline-none"
+                />
+             </div>
+
+             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                {ALL_GOOGLE_FONTS
+                  .filter(f => f.toLowerCase().includes(fontSearch.toLowerCase()))
+                  .map(font => {
+                    const isAdded = systemFonts.includes(font);
+                    return (
+                      <div 
+                        key={font} 
+                        className={cn(
+                          "group p-4 rounded-2xl border transition-all flex items-center justify-between",
+                          isAdded ? "bg-[#3E6B43]/5 border-[#3E6B43]/20" : "bg-white border-black/5 hover:border-[#3E6B43]/30"
+                        )}
+                      >
+                         <div className="space-y-1">
+                            <p className="text-[8px] font-black uppercase text-black/20 tracking-tighter">{font}</p>
+                            <p 
+                              className="text-xl" 
+                              style={{ 
+                                fontFamily: `"${font}", sans-serif`,
+                                // Force browser to fetch font for preview
+                                display: 'block' 
+                              }}
+                            >
+                              The quick brown fox
+                            </p>
+                            {/* Hidden element to trigger font load */}
+                            <link rel="stylesheet" href={`https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&text=Thequickbrownfox&display=swap`} />
+                         </div>
+                         <button 
+                           onClick={() => {
+                             addFontToSystem(font);
+                             if (activeElementId && (activeElement?.type === 'text' || activeElement?.type === 'timestamp')) {
+                               updateActiveElement({ font });
+                             }
+                             setShowFontBrowser(false);
+                           }}
+                           className={cn(
+                             "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                             isAdded 
+                               ? "bg-[#3E6B43] text-white" 
+                               : "bg-white border border-black/5 text-black/40 group-hover:bg-[#3E6B43] group-hover:text-white"
+                           )}
+                         >
+                           {isAdded ? "Selected" : "Select Font"}
+                         </button>
+                      </div>
+                    );
+                  })}
+                {ALL_GOOGLE_FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).length === 0 && (
+                  <div className="py-20 text-center opacity-20 font-black uppercase italic tracking-[0.2em]">No fonts found</div>
+                )}
+             </div>
+          </div>
+        </div>
+      )}
 
       {showAssetLibrary.show && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-12 bg-black/60 backdrop-blur-md">
