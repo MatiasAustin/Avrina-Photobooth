@@ -396,20 +396,72 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
       exportCanvas.height = 1800;
       const ctx = exportCanvas.getContext('2d')!;
 
-      // Safety Margin: Shrink content slightly (96%) to prevent cutoff by printer expansion
-      const scaleFactor = 0.96;
-      const offsetX = (1200 * (1 - scaleFactor)) / 2;
-      const offsetY = (1800 * (1 - scaleFactor)) / 2;
-
+      // 1. Draw Background
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 1200, 1800);
-
-      ctx.save();
-      ctx.translate(offsetX, offsetY);
-      ctx.scale(scaleFactor, scaleFactor);
       
-      ctx.drawImage(canvasRef.current!, 0, 0);
+      if (bgImage) {
+        const img = new Image();
+        img.src = bgImage;
+        await new Promise(r => img.onload = () => { ctx.drawImage(img, 0, 0, 1200, 1800); r(null); });
+      }
 
+      // 2. Punch Holes (Slots)
+      const photoW = 504;
+      const photoH = 504;
+      const cols = 2;
+      ctx.globalCompositeOperation = 'destination-out';
+      
+      for (let i = 0; i < slotCount; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = col === 0 ? 48 : 648;
+        let y = 0;
+        let currentPhotoH = photoH;
+
+        if (slotCount === 6) {
+           y = [32, 568, 1104][row];
+        } else if (slotCount === 8) {
+           currentPhotoH = 378;
+           y = [32, 442, 852, 1262][row];
+        } else {
+           y = [120, 744][row];
+        }
+        
+        ctx.beginPath();
+        drawMaskPath(ctx, gridMask, x, y, photoW, currentPhotoH);
+        ctx.fill();
+      }
+
+      // 3. Draw Elements (Stickers, Text)
+      ctx.globalCompositeOperation = 'source-over';
+      
+      // Draw Frames
+      if (frameColor !== 'transparent' && frameWidth > 0) {
+        ctx.strokeStyle = frameColor;
+        ctx.lineWidth = frameWidth;
+        for (let i = 0; i < slotCount; i++) {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = col === 0 ? 48 : 648;
+          let y = 0;
+          let currentPhotoH = photoH;
+
+          if (slotCount === 6) {
+             y = [32, 568, 1104][row];
+          } else if (slotCount === 8) {
+             currentPhotoH = 378;
+             y = [32, 442, 852, 1262][row];
+          } else {
+             y = [120, 744][row];
+          }
+          ctx.beginPath();
+          drawMaskPath(ctx, gridMask, x, y, photoW, currentPhotoH);
+          ctx.stroke();
+        }
+      }
+
+      // Draw Assets
       for (const el of elements) {
         if (el.type === 'timestamp') continue;
         ctx.save();
@@ -417,12 +469,13 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         ctx.rotate(el.rotation * Math.PI / 180);
         ctx.scale(el.scale, el.scale);
         if (el.opacity !== undefined) ctx.globalAlpha = el.opacity;
+        
         const bm = BLEND_MODES.find(m => m.value === el.blendMode);
         if (bm) ctx.globalCompositeOperation = bm.canvas as GlobalCompositeOperation;
         else if (el.blendMode) ctx.globalCompositeOperation = el.blendMode as GlobalCompositeOperation;
 
         if (el.type === 'text' || el.type === 'sticker') {
-          ctx.font = `bold 64px ${el.font || 'sans-serif'}`;
+          ctx.font = `bold 64px "${el.font || 'sans-serif'}"`;
           ctx.fillStyle = el.color || '#000000';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -430,6 +483,7 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         } else if (el.type === 'image') {
           const img = new Image();
           img.src = el.content;
+          img.crossOrigin = "anonymous";
           await new Promise(r => img.onload = r);
           let drawW = img.width, drawH = img.height;
           if (drawW > 500 || drawH > 500) {
@@ -440,8 +494,6 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         }
         ctx.restore();
       }
-
-      ctx.restore(); // Final restore from safe zone scale
 
       const blob = await new Promise<Blob>((resolve) => exportCanvas.toBlob(b => resolve(b!), 'image/png'));
       const fileName = `${Date.now()}-${name.replace(/ /g, '_')}.png`;
