@@ -13,6 +13,7 @@ import { SubscriptionManager } from './admin/SubscriptionManager';
 import { PaymentManager } from './admin/PaymentManager';
 import { SessionManager } from './admin/SessionManager';
 import { UserProfile } from './admin/UserProfile';
+import { PrintingDetailedStats } from './admin/PrintingDetailedStats';
 import { useSettings } from '../contexts/SettingsContext';
 
 interface AdminProps {
@@ -197,6 +198,7 @@ export function Admin({ session }: AdminProps) {
                     queueCount={printJobs.filter(j => j.status === 'queued').length}
                     eventCount={events.length}
                   />
+                  <PrintingDetailedStats printJobs={printJobs} />
                   <div className="space-y-6">
                      <div className="flex items-center justify-between">
                         <h3 className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--color-pawtobooth-dark)]/60">Recent Sessions</h3>

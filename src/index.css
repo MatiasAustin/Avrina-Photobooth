@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Inter:wght@400;700;900&family=Kanit:wght@400;700&family=Lobster&family=Montserrat:wght@400;700;900&family=Outfit:wght@400;700;900&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Quicksand:wght@400;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Varela+Round&display=swap');
 
 @theme {
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;

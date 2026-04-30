@@ -78,17 +78,16 @@ export function CaptureStage({
           )}
         </div>
 
-        {/* Countdown */}
         <AnimatePresence>
           {countdown > 0 && (
             <motion.div 
-              initial={{ opacity: 0, scale: 2 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.5 }}
-              className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+              className="absolute top-8 right-8 z-30 pointer-events-none"
             >
-              <div className="w-48 h-48 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/50">
-                <span className="text-[8rem] font-black text-white italic drop-shadow-lg">
+              <div className="flex flex-col items-center">
+                <span className="text-[12rem] font-black text-white/40 italic leading-none drop-shadow-2xl">
                   {countdown}
                 </span>
               </div>

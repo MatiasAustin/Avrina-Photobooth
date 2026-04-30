@@ -1,8 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Type, Palette, Upload, Trash2, Plus, Minus, RotateCw, Layers, Move, Check, Type as FontIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { MaskShape, drawMaskPath } from '../../lib/canvas-shapes';
+
+const GOOGLE_FONTS = [
+  'Inter', 'Playfair Display', 'Dancing Script', 'Montserrat', 'Pacifico', 
+  'Bebas Neue', 'Lobster', 'Roboto', 'Outfit', 'Quicksand', 'Caveat',
+  'Abril Fatface', 'Oswald', 'Kanit', 'Varela Round'
+];
 
 interface TemplateEditorProps {
   onClose: () => void;
@@ -413,9 +419,13 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                     <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 pl-2">Grid Shape</span>
                     <select value={gridMask} onChange={e => setGridMask(e.target.value as MaskShape)} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold">
                        <option value="square">Square</option>
+                       <option value="rounded-square">Rounded Square</option>
                        <option value="circle">Circle</option>
                        <option value="heart">Heart</option>
                        <option value="arch">Arch</option>
+                       <option value="flower">Flower</option>
+                       <option value="wave-square">Wave Square</option>
+                       <option value="wave-circle">Wave Circle</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -478,7 +488,17 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                     <button onClick={() => setElements(elements.filter(e => e.id !== activeElementId))} className="text-red-500 hover:scale-110"><Trash2 className="w-4 h-4"/></button>
                  </div>
                  {(activeElement.type === 'text' || activeElement.type === 'timestamp') && (
-                    <input value={activeElement.content} onChange={e => updateActiveElement({ content: e.target.value })} className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm" />
+                    <div className="space-y-3">
+                       <input value={activeElement.content} onChange={e => updateActiveElement({ content: e.target.value })} className="w-full bg-white border border-[#3E6B43]/20 p-3 rounded-lg text-sm" />
+                       <div className="flex gap-2">
+                         <input type="color" value={activeElement.color} onChange={e => updateActiveElement({ color: e.target.value })} className="w-10 h-10 bg-white rounded-lg border border-[#3E6B43]/20 cursor-pointer" />
+                         <select value={activeElement.font} onChange={e => updateActiveElement({ font: e.target.value })} className="flex-1 bg-white border border-[#3E6B43]/20 rounded-lg text-xs px-2 outline-none font-bold">
+                             {GOOGLE_FONTS.map(f => (
+                               <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+                             ))}
+                         </select>
+                       </div>
+                    </div>
                  )}
                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -492,6 +512,14 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                           <option value="multiply">Multiply</option>
                           <option value="screen">Screen</option>
                           <option value="overlay">Overlay</option>
+                          <option value="darken">Darken</option>
+                          <option value="lighten">Lighten</option>
+                          <option value="color-dodge">Color Dodge</option>
+                          <option value="color-burn">Color Burn</option>
+                          <option value="hard-light">Hard Light</option>
+                          <option value="soft-light">Soft Light</option>
+                          <option value="difference">Difference</option>
+                          <option value="exclusion">Exclusion</option>
                        </select>
                     </div>
                  </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Printer, Zap, Activity, CheckCircle2, AlertTriangle, Play, Pause, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../../lib/utils';
 import { useSettings } from '../../contexts/SettingsContext';
 
 export function PrintNode() {
@@ -9,6 +10,12 @@ export function PrintNode() {
   const [isListening, setIsListening] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({ printed: 0, pending: 0 });
+  const [printers, setPrinters] = useState([
+    { id: '1', name: 'System Default Printer', type: 'usb', status: 'connected', health: 100 },
+    { id: '2', name: 'DNP DS620 (Office)', type: 'wifi', ip: '192.168.1.102', status: 'warning', health: 45 },
+    { id: '3', name: 'Canon SELPHY (Warehouse)', type: 'wifi', ip: '192.168.1.105', status: 'offline', health: 0 }
+  ]);
+  const [activePrinterId, setActivePrinterId] = useState('1');
   const printFrameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -130,6 +137,40 @@ export function PrintNode() {
                     <p className={`text-5xl font-black ${stats.pending > 0 ? 'text-yellow-500' : 'text-[var(--color-pawtobooth-dark)]'}`}>{stats.pending}</p>
                  </div>
               </div>
+
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-pawtobooth-dark)]/80 flex items-center gap-2">
+                        <Printer className="w-4 h-4 text-[#3E6B43]" /> Active Printers
+                     </h3>
+                     <button className="text-[10px] text-[#3E6B43] font-bold uppercase hover:underline flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3" /> Refresh Network
+                     </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     {printers.map(p => (
+                       <button 
+                         key={p.id}
+                         onClick={() => setActivePrinterId(p.id)}
+                         className={cn(
+                           "p-4 rounded-3xl border text-left transition-all relative overflow-hidden",
+                           activePrinterId === p.id ? "bg-[#3E6B43] border-[#3E6B43] text-white shadow-lg" : "bg-white border-black/5 text-[var(--color-pawtobooth-dark)] hover:bg-black/5"
+                         )}
+                       >
+                          <div className="flex items-center justify-between mb-2">
+                             <div className={`w-2 h-2 rounded-full ${p.status === 'connected' ? 'bg-green-400' : p.status === 'warning' ? 'bg-yellow-400' : 'bg-red-400'}`} />
+                             <span className="text-[8px] font-mono uppercase opacity-40">{p.type}</span>
+                          </div>
+                          <p className="text-[10px] font-black uppercase truncate">{p.name}</p>
+                          <p className="text-[8px] font-mono opacity-60 truncate">{p.ip || 'Local USB'}</p>
+                          
+                          {activePrinterId === p.id && (
+                            <div className="absolute bottom-0 left-0 h-1 bg-white/30" style={{ width: `${p.health}%` }} />
+                          )}
+                       </button>
+                     ))}
+                  </div>
+               </div>
 
               <div className="space-y-4">
                  <div className="flex items-center justify-between">
