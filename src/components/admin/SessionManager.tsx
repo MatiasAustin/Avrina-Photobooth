@@ -15,9 +15,12 @@ import {
   Edit3,
   MessageCircle,
   Share2,
-  Phone
+  Phone,
+  Mail,
+  Send
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { PLATFORM_NAME } from '../../lib/constants';
 import { Session, EventConfig, PhotoTemplate } from '../../types';
 import { cn } from '../../lib/utils';
 import { generatePhotoStrip, PhotoTransform } from '../../lib/image-utils';
@@ -36,7 +39,7 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
-  const [waModal, setWaModal] = useState<{ show: boolean, session: Session | null }>({ show: false, session: null });
+  const [emailModal, setEmailModal] = useState<{ show: boolean, session: Session | null }>({ show: false, session: null });
   const [isSavingLayout, setIsSavingLayout] = useState(false);
 
   const getSessionPhotos = (session: Session) => {
@@ -107,8 +110,8 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
     document.body.removeChild(link);
   };
 
-  const handleWhatsAppShare = (session: Session) => {
-    setWaModal({ show: true, session });
+  const handleEmailShare = (session: Session) => {
+    setEmailModal({ show: true, session });
   };
 
   const handleFinalizeEdit = async (arrangedPhotos: string[], transforms: PhotoTransform[]) => {
@@ -252,10 +255,10 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                           <div>
                             <p className="text-xs font-black uppercase tracking-tight text-[var(--color-pawtobooth-dark)]">{session.id}</p>
                             <p className="text-[10px] font-mono text-[var(--color-pawtobooth-dark)]/40 uppercase">
-                              {session.customer_phone ? (
-                                <span className="text-[#25D366] font-bold">WA: {session.customer_phone}</span>
+                              {session.customer_email ? (
+                                <span className="text-[#3E6B43] font-bold">EMAIL: {session.customer_email}</span>
                               ) : (
-                                session.payment_id || 'NO PAYMENT ID'
+                                <span className="text-black/20 italic">No email provided</span>
                               )}
                             </p>
                           </div>
@@ -294,16 +297,16 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => handleWhatsAppShare(session)}
+                            onClick={() => handleEmailShare(session)}
                             className={cn(
                               "p-3 rounded-xl border transition-all",
-                              session.customer_phone 
-                                ? "bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366] hover:text-white" 
+                              session.customer_email 
+                                ? "bg-[#3E6B43]/10 border-[#3E6B43]/30 text-[#3E6B43] hover:bg-[#3E6B43] hover:text-white" 
                                 : "bg-[var(--color-pawtobooth-light)] border-black/5 text-[var(--color-pawtobooth-dark)]/60 hover:bg-[#3E6B43] hover:text-white"
                             )}
-                            title="Share to WhatsApp"
+                            title="Share to Email"
                           >
-                            <MessageCircle className="w-4 h-4" />
+                            <Mail className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => setEditingSession(session)}
@@ -380,16 +383,16 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
                    </button>
                    <div className="flex items-center gap-4">
                        <button 
-                         onClick={() => handleWhatsAppShare(session)}
+                         onClick={() => handleEmailShare(session)}
                          className={cn(
                            "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                           session.customer_phone 
-                             ? "bg-[#25D366] text-white" 
+                           session.customer_email 
+                             ? "bg-[#3E6B43] text-white shadow-lg shadow-[#3E6B43]/20" 
                              : "bg-white/20 text-white hover:bg-[#3E6B43]"
                          )}
-                         title="Share to WhatsApp"
+                         title="Share to Email"
                        >
-                         <MessageCircle className="w-4 h-4" />
+                         <Mail className="w-4 h-4" />
                        </button>
                       <button 
                         onClick={() => setEditingSession(session)}
@@ -541,11 +544,11 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
           </div>
         </div>
       )}
-      {/* WhatsApp Modal */}
-      {waModal.show && waModal.session && (
-        <WhatsAppModal 
-          session={waModal.session} 
-          onClose={() => setWaModal({ show: false, session: null })}
+      {/* Email Modal */}
+      {emailModal.show && emailModal.session && (
+        <EmailModal 
+          session={emailModal.session} 
+          onClose={() => setEmailModal({ show: false, session: null })}
           onUpdate={onUpdate}
         />
       )}
@@ -553,25 +556,24 @@ export function SessionManager({ sessions, events, templates, onUpdate }: Sessio
   );
 }
 
-function WhatsAppModal({ session, onClose, onUpdate }: { session: Session, onClose: () => void, onUpdate: () => void }) {
-  const [phone, setPhone] = useState(session.customer_phone || '');
+function EmailModal({ session, onClose, onUpdate }: { session: Session, onClose: () => void, onUpdate: () => void }) {
+  const [email, setEmail] = useState(session.customer_email || '');
+  const [subject, setSubject] = useState(`Your Photos from ${PLATFORM_NAME}! 📸`);
+  const [body, setBody] = useState(`Hi there!\n\nThank you for using ${PLATFORM_NAME}. Your photos are ready to view and download.\n\nLink: ${window.location.origin}/gallery/${session.id}\n\nHope you had a great time!`);
   const [isSaving, setIsSaving] = useState(false);
 
-  const galleryUrl = `${window.location.origin}/gallery/${session.id}`;
-  const message = `✨ *YOUR PHOTOS ARE READY!* ✨\n\nHi there! Thank you for using *PAWTOBOOTH*. You can view and download all your high-quality photos here:\n\n🔗 ${galleryUrl}\n\nHope you had a great time! 📸✨`;
-  
   const handleSaveAndShare = async () => {
-    if (!phone) return;
+    if (!email) return;
     setIsSaving(true);
     try {
-      await supabase.from('sessions').update({ customer_phone: phone }).eq('id', session.id);
+      await supabase.from('sessions').update({ customer_email: email }).eq('id', session.id);
       onUpdate();
       
-      const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, '_blank');
+      const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoUrl;
       onClose();
     } catch (e) {
-      alert("Failed to update phone number.");
+      alert("Failed to update email.");
     } finally {
       setIsSaving(false);
     }
@@ -580,49 +582,57 @@ function WhatsAppModal({ session, onClose, onUpdate }: { session: Session, onClo
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-       <div className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-          <div className="p-8 border-b border-black/5 bg-[#25D366]/5 flex items-center justify-between">
+       <div className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="p-8 border-b border-black/5 bg-[#3E6B43]/5 flex items-center justify-between">
              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#25D366] text-white rounded-xl flex items-center justify-center shadow-lg shadow-[#25D366]/20">
-                   <MessageCircle className="w-6 h-6" />
+                <div className="w-10 h-10 bg-[#3E6B43] text-white rounded-xl flex items-center justify-center shadow-lg shadow-[#3E6B43]/20">
+                   <Mail className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-pawtobooth-dark)]">Share <span className="text-[#25D366]">WhatsApp</span></h3>
+                <h3 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-pawtobooth-dark)]">Share via <span className="text-[#3E6B43]">Email</span></h3>
              </div>
              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-xl transition-colors"><XCircle className="w-6 h-6 text-black/20" /></button>
           </div>
           
           <div className="p-8 space-y-6">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Customer Phone Number</label>
-                <div className="relative">
-                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+             <div className="space-y-4">
+                <div className="space-y-1">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Recipient Email</label>
                    <input 
-                    type="tel" 
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="e.g. 628123456789"
-                    className="w-full pl-12 pr-4 py-4 bg-[var(--color-pawtobooth-light)]/50 border-2 border-transparent focus:border-[#25D366]/20 rounded-2xl text-lg font-black outline-none transition-all"
+                    type="email" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl text-sm font-bold outline-none focus:border-[#3E6B43]/20 transition-all"
                    />
                 </div>
-                <p className="text-[9px] font-bold text-black/20 uppercase">International format preferred (e.g. 62...)</p>
+                
+                <div className="space-y-1">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Subject</label>
+                   <input 
+                    type="text" 
+                    value={subject}
+                    onChange={e => setSubject(e.target.value)}
+                    className="w-full px-4 py-3 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl text-sm font-bold outline-none focus:border-[#3E6B43]/20 transition-all"
+                   />
+                </div>
+
+                <div className="space-y-1">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Message Body</label>
+                   <textarea 
+                    value={body}
+                    rows={6}
+                    onChange={e => setBody(e.target.value)}
+                    className="w-full px-4 py-3 bg-[var(--color-pawtobooth-light)] border border-black/5 rounded-xl text-xs font-medium outline-none focus:border-[#3E6B43]/20 transition-all resize-none"
+                   />
+                </div>
              </div>
 
-             <div className="p-6 bg-[var(--color-pawtobooth-light)] rounded-3xl border border-black/5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">Message Preview</p>
-                <p className="text-[11px] font-medium text-[var(--color-pawtobooth-dark)] whitespace-pre-wrap leading-relaxed opacity-60">
-                   {message}
-                </p>
-             </div>
-
-             <div className="grid grid-cols-1 gap-3">
-                <button 
-                  onClick={handleSaveAndShare}
-                  disabled={!phone || isSaving}
-                  className="w-full py-5 bg-[#25D366] text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#25D366]/20 flex items-center justify-center gap-3"
-                >
-                   {isSaving ? "Saving..." : <><Share2 className="w-5 h-5"/> Save & Open WhatsApp</>}
-                </button>
-             </div>
+             <button 
+               onClick={handleSaveAndShare}
+               disabled={!email || isSaving}
+               className="w-full py-5 bg-[#3E6B43] text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#3E6B43]/20 flex items-center justify-center gap-3"
+             >
+                {isSaving ? "Saving..." : <><Send className="w-5 h-5"/> Save & Open Mailer</>}
+             </button>
           </div>
        </div>
     </div>

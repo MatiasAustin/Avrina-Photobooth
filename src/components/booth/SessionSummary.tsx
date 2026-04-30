@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Printer, Download, ArrowLeft, Share2, MessageCircle, Check, X, Phone } from 'lucide-react';
+import { Mail, Download, Share2, Printer, CheckCircle2, XCircle, Send, Loader2, ArrowLeft } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PLATFORM_NAME } from '../../lib/constants';
 import { supabase } from '../../lib/supabase';
@@ -16,40 +16,54 @@ interface SessionSummaryProps {
 }
 
 export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onReset }: SessionSummaryProps) {
-  const [showPhoneInput, setShowPhoneInput] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [showEmailInput, setShowEmailInput] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [printStatus, setPrintStatus] = useState<'idle' | 'printing' | 'done'>('idle');
 
   const handleDownloadAction = () => {
     downloadPhoto(photoUrl, `pawtobooth-${sessionId}.jpg`);
   };
 
-  const submitPhone = async () => {
-    if (!phone || phone.length < 9) return;
+  const submitEmail = async () => {
+    if (!email || !email.includes('@')) return;
     if (!sessionId || sessionId === 'demo') {
-      alert("Cannot save number in demo mode.");
+      setIsSuccess(true);
+      setTimeout(() => {
+        setShowEmailInput(false);
+        setIsSuccess(false);
+      }, 2000);
       return;
     }
     setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('sessions')
-        .update({ customer_phone: phone })
+        .update({ customer_email: email })
         .eq('id', sessionId);
       
       if (error) throw error;
       setIsSuccess(true);
       setTimeout(() => {
-        setShowPhoneInput(false);
+        setShowEmailInput(false);
         setIsSuccess(false);
       }, 2000);
     } catch (e: any) {
       console.error(e);
-      alert(`Failed to save number: ${e.message || 'Database error'}`);
+      alert(`Failed to save email: ${e.message || 'Database error'}`);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintAction = () => {
+    setPrintStatus('printing');
+    onPrint();
+    setTimeout(() => {
+      setPrintStatus('done');
+      setTimeout(() => setPrintStatus('idle'), 3000);
+    }, 1500);
   };
 
   return (
@@ -70,10 +84,10 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
               className="absolute inset-0 z-50 bg-[#3E6B43] flex flex-col items-center justify-center text-white p-12 text-center"
             >
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6">
-                <Check className="w-10 h-10" />
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h3 className="text-3xl font-black uppercase italic tracking-tighter">Number Saved!</h3>
-              <p className="opacity-80 mt-2 font-medium">The administrator can now send the link to your WhatsApp.</p>
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter">Email Saved!</h3>
+              <p className="opacity-80 mt-2 font-medium">Your photo will be sent to your inbox shortly.</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -95,56 +109,71 @@ export function SessionSummary({ sessionId, eventName, photoUrl, onPrint, onRese
             )}
             
             <button 
-              onClick={() => setShowPhoneInput(true)}
+              onClick={() => setShowEmailInput(true)}
               className="flex items-center justify-center gap-3 bg-white border-2 border-black/5 px-10 py-5 rounded-[24px] text-[var(--color-pawtobooth-dark)] font-black uppercase text-sm tracking-widest hover:bg-black/5 active:scale-95 transition-all shadow-lg"
             >
-              <MessageCircle className="w-5 h-5 text-[#25D366]" /> Get Digital Copy
+              <Mail className="w-5 h-5 text-[#3E6B43]" /> Get Digital Copy
             </button>
           </div>
 
-          {sessionId !== 'demo' && !showPhoneInput && (
-            <div className="flex items-center gap-6 p-6 bg-[var(--color-pawtobooth-light)] rounded-[32px] border border-black/5 shadow-inner">
-              <div className="bg-white p-3 rounded-2xl shrink-0 border border-black/5 shadow-sm">
-                <QRCodeSVG value={`${window.location.origin}/gallery/${sessionId}`} size={80} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-black uppercase tracking-tight text-[#3E6B43]">Instant Access</p>
-                <p className="text-[11px] text-[var(--color-pawtobooth-dark)]/40 font-mono uppercase leading-tight font-bold">Scan to download your high-resolution photos instantly</p>
-              </div>
+          {showEmailInput ? (
+            <div className="space-y-6 w-full animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="space-y-2">
+                 <h3 className="text-2xl font-black uppercase italic tracking-tight">Get Your <span className="text-[#3E6B43]">Photos</span></h3>
+                 <p className="text-xs opacity-40 uppercase tracking-widest font-bold">Enter your email to receive the digital copy</p>
+               </div>
+               
+               <div className="flex flex-col gap-3">
+                  <div className="relative">
+                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="yourname@example.com"
+                      className="w-full pl-16 pr-6 py-5 bg-[var(--color-pawtobooth-light)] border-2 border-transparent focus:border-[#3E6B43]/20 rounded-3xl text-lg font-black outline-none transition-all placeholder:text-black/10"
+                    />
+                  </div>
+                  <button 
+                    onClick={submitEmail}
+                    disabled={!email || isSubmitting}
+                    className="w-full py-5 bg-[#3E6B43] text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#3E6B43]/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Sending..." : "Send to My Email"}
+                  </button>
+               </div>
             </div>
-          )}
-
-          {showPhoneInput && (
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="p-8 bg-[#25D366]/5 border-2 border-[#25D366]/20 rounded-[32px] space-y-4"
-            >
-              <div className="flex justify-between items-center">
-                <h4 className="text-xs font-black uppercase text-[#25D366] tracking-widest">Enter WhatsApp Number</h4>
-                <button onClick={() => setShowPhoneInput(false)} className="text-black/20 hover:text-black"><X className="w-4 h-4"/></button>
-              </div>
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
-                   <input 
-                    type="tel" 
-                    placeholder="0812345678..." 
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl text-lg font-black focus:ring-2 ring-[#25D366]/20 outline-none"
-                   />
-                </div>
-                <button 
-                  disabled={phone.length < 9 || isSubmitting}
-                  onClick={submitPhone}
-                  className="px-6 bg-[#25D366] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#25D366]/20 disabled:opacity-50"
-                >
-                  {isSubmitting ? "..." : "Send"}
-                </button>
-              </div>
-              <p className="text-[9px] font-bold text-black/30 uppercase text-center">Your number will only be used to send your photos.</p>
-            </motion.div>
+          ) : (
+            <div className="space-y-8 w-full animate-in zoom-in-95 duration-500">
+               <div className="grid grid-cols-1 gap-3">
+                  <button 
+                    onClick={handleDownloadAction}
+                    className="w-full py-5 bg-white border-2 border-black/5 text-[var(--color-pawtobooth-dark)] rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-[var(--color-pawtobooth-light)] transition-all flex items-center justify-center gap-3"
+                  >
+                    <Download className="w-5 h-5" /> Save Locally
+                  </button>
+                  <button 
+                    onClick={handlePrintAction}
+                    disabled={printStatus !== 'idle'}
+                    className={cn(
+                      "w-full py-5 rounded-3xl font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl",
+                      printStatus === 'done' ? "bg-green-500 text-white shadow-green-500/20" : "bg-[var(--color-pawtobooth-dark)] text-white shadow-black/20 hover:scale-[1.02]"
+                    )}
+                  >
+                    {printStatus === 'printing' ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" /> Sending to Printer...</>
+                    ) : printStatus === 'done' ? (
+                      <><CheckCircle2 className="w-5 h-5" /> Added to Queue!</>
+                    ) : (
+                      <><Printer className="w-5 h-5" /> Print This Photo</>
+                    )}
+                  </button>
+               </div>
+               
+               <button onClick={onReset} className="w-full py-4 text-[10px] font-black uppercase tracking-[0.3em] text-black/20 hover:text-black transition-colors">
+                  Take Another Shot
+               </button>
+            </div>
           )}
         </div>
 

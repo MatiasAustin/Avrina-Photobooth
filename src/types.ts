@@ -35,6 +35,7 @@ export interface Session {
   payment_id?: string;
   final_photo_url?: string;
   customer_phone?: string;
+  customer_email?: string;
   created_at: string;
 }
 

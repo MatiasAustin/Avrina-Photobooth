@@ -12,6 +12,7 @@ import { ReviewGallery } from './booth/ReviewGallery';
 import { SessionSummary } from './booth/SessionSummary';
 import { BoothLayout } from './booth/BoothLayout';
 import { generatePhotoStrip, PhotoTransform } from '../lib/image-utils';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Booth() {
@@ -30,6 +31,12 @@ export function Booth() {
   const [currentShot, setCurrentShot] = useState(0);
   const [qrisData, setQrisData] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 4000);
+  };
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [globalTimeLeft, setGlobalTimeLeft] = useState<number | null>(null);
 
@@ -403,9 +410,10 @@ export function Booth() {
         session_id: session.id,
         image_url: capturedPhotos[0],
       });
-      alert("Photo added to print queue!");
+      showNotification("Success! Your photo has been added to the print queue.");
     } catch (e) {
       console.error("Print error", e);
+      showNotification("Failed to print. Please contact staff.", "error");
     }
   };
 
@@ -549,6 +557,31 @@ export function Booth() {
       )}
 
       <canvas ref={canvasRef} className="hidden" />
+
+      {/* Professional Notification Toast */}
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0, x: '-50%' }}
+            animate={{ y: 0, opacity: 1, x: '-50%' }}
+            exit={{ y: 100, opacity: 0, x: '-50%' }}
+            className={cn(
+              "fixed bottom-32 left-1/2 z-[2000] px-10 py-6 rounded-[32px] shadow-2xl flex items-center gap-4 border-2 backdrop-blur-2xl transition-all",
+              notification.type === 'success' 
+                ? "bg-[#3E6B43]/90 border-[#3E6B43]/20 text-white" 
+                : "bg-red-600/90 border-red-500/20 text-white"
+            )}
+          >
+             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                {notification.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+             </div>
+             <div className="pr-4">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5">{notification.type === 'success' ? 'System Status' : 'System Error'}</p>
+                <p className="text-sm font-bold uppercase tracking-tight leading-tight">{notification.message}</p>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </BoothLayout>
   );
 }
