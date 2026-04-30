@@ -53,8 +53,11 @@ export function ReviewGallery({
     // Balanced Y
     let y = 0;
     if (slotCount === 6) {
-       // 48/1800, 600/1800, 1152/1800
-       y = [0.0266, 0.3333, 0.64][row];
+       // 32/1800, 568/1800, 1104/1800
+       y = [0.0177, 0.3155, 0.6133][row];
+    } else if (slotCount === 8) {
+       // 32/1800, 442/1800, 852/1800, 1262/1800
+       y = [0.0177, 0.2455, 0.4733, 0.7011][row];
     } else {
        // 120/1800, 744/1800
        y = [0.0666, 0.4133][row];
@@ -216,7 +219,7 @@ export function ReviewGallery({
                     top: (transforms[i].y || 0) * 100 + '%', 
                     scale: transforms[i].scale,
                     width: '42%', 
-                    aspectRatio: '1/1',
+                    aspectRatio: slotCount === 8 ? '4/3' : '1/1',
                     touchAction: 'none',
                     position: 'absolute',
                     zIndex: activeEditIdx === i ? 30 : 10 

@@ -174,15 +174,21 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
         const col = i % cols;
         const row = Math.floor(i / cols);
         const x = col === 0 ? 48 : 648;
+        
         let y = 0;
+        let currentPhotoH = photoH;
+
         if (slotCount === 6) {
-           y = [48, 600, 1152][row];
+           y = [32, 568, 1104][row];
+        } else if (slotCount === 8) {
+           currentPhotoH = 378; // 4:3 Landscape
+           y = [32, 442, 852, 1262][row];
         } else {
            y = [120, 744][row];
         }
         
         ctx.beginPath();
-        drawMaskPath(ctx, gridMask, x, y, photoW, photoH);
+        drawMaskPath(ctx, gridMask, x, y, photoW, currentPhotoH);
         ctx.fill();
       }
 
@@ -195,13 +201,18 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
           const row = Math.floor(i / cols);
           const x = col === 0 ? 48 : 648;
           let y = 0;
+          let currentPhotoH = photoH;
+
           if (slotCount === 6) {
-             y = [48, 600, 1152][row];
+             y = [32, 568, 1104][row];
+          } else if (slotCount === 8) {
+             currentPhotoH = 378;
+             y = [32, 442, 852, 1262][row];
           } else {
              y = [120, 744][row];
           }
           ctx.beginPath();
-          drawMaskPath(ctx, gridMask, x, y, photoW, photoH);
+          drawMaskPath(ctx, gridMask, x, y, photoW, currentPhotoH);
           ctx.stroke();
         }
       }
@@ -370,8 +381,9 @@ export function TemplateEditor({ onClose, onSave, events, initialTemplate }: Tem
                   <div className="space-y-2">
                     <p className="text-[8px] font-bold uppercase opacity-30 pl-2">Photo Slots</p>
                     <select value={slotCount} onChange={e => setSlotCount(parseInt(e.target.value))} className="w-full bg-white border border-black/5 p-4 rounded-xl text-xs font-bold shadow-sm">
-                       <option value={4}>4 Slots (2x2)</option>
-                       <option value={6}>6 Slots (2x3)</option>
+                       <option value={4}>4 Slots (2x2 Square)</option>
+                       <option value={6}>6 Slots (2x3 Square)</option>
+                       <option value={8}>8 Slots (2x4 Landscape)</option>
                     </select>
                   </div>
                </div>

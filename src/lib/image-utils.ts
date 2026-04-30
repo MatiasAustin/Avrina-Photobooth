@@ -68,32 +68,34 @@ export const generatePhotoStrip = async (
     loadedImages.forEach((img, i) => {
       const transform = transforms ? transforms[i] : { x: 0, y: 0, scale: 1 };
       
-      // Match UI width of 42% of card
+      // Match UI width of 42% of card (1200 * 0.42 = 504px)
       const photoWidth = canvasWidth * 0.42; 
-      const photoHeight = photoWidth; // 1:1 aspect
+      const isLandscape = (selectedTemplate?.slot_count || 6) === 8;
+      const photoHeight = isLandscape ? photoWidth * 0.75 : photoWidth;
 
       const x = (transform.x || 0) * canvasWidth;
       const y = (transform.y || 0) * canvasHeight;
       const scale = transform.scale || 1;
 
       ctx.save();
-      // Clipping region to match the photo square
+      // Clipping region to match the photo slot
       ctx.beginPath();
       ctx.rect(x, y, photoWidth, photoHeight);
       ctx.clip();
 
       // Draw image centered in the slot with zoom scale
       const imgAspect = img.naturalWidth / img.naturalHeight;
-      const drawW = photoWidth * scale;
-      const drawH = photoHeight * scale;
+      const slotAspect = photoWidth / photoHeight;
 
       let imgDrawW, imgDrawH;
-      if (imgAspect > 1) { // Landscape
-        imgDrawH = drawH;
-        imgDrawW = drawH * imgAspect;
+      if (imgAspect > slotAspect) { 
+        // Image is wider than slot -> fit height
+        imgDrawH = photoHeight * scale;
+        imgDrawW = imgDrawH * imgAspect;
       } else {
-        imgDrawW = drawW;
-        imgDrawH = drawW / imgAspect;
+        // Image is taller than slot -> fit width
+        imgDrawW = photoWidth * scale;
+        imgDrawH = imgDrawW / imgAspect;
       }
 
       ctx.drawImage(
