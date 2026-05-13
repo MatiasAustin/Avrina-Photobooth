@@ -104,6 +104,16 @@ export function Admin({ session }: AdminProps) {
   useEffect(() => {
     fetchData();
 
+    // Supabase keep-alive ping
+    const pingSupabase = async () => {
+      try {
+        await supabase.from('profiles').select('id').limit(1).maybeSingle();
+      } catch (e) {
+        // Ping is best-effort
+      }
+    };
+    pingSupabase();
+
     // Set up real-time subscription for print queue and sessions
     const sub = supabase.channel('admin-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
